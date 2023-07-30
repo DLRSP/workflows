@@ -45,7 +45,7 @@ jobs:
           for x_dj_version in "3.2" "4.2"
           do
             RAW_DJANGO_ENV="py${{ matrix.python-version }}-django${x_dj_version}"
-            DJANGO_ENV="$(echo ${RAW_DJANGO_ENV} | sed 's/\.//g')"
+            DJANGO_ENV="$(echo ${RAW_DJANGO_ENV//./})"
             pip install -U pip pip-tools
             pip-compile --upgrade --generate-hashes --allow-unsafe \
                         -P "${ranges[${x_dj_version}]}" \
