@@ -38,7 +38,7 @@ jobs:
         if: ${{ always() && hashFiles('setup.py') }}
         id: pip-cache
         run: |
-          echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
+          echo "dir=\"$(pip cache dir)\"" >> $GITHUB_OUTPUT
 
       - uses: actions/cache@v3.3.1
         if: ${{ always() && hashFiles('setup.py') }}
@@ -91,7 +91,7 @@ jobs:
     - name: Get pip cache dir
       id: pip-cache
       run: |
-        echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
+        echo "dir=\"$(pip cache dir)\"" >> $GITHUB_OUTPUT
 
     - uses: actions/cache@v3.3.1
       with:
