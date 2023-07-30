@@ -13,27 +13,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  is_python:
-    name: Check if repository need Python's jobs
-    runs-on: ubuntu-latest
-    outputs:
-      files: ${{ steps.ff.outputs.files }}
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Find files matching "*.py"
-        uses: jeertmans/filesfinder@latest
-        id: ff
-        with:
-          args: "*.py"
-
-      - name: Print files
-        run: echo "${{ steps.ff.outputs.files }}"
-
   test:
     name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
-    needs: is_python
     strategy:
       max-parallel: 5
       matrix:
@@ -89,7 +71,7 @@ jobs:
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
-    needs: [is_python, test]
+    needs: test
     permissions:
       actions: read
       contents: read
@@ -134,28 +116,18 @@ jobs:
 #          eslint: true
 #          prettier: true
 
-#    - name: Find files matching "*.py"
-#      uses: jeertmans/filesfinder@latest
-#      id: ff
-#      with:
-#        args: "*.py"
-#
-#    - name: Print files
-#      run: echo "${{ steps.ff.outputs.files }}"
-
     - name: Initialize CodeQL
-#      if: ${{ steps.ff.outputs.files }}
-      if: ${{ needs.is_python.outputs.files }}
+      if: ${{ always() && hashFiles('setup.py') }}
       uses: github/codeql-action/init@v2
       with:
         languages: ${{ matrix.language }}
 
     - name: Autobuild
-      if: ${{ steps.ff.outputs.files }}
+      if: ${{ always() && hashFiles('setup.py') }}
       uses: github/codeql-action/autobuild@v2
 
     - name: Perform CodeQL Analysis
-      if: ${{ steps.ff.outputs.files }}
+      if: ${{ always() && hashFiles('setup.py') }}
       uses: github/codeql-action/analyze@v2
 
   bots:
@@ -166,9 +138,6 @@ jobs:
     # PRs but also ensures that it only does work for Dependabot PRs and Pre-Commit-CI
     if: github.actor == 'dependabot[bot]' || github.actor == 'pre-commit-ci[bot]' || github.actor == 'dlrsp-bot'
     steps:
-#      - uses: actions/checkout@v3
-#        with:
-#          ref: main
       - uses: actions/checkout@v3
         with:
           token: ${{ secrets.PERSONAL_TOKEN }}
