@@ -47,7 +47,10 @@ jobs:
             RAW_DJANGO_ENV="py${{ matrix.python-version }}-django${x_dj_version}"
             DJANGO_ENV=$(echo ${RAW_DJANGO_ENV} | sed 's/\.//g')
             pip install -U pip pip-tools
-            pip-compile --upgrade --generate-hashes --allow-unsafe -P ${ranges[${x_dj_version}]} -o requirements/${DJANGO_ENV}.txt requirements/requirements.in
+            pip-compile --upgrade --generate-hashes --allow-unsafe \
+                        -P ${ranges[${x_dj_version}]} \
+                        -o requirements/${DJANGO_ENV}.txt \
+                        requirements/requirements.in
           done
           if [[ "${{ matrix.python-version }}" == "3.9" ]] ; then
             pip-compile --upgrade --generate-hashes --allow-unsafe -o requirements/docs.txt requirements/docs.in

@@ -144,7 +144,9 @@ jobs:
           fetch-depth: 0
       - name: Rebase this branch if behind the main
         run: |
-          if [[ "$(git rev-list --left-only --count origin/main...origin/${{ github.event.pull_request.head.ref }})" != 0 ]] ; then
+          if [[ "$(git rev-list --left-only --count \
+                   origin/main...origin/${{ github.event.pull_request.head.sha }} \
+                  )" != 0 ]] ; then
             echo "This branch is not up to date with main: rebase it!";
             git pull --rebase
           fi
