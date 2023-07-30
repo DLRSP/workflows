@@ -2,6 +2,8 @@
 name: Docs
 
 on:
+  workflow_call:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -10,7 +12,6 @@ on:
   pull_request:
     paths:
       - 'docs/**'
-  workflow_dispatch:
 
 jobs:
   deploy:

@@ -1,0 +1,37 @@
+---
+name: Labels
+"on":
+  workflow_call:
+    inputs:
+      extra-label-files:
+        required: false
+        type: string
+  # Restrict all project-related activities to the main branch.
+  push:
+    branches:
+      - main
+
+concurrency:
+  # Group workflow jobs so new commits cancels in-progress execution triggered by previous commits.
+  # Source: https://mail.python.org/archives/list/pypa-committers@python.org/thread/PCBCQMJF64JGRBOX7E2EE4YLKHT4DI55/
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+
+  labels:
+    name: Sync labels
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3.5.3
+      - name: Sync labels
+        uses: julb/action-manage-label@1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+        with:
+          skip_delete: true
+          from: |
+            https://raw.githubusercontent.com/kdeldycke/workflows/main/.github/labels.yaml
+            ${{ inputs.extra-label-files }}
+            ${{ startsWith(github.event.repository.name, 'awesome-') &&
+            'https://raw.githubusercontent.com/DLRSP/workflows/main/.github/labels-awesome.yaml' || '' }}
