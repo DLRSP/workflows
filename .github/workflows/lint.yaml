@@ -306,3 +306,4 @@ jobs:
           config-path: .github/gitleaks.toml
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
