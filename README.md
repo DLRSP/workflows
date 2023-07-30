@@ -39,6 +39,7 @@ A [detailed changelog](CHANGELOG.md) is available.
 Check these projects to get real-life examples of usage and inspiration:
 
 - ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-errors?label=%E2%AD%90&style=flat-square) [django-errors](https://github.com/DLRSP/django-errors#readme) - Django application for handling server errors.
+- ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-requests-api?label=%E2%AD%90&style=flat-square) [django-requests-api](https://github.com/DLRSP/django-requests-api#readme) - Django application to provide simple and shared requests client.
 
 Feel free to send a PR to add your project in this list if you are relying on these scripts.
 
