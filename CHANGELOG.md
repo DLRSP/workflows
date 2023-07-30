@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.0.7 (unreleased)](https://github.com/DLRSP/workflows/compare/v0.0.1...main)
+## [1.0.8 (unreleased)](https://github.com/DLRSP/workflows/compare/v0.0.1...main)
 
 ```{important}
 This version is not released yet and is under active development.
