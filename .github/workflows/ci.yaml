@@ -14,7 +14,7 @@ on:
 
 jobs:
   test-django:
-    if: ${{ hashFiles('tox.ini') != '' }}
+    if: ${{ always() && hashFiles('tox.ini') != '' }}
     name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
