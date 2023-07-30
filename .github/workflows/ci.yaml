@@ -66,7 +66,7 @@ jobs:
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
-    needs: test-django
+    needs: test
     permissions:
       actions: read
       contents: read
@@ -137,7 +137,7 @@ jobs:
   bots:
     name: BOTs (Dependabot/Pre-Commit-CI) Pull Request Approve and Merge
     runs-on: ubuntu-latest
-    needs: [test-django, analyze]
+    needs: [test, analyze]
     # Checking the actor will prevent your Action run failing on non-Dependabot or non-Pre-Commit-CI
     # PRs but also ensures that it only does work for Dependabot PRs and Pre-Commit-CI
     if: github.actor == 'dependabot[bot]' || github.actor == 'pre-commit-ci[bot]' || github.actor == 'dlrsp-bot'
@@ -185,7 +185,7 @@ jobs:
     name: GitHub Release
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
     runs-on: ubuntu-latest
-    needs: [test-django, analyze]
+    needs: [test, analyze]
     steps:
       - uses: actions/checkout@v3
 
@@ -199,7 +199,7 @@ jobs:
     name: PyPI Deploy
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
     runs-on: ubuntu-latest
-    needs: [test-django, analyze, release]
+    needs: [test, analyze, release]
     steps:
       - uses: actions/checkout@v3
 
