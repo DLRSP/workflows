@@ -30,7 +30,7 @@ jobs:
       - name: Get pip cache dir
         id: pip-cache
         run: |
-          echo "dir=\"$(pip cache dir)\"" >> $GITHUB_OUTPUT
+          echo "dir=$(pip cache dir)" >> "$GITHUB_OUTPUT"
 
       - uses: actions/cache@v3.3.1
         with:
@@ -48,8 +48,8 @@ jobs:
             DJANGO_ENV="$(echo ${RAW_DJANGO_ENV} | sed 's/\.//g')"
             pip install -U pip pip-tools
             pip-compile --upgrade --generate-hashes --allow-unsafe \
-                        -P ${ranges[${x_dj_version}]} \
-                        -o requirements/${DJANGO_ENV}.txt \
+                        -P "${ranges[${x_dj_version}]}" \
+                        -o "requirements/${DJANGO_ENV}.txt" \
                         requirements/requirements.in
           done
           if [[ "${{ matrix.python-version }}" == "3.9" ]] ; then
