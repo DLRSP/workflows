@@ -197,22 +197,27 @@ jobs:
       - uses: actions/checkout@v3
 
       - uses: actions/setup-python@v4
+        if: ${{ always() && hashFiles('setup.py') }}
         with:
           python-version: "3.x"
 
       - name: Install OS dependencies
+        if: ${{ always() && hashFiles('setup.py') }}
         run: |
           sudo apt-get install -y gettext
 
       - name: Install Python dependencies
+        if: ${{ always() && hashFiles('setup.py') }}
         run: |
           python -m pip install --upgrade pip setuptools wheel
 
       - name: Build a binary wheel and source tarball with latest python version
+        if: ${{ always() && hashFiles('setup.py') }}
         run: |
           python setup.py sdist bdist_wheel
 
       - name: Publish package
+        if: ${{ always() && hashFiles('setup.py') }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
