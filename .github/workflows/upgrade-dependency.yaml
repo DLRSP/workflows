@@ -1,5 +1,6 @@
 # File: .github/workflows/upgrade-dependencies.yml
 # Reference: https://www.oddbird.net/2022/06/01/dependabot-single-pull-request/
+---
 name: Upgrade dependencies
 
 on:
