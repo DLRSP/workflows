@@ -1,5 +1,5 @@
 ---
-name: Pull Request Recap
+name: Recap PR
 
 on:
   pull_request:
