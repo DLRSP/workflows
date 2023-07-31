@@ -22,7 +22,7 @@ jobs:
 
   version-increments:
     # This job is not time-sensitive: do not let it to be triggered by schedule event.
-    # Also skip release commits (during which bump-my-version cannot find "unreleased" string in changelog.md).
+    # Also skip release commits (during which bump-my-version cannot find "unreleased" string in CHANGELOG.md).
     if: github.event_name != 'schedule' && !startsWith(github.event.head_commit.message, '[changelog] Release v')
     runs-on: ubuntu-22.04
     strategy:
@@ -175,7 +175,7 @@ jobs:
           import re
           from pathlib import Path
 
-          file = Path("./changelog.md")
+          file = Path("./CHANGELOG.md")
           content = file.read_text()
 
           cleaned_content = re.sub(
