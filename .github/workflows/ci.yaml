@@ -138,10 +138,10 @@ jobs:
     # PRs but also ensures that it only does work for Dependabot PRs and Pre-Commit-CI
     if: github.actor == 'dependabot[bot]' || github.actor == 'pre-commit-ci[bot]' || github.actor == 'dlrsp-bot'
     steps:
-      - uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.PERSONAL_TOKEN }}
-          fetch-depth: 0
+#      - uses: actions/checkout@v3
+#        with:
+#          token: ${{ secrets.PERSONAL_TOKEN }}
+#          fetch-depth: 0
 #      - name: Rebase this branch if behind the main
 #        run: |
 #          if [[ "$(git rev-list --left-only --count \
@@ -159,14 +159,14 @@ jobs:
         id: dependabot-metadata
         uses: dependabot/fetch-metadata@v1.6.0
         with:
-          github-token: "${{ secrets.PERSONAL_TOKEN }}"
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
 
       # Here the PR gets approved.
       - name: Approve a PR
         run: gh pr review --approve "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Sets the PR to allow auto-merging for patch, minor and major updates if all checks pass
       - name: Enable auto-merge for Dependabot PRs
@@ -174,7 +174,7 @@ jobs:
         run: gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   release:
     name: GitHub Release
