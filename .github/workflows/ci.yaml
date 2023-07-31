@@ -161,12 +161,17 @@ jobs:
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 
+
       # Here the PR gets approved.
       - name: Approve a PR
-        run: gh pr review --approve "$PR_URL"
-        env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: hmarr/auto-approve-action@v3
+        with:
+          github-token: ${{ secrets.BOT_PAT }}
+
+#        run: gh pr review --approve "$PR_URL"
+#        env:
+#          PR_URL: ${{ github.event.pull_request.html_url }}
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Sets the PR to allow auto-merging for patch, minor and major updates if all checks pass
       - name: Enable auto-merge for Dependabot PRs
