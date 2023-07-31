@@ -136,7 +136,7 @@ jobs:
     needs: [test, analyze]
     # Checking the actor will prevent your Action run failing on non-Dependabot or non-Pre-Commit-CI
     # PRs but also ensures that it only does work for Dependabot PRs and Pre-Commit-CI
-    if: github.actor == 'dependabot[bot]' || github.actor == 'pre-commit-ci[bot]' || github.actor == 'dlrsp-bot'
+    if: (github.actor == 'dependabot[bot]' || github.actor == 'pre-commit-ci[bot]' || github.actor == 'dlrsp-bot') && github.event_name == 'pull_request_target'
     steps:
 #      - uses: actions/checkout@v3
 #        with:
@@ -162,7 +162,7 @@ jobs:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 
       # Here the PR gets approved.
-      - name: Approve a PR
+      - name: Approve Bot PRs
         uses: hmarr/auto-approve-action@v3
         with:
           github-token: ${{ secrets.BOT_PAT }}
@@ -173,7 +173,7 @@ jobs:
 #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Sets the PR to allow auto-merging for patch, minor and major updates if all checks pass
-      - name: Enable auto-merge for Dependabot PRs
+      - name: Enable auto-merge for Bot PRs
         # if: ${{ steps.dependabot-metadata.outputs.update-type != 'version-update:semver-major' }}
         run: gh pr merge --auto --squash "$PR_URL"
         env:
