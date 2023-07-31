@@ -8,7 +8,7 @@ on:
       - 'v*'
     branches:
       - main
-  pull_request:
+  pull_request_target:
     branches:
       - main
 
@@ -160,7 +160,6 @@ jobs:
         uses: dependabot/fetch-metadata@v1.6.0
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
-
 
       # Here the PR gets approved.
       - name: Approve a PR
