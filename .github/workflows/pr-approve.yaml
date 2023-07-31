@@ -13,6 +13,6 @@ jobs:
     if: github.actor == 'dependabot[bot]' || github.actor == 'pre-commit-ci[bot]' || github.actor == 'dlrsp-bot'
     steps:
       - name: Approve Bot PRs
-        uses: hmarr/auto-approve-action@v3
+        uses: hmarr/auto-approve-action@v3.2.1
 #        with:
 #          github-token: ${{ secrets.BOT_PAT }}
