@@ -1,5 +1,5 @@
 ---
-name: Rebase Pull Request
+name: Rebase PR (label)
 
 on:
   workflow_call:

@@ -1,0 +1,14 @@
+---
+name: Rebase PR (push)
+on:
+  workflow_call:
+  push:
+    branches: [main]
+jobs:
+  rebase:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: peter-evans/rebase@v2
+        with:
+          base: main
+          token: ${{ secrets.PERSONAL_TOKEN }}
