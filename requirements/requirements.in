@@ -1,3 +1,4 @@
 bump-my-version
 poetry
 black
+mypy
