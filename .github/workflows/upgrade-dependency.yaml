@@ -74,3 +74,9 @@ jobs:
             python
           assignees: ${{ github.actor }}
           draft: false
+
+      - name: Recap changes
+        uses: flowwer-dev/recap@main
+        with:
+          openai-apikey: ${{ secrets.OPENAI_APIKEY }}
+          publish-as: DESCRIPTION
