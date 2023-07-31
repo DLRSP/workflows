@@ -7,7 +7,7 @@ on:
     types: [labeled]
 
 jobs:
-  main:
+  rebase:
     if: ${{ github.event.label.name == 'rebase' }}
     name: Rebase
     runs-on: ubuntu-latest
