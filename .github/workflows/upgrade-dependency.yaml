@@ -70,7 +70,7 @@ jobs:
           title: '[py-${{ matrix.python-version }}] Automated dependency upgrades'
           body: "Full log: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           labels: |
-            "📦 dependencies"
+            📦 dependencies
             python
           assignees: ${{ github.actor }}
           draft: false
