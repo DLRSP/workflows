@@ -2,7 +2,7 @@
 "🆙 changelog":
   - .github/workflows/changelog.yaml
   - .github/workflows/release.yaml
-  - changelog.md
+  - CHANGELOG.md
 
 "🤖 ci":
   - .github/**/*
@@ -11,7 +11,9 @@
   - .gitignore
 
 "📦 dependencies":
+  - .github/workflows/upgrade-dependency.yaml
   - .github/dependabot.yaml
+  - requirements/*
   - poetry.lock
   - pyproject.toml
 
@@ -21,8 +23,8 @@
   - .github/code-of-conduct.md
   - docs/**/*
   - .mailmap
-  - license
-  - readme.md
+  - LICENSE
+  - README.md
 
 "💖 sponsor":
   - .github/funding.yml
