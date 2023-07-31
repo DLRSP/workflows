@@ -3,6 +3,6 @@ current_version = "1.6.2"
 allow_dirty = true
 
 [[tool.bumpversion.files]]
-filename = "./CHANGELOG.md"
+filename = "./changelog.md"
 search = "[{current_version} (unreleased)]("
 replace = "[{new_version} (unreleased)]("
