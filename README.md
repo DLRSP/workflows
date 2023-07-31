@@ -32,7 +32,7 @@ So I made up a [`release.yaml` workflow](https://github.com/kdeldycke/workflows/
 
 ## Changelog
 
-A [detailed changelog](CHANGELOG.md) is available.
+A [detailed changelog](changelog.md) is available.
 
 ## Used in
 

@@ -2,7 +2,7 @@
 "🆙 changelog":
   - .github/workflows/changelog.yaml
   - .github/workflows/release.yaml
-  - CHANGELOG.md
+  - changelog.md
 
 "🤖 ci":
   - .github/**/*
