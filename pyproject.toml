@@ -1,8 +1,6 @@
 [tool.bumpversion]
 current_version = "1.7.15"
 allow_dirty = true
-commit = true
-tag = true
 
 [[tool.bumpversion.files]]
 filename = "./changelog.md"
