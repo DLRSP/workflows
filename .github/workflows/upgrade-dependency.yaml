@@ -88,7 +88,7 @@ jobs:
           for X_Dir in $(ls tmp_artifacts/)
           do
             echo "Move file from [${X_Dir}] to requirements/"
-            mv -f "${X_Dir}"/* requirements/
+            mv -f "tmp_artifacts/${X_Dir}"/* requirements/
           done
           rm -rf tmp_artifacts && echo "Temporary directory deleted!"
 
