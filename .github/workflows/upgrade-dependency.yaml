@@ -65,7 +65,7 @@ jobs:
           path: requirements/${{ env.DJANGO_ENV }}.txt
 
       - name: Upload Python dependencies ${{ matrix.python-version }} for Docs
-        if: matrix.python-version == "3.11"
+        if: matrix.python-version == '3.11'
         uses: actions/upload-artifact@v3
         with:
           name: docs.txt
