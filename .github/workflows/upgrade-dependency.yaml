@@ -78,14 +78,19 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Removing old files
-        run: |
-          rm -r requirements/*.txt
-
       - name: Download all artifacts
         uses: actions/download-artifact@v3
         with:
-          path: requirements/
+          path: tmp/
+
+      - name: Removing old files
+        run: |
+          fox X_Dir in $(ls tmp/)
+          do
+            echo "Move file from [${X_Dir}] to requirements/"
+            mv -f "${X_Dir}"/* requirements/
+          done
+          rm -rf tmp && echo "Temporary directory deleted!"
 
       - name: Create Pull Request
         id: cpr
