@@ -72,8 +72,9 @@ jobs:
           path: requirements/docs.txt
 
   pull-request:
-    name: Upgrade & Open Pull Request
+    name: Open Pull Request
     runs-on: ubuntu-latest
+    needs: upgrade
     steps:
       - name: Download Python dependencies 3.11 for Docs
         uses: actions/download-artifact@v3
