@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Recap changes
-        if: github.actor == 'dlrsp-bot'
+        if: github.actor == 'dlrsp-bot' && github.workflow != 'Upgrade dependencies'
         uses: flowwer-dev/recap@main
         with:
           openai-apikey: ${{ secrets.OPENAI_APIKEY }}
