@@ -81,16 +81,16 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v3
         with:
-          path: tmp/
+          path: tmp_artifacts/
 
       - name: Removing old files
         run: |
-          fox X_Dir in $(ls tmp/)
+          for X_Dir in $(ls tmp_artifacts/)
           do
             echo "Move file from [${X_Dir}] to requirements/"
             mv -f "${X_Dir}"/* requirements/
           done
-          rm -rf tmp && echo "Temporary directory deleted!"
+          rm -rf tmp_artifacts && echo "Temporary directory deleted!"
 
       - name: Create Pull Request
         id: cpr
