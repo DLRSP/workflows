@@ -1,5 +1,5 @@
 [tool.bumpversion]
-current_version = "1.7.9"
+current_version = "1.7.10"
 allow_dirty = true
 commit = true
 tag = true
