@@ -78,6 +78,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Removing old files
+        run: |
+          rm -r requirements/
+
       - name: Download all artifacts
         uses: actions/download-artifact@v3
         with:
