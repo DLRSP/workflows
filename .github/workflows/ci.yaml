@@ -141,6 +141,7 @@ jobs:
     # PRs but also ensures that it only does work for Dependabot PRs and Pre-Commit-CI
     if: (github.actor == 'dependabot[bot]' || github.actor == 'pre-commit-ci[bot]' || github.actor == 'dlrsp-bot') 
         && github.event_name == 'pull_request'
+        && github.event.pull_request.draft == false
     steps:
 #      - uses: actions/checkout@v3
 #        with:
