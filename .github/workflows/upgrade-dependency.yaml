@@ -41,10 +41,10 @@ jobs:
             ${{ runner.os }}-pip-
 
       - name: Set Python and Django version's file variable
-        run:
+        run: |
           RAW_DJANGO_ENV="py${{ matrix.python-version }}-django${{ matrix.django-version }}"
           DJANGO_ENV="${RAW_DJANGO_ENV//./}"
-          echo "DJANGO_ENV=${DJANGO_ENV}" >> "${GITHUB_ENV}"
+          echo "DJANGO_ENV=${DJANGO_ENV}" >> "$GITHUB_ENV"
 
       - name: Upgrade Python dependencies ${{ matrix.python-version }}
         run: |
