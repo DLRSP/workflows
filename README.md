@@ -40,6 +40,8 @@ Check these projects to get real-life examples of usage and inspiration:
 
 - ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-errors?label=%E2%AD%90&style=flat-square) [django-errors](https://github.com/DLRSP/django-errors#readme) - Django application for handling server errors.
 - ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-requests-api?label=%E2%AD%90&style=flat-square) [django-requests-api](https://github.com/DLRSP/django-requests-api#readme) - Django application to provide simple and shared requests client.
+- ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-sp?label=%E2%AD%90&style=flat-square) [django-sp](https://github.com/DLRSP/django-sp#readme) - Django application for custom Social Profile Auth and User model.
+- ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-iubenda?label=%E2%AD%90&style=flat-square) [django-iubenda](https://github.com/DLRSP/django-iubenda#readme) - Django application for handling privacy and cookie policies configured with Iubenda.
 
 Feel free to send a PR to add your project in this list if you are relying on these scripts.
 
