@@ -38,9 +38,9 @@ build==0.10.0 \
     --hash=sha256:af266720050a66c893a6096a2f410989eeac74ff9a68ba194b3f6473e8e26171 \
     --hash=sha256:d5b71264afdb5951d6704482aac78de887c80691c52b88a9ad195983ca2c9269
     # via poetry
-bump-my-version==0.8.0 \
-    --hash=sha256:9cfc7bd079f475524d74a0e5b028342c648001a9e713d47b7669bb5b6e612cd8 \
-    --hash=sha256:f129f58d0c37cec07f57792fef5b4af98e255b483403862bd8c42725977101e7
+bump-my-version==0.9.1 \
+    --hash=sha256:b5c7294caa2f59c4c7233313806180b3ed608d34ca911f8c09c525142ee723e6 \
+    --hash=sha256:ceaec4a5064b3d9b1d58ebbc75075776b325f488d9536fc7c6262b70d8b9bd2a
     # via -r requirements/requirements.in
 cachecontrol[filecache]==0.12.14 \
     --hash=sha256:1c2939be362a70c4e5f02c6249462b3b7a24441e4f1ced5e9ef028172edf356a \
@@ -364,9 +364,9 @@ mdurl==0.1.2 \
     --hash=sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8 \
     --hash=sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba
     # via markdown-it-py
-more-itertools==10.0.0 \
-    --hash=sha256:928d514ffd22b5b0a8fce326d57f423a55d2ff783b093bab217eda71e732330f \
-    --hash=sha256:cd65437d7c4b615ab81c0640c0480bc29a550ea032891977681efd28344d51e1
+more-itertools==10.1.0 \
+    --hash=sha256:626c369fa0eb37bac0291bce8259b332fd59ac792fa5497b59837309cd5b114a \
+    --hash=sha256:64e0735fcfdc6f3464ea133afe8ea4483b1c5fe3a3d69852e6503b43a0b222e6
     # via jaraco-classes
 msgpack==1.0.5 \
     --hash=sha256:06f5174b5f8ed0ed919da0e62cbd4ffde676a374aba4020034da05fab67b9164 \
