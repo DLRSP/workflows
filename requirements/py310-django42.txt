@@ -295,9 +295,9 @@ dulwich==0.21.6 \
     --hash=sha256:edc21c3784dd9d9b85abd9fe53f81a884e2cdcc4e5e09ada17287420d64cfd46 \
     --hash=sha256:eee8aba4dec4d0a52737a8a141f3456229c87dcfd7961f8115786a27b6ebefed
     # via poetry
-filelock==3.12.3 \
-    --hash=sha256:0ecc1dd2ec4672a10c8550a8182f1bd0c0a5088470ecd5a125e45f49472fac3d \
-    --hash=sha256:f067e40ccc40f2b48395a80fcbd4728262fab54e232e090a4063ab804179efeb
+filelock==3.12.4 \
+    --hash=sha256:08c21d87ded6e2b9da6728c3dff51baf1dcecf973b768ef35bcbc3447edb9ad4 \
+    --hash=sha256:2e6f249f1f3654291606e046b09f1fd5eac39b360664c27f5aad072012f8bcbd
     # via
     #   cachecontrol
     #   virtualenv
@@ -717,7 +717,6 @@ typing-extensions==4.7.1 \
     --hash=sha256:b75ddc264f0ba5615db7ba217daeb99701ad295353c45f9e95963337ceeeffb2
     # via
     #   black
-    #   filelock
     #   mypy
     #   pydantic
 urllib3==2.0.4 \
