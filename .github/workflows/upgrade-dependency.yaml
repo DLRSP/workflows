@@ -80,7 +80,7 @@ jobs:
       - name: Upload Python dependencies ${{ matrix.python-version }} for Dev ${{ matrix.django-version }}
         uses: actions/upload-artifact@v3
         with:
-          name: py${{ matrix.python-version }}-dev.txt
+          name: py${{ env.PY_ENV }}-dev.txt
           path: requirements/py${{ env.PY_ENV }}-dev.txt
 
       - name: Upload Python dependencies ${{ matrix.python-version }} for Docs
