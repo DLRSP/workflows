@@ -53,11 +53,15 @@ jobs:
                       -o "requirements/${{ env.DJANGO_ENV }}.txt" \
                       requirements/requirements.in
           if [[ -f "requirements/dev.in" ]] ; then
-            pip-compile --upgrade --generate-hashes --allow-unsafe -o requirements/py${{ matrix.python-version }}-dev.txt requirements/dev.in
+            pip-compile --upgrade --generate-hashes --allow-unsafe \
+                      -o requirements/py${{ matrix.python-version }}-dev.txt \
+                      requirements/dev.in
           fi
           if [[ "${{ matrix.python-version }}" == "3.11" ]] ; then
             if [[ -f "requirements/docs.in" ]] ; then
-              pip-compile --upgrade --generate-hashes --allow-unsafe -o requirements/docs.txt requirements/docs.in
+              pip-compile --upgrade --generate-hashes --allow-unsafe \
+                      -o requirements/docs.txt \
+                      requirements/docs.in
             fi
           fi
 
