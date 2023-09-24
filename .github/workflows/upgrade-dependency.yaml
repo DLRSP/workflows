@@ -45,9 +45,10 @@ jobs:
 
       - name: Set Python and Django version's file variable
         run: |
-          RAW_DJANGO_ENV="py${{ matrix.python-version }}-django${{ matrix.django-version }}"
-          DJANGO_ENV="${RAW_DJANGO_ENV//./}"
-          echo "DJANGO_ENV=${DJANGO_ENV}" >> "$GITHUB_ENV"
+          RAW_PY_ENV="py${{ matrix.python-version }}"
+          RAW_DJANGO_ENV="${RAW_PY_ENV}-django${{ matrix.django-version }}"
+          echo "PY_ENV=${RAW_PY_ENV//./}" >> "$GITHUB_ENV"
+          echo "DJANGO_ENV=${RAW_DJANGO_ENV//./}" >> "$GITHUB_ENV"
 
       - name: Upgrade Python dependencies ${{ matrix.python-version }}
         run: |
@@ -59,7 +60,7 @@ jobs:
                       requirements/requirements.in
           if [[ -f "requirements/dev.in" ]] ; then
             pip-compile --upgrade --generate-hashes --allow-unsafe \
-                      -o requirements/py${{ matrix.python-version }}-dev.txt \
+                      -o requirements/py${{ env.PY_ENV }}-dev.txt \
                       requirements/dev.in
           fi
           if [[ "${{ matrix.python-version }}" == "3.11" ]] ; then
@@ -80,7 +81,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: py${{ matrix.python-version }}-dev.txt
-          path: requirements/py${{ matrix.python-version }}-dev.txt
+          path: requirements/py${{ env.PY_ENV }}-dev.txt
 
       - name: Upload Python dependencies ${{ matrix.python-version }} for Docs
         if: matrix.python-version == '3.11'
