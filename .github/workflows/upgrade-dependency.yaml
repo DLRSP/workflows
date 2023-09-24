@@ -76,6 +76,12 @@ jobs:
           name: ${{ env.DJANGO_ENV }}.txt
           path: requirements/${{ env.DJANGO_ENV }}.txt
 
+      - name: Upload Python dependencies ${{ matrix.python-version }} for Dev ${{ matrix.django-version }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: py${{ matrix.python-version }}-dev.txt
+          path: requirements/py${{ matrix.python-version }}-dev.txt
+
       - name: Upload Python dependencies ${{ matrix.python-version }} for Docs
         if: matrix.python-version == '3.11'
         uses: actions/upload-artifact@v3
