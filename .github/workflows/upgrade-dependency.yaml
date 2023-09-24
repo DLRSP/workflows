@@ -52,8 +52,13 @@ jobs:
                       -P "${ranges["${{ matrix.django-version }}"]}" \
                       -o "requirements/${{ env.DJANGO_ENV }}.txt" \
                       requirements/requirements.in
+          if [[ -f "requirements/dev.in" ]] ; then
+            pip-compile --upgrade --generate-hashes --allow-unsafe -o requirements/py${{ matrix.python-version }}-dev.txt requirements/dev.in
+          fi
           if [[ "${{ matrix.python-version }}" == "3.11" ]] ; then
-            pip-compile --upgrade --generate-hashes --allow-unsafe -o requirements/docs.txt requirements/docs.in
+            if [[ -f "requirements/docs.in" ]] ; then
+              pip-compile --upgrade --generate-hashes --allow-unsafe -o requirements/docs.txt requirements/docs.in
+            fi
           fi
 
       - name: Upload Python dependencies ${{ matrix.python-version }} for Django ${{ matrix.django-version }}
