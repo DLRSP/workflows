@@ -60,7 +60,7 @@ jobs:
                       requirements/requirements.in
           if [[ -f "requirements/dev.in" ]] ; then
             pip-compile --upgrade --generate-hashes --allow-unsafe \
-                      -o requirements/py${{ env.PY_ENV }}-dev.txt \
+                      -o requirements/${{ env.PY_ENV }}-dev.txt \
                       requirements/dev.in
           fi
           if [[ "${{ matrix.python-version }}" == "3.11" ]] ; then
@@ -80,8 +80,8 @@ jobs:
       - name: Upload Python dependencies ${{ matrix.python-version }} for Dev ${{ matrix.django-version }}
         uses: actions/upload-artifact@v3
         with:
-          name: py${{ env.PY_ENV }}-dev.txt
-          path: requirements/py${{ env.PY_ENV }}-dev.txt
+          name: ${{ env.PY_ENV }}-dev.txt
+          path: requirements/${{ env.PY_ENV }}-dev.txt
 
       - name: Upload Python dependencies ${{ matrix.python-version }} for Docs
         if: matrix.python-version == '3.11'
