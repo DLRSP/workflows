@@ -45,6 +45,7 @@ Check these projects to get real-life examples of usage and inspiration:
 - ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-iubenda?label=%E2%AD%90&style=flat-square) [django-iubenda](https://github.com/DLRSP/django-iubenda#readme) - Django application for handling privacy and cookie policies configured with Iubenda.
 - ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-hashtag?label=%E2%AD%90&style=flat-square) [django-hashtag](https://github.com/DLRSP/django-hashtag#readme) - Django application provide hashtag functionality.
 - ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-model-mixin?label=%E2%AD%90&style=flat-square) [django-model-mixin](https://github.com/DLRSP/django-model-mixin#readme) - Django application provide simple model's mixins to add common reusable attributes.
+- ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-lang?label=%E2%AD%90&style=flat-square) [django-lang](https://github.com/DLRSP/django-lang#readme) - Django application to provide useful utils and reusable parts of code for multi-languages sites.
 
 Feel free to send a PR to add your project in this list if you are relying on these scripts.
 
