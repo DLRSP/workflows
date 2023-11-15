@@ -296,9 +296,9 @@ dulwich==0.21.6 \
     --hash=sha256:edc21c3784dd9d9b85abd9fe53f81a884e2cdcc4e5e09ada17287420d64cfd46 \
     --hash=sha256:eee8aba4dec4d0a52737a8a141f3456229c87dcfd7961f8115786a27b6ebefed
     # via poetry
-fastjsonschema==2.18.1 \
-    --hash=sha256:06dc8680d937628e993fa0cd278f196d20449a1adc087640710846b324d422ea \
-    --hash=sha256:aec6a19e9f66e9810ab371cc913ad5f4e9e479b63a7072a2cd060a9369e329a8
+fastjsonschema==2.19.0 \
+    --hash=sha256:b9fd1a2dd6971dbc7fee280a95bd199ae0dd9ce22beb91cc75e9c1c528a5170e \
+    --hash=sha256:e25df6647e1bc4a26070b700897b07b542ec898dd4f1f6ea013e7f6a88417225
     # via poetry
 filelock==3.13.1 \
     --hash=sha256:521f5f56c50f8426f5e03ad3b281b490a87ef15bc6c526f168290f0c7148d44e \
@@ -599,9 +599,9 @@ pydantic-core==2.14.1 \
     --hash=sha256:fd937733bf2fe7d6a8bf208c12741f1f730b7bf5636033877767a75093c29b8a \
     --hash=sha256:ffba979801e3931a19cd30ed2049450820effe8f152aaa317e2fd93795d318d7
     # via pydantic
-pydantic-settings==2.0.3 \
-    --hash=sha256:962dc3672495aad6ae96a4390fac7e593591e144625e5112d359f8f67fb75945 \
-    --hash=sha256:ddd907b066622bd67603b75e2ff791875540dc485b7307c4fffc015719da8625
+pydantic-settings==2.1.0 \
+    --hash=sha256:26b1492e0a24755626ac5e6d715e9077ab7ad4fb5f19a8b7ed7011d52f36141c \
+    --hash=sha256:7621c0cb5d90d1140d2f0ef557bdf03573aac7035948109adf2574770b77605a
     # via bump-my-version
 pygments==2.16.1 \
     --hash=sha256:13fc09fa63bc8d8671a6d247e1eb303c4b343eaee81d861f3404db2935653692 \
@@ -747,15 +747,15 @@ tomli==2.0.1 \
     #   mypy
     #   poetry
     #   pyproject-hooks
-tomlkit==0.12.2 \
-    --hash=sha256:df32fab589a81f0d7dc525a4267b6d7a64ee99619cbd1eeb0fae32c1dd426977 \
-    --hash=sha256:eeea7ac7563faeab0a1ed8fe12c2e5a51c61f933f2502f7e9db0241a65163ad0
+tomlkit==0.12.3 \
+    --hash=sha256:75baf5012d06501f07bee5bf8e801b9f343e7aac5a92581f20f80ce632e6b5a4 \
+    --hash=sha256:b0a645a9156dc7cb5d3a1f0d4bab66db287fcb8e0430bdd4664a095ea16414ba
     # via
     #   bump-my-version
     #   poetry
-trove-classifiers==2023.11.13 \
-    --hash=sha256:5b09dd4114d2ea30928561fbb656724ea5e2b19f97b2c8c3699ac22e4e971958 \
-    --hash=sha256:87d8599d890b719c81c7e33cdb2813d5965e5958984bff1b913e161f0d6a5286
+trove-classifiers==2023.11.14 \
+    --hash=sha256:2893a80cf3c48645462dea97c72c02a9fb1f7bd3c65f9908d3ffb1a7ef0b3833 \
+    --hash=sha256:64b5e78305a5de347f2cd7ec8c12d704a3ef0cb85cc10c0ca5f73488d1c201f8
     # via poetry
 typing-extensions==4.8.0 \
     --hash=sha256:8f92fc8806f9a6b641eaa5318da32b44d401efaac0f6678c9bc448ba3605faa0 \
