@@ -306,9 +306,9 @@ filelock==3.13.1 \
     # via
     #   cachecontrol
     #   virtualenv
-idna==3.4 \
-    --hash=sha256:814f528e8dead7d329833b91c5faa87d60bf71824cd12a7530b5526063d02cb4 \
-    --hash=sha256:90b77e79eaa3eba6de819a0c442c0b4ceefc341a7a2ab77d7562bf49f425c5c2
+idna==3.5 \
+    --hash=sha256:27009fe2735bf8723353582d48575b23c533cc2c2de7b5a68908d91b5eb18d08 \
+    --hash=sha256:79b8f0ac92d2351be5f6122356c9a592c96d81c9a79e4b488bf2a6a15f88057a
     # via requests
 importlib-metadata==6.8.0 \
     --hash=sha256:3ebb78df84a805d7698245025b975d9d67053cd94c79245ba4b3eb694abe68bb \
@@ -448,9 +448,8 @@ pathspec==0.11.2 \
     --hash=sha256:1d6ed233af05e679efb96b1851550ea95bbb64b7c490b0f5aa52996c11e92a20 \
     --hash=sha256:e0d8d0ac2f12da61956eb2306b69f9469b42f4deb0f3cb6ed47b9cce9996ced3
     # via black
-pexpect==4.8.0 \
-    --hash=sha256:0b48a55dcb3c05f3329815901ea4fc1537514d6ba867a152b581d69ae3710937 \
-    --hash=sha256:fc65a43959d153d0114afe13997d439c22823a27cefceb5ff35c2178c6784c0c
+pexpect==4.9.0 \
+    --hash=sha256:7236d1e080e4936be2dc3e326cec0af72acf9212a7e1d060210e70a47e253523
     # via poetry
 pkginfo==1.9.6 \
     --hash=sha256:4b7a555a6d5a22169fcc9cf7bfd78d296b0361adad412a346c1226849af5e546 \
