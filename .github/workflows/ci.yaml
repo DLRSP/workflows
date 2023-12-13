@@ -124,17 +124,17 @@ jobs:
 
     - name: Initialize CodeQL
       if: ${{ always() && hashFiles('setup.py') }}
-      uses: github/codeql-action/init@v2
+      uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
 
     - name: Autobuild
       if: ${{ always() && hashFiles('setup.py') }}
-      uses: github/codeql-action/autobuild@v2
+      uses: github/codeql-action/autobuild@v3
 
     - name: Perform CodeQL Analysis
       if: ${{ always() && hashFiles('setup.py') }}
-      uses: github/codeql-action/analyze@v2
+      uses: github/codeql-action/analyze@v3
 
   bots:
     name: BOTs (Dependabot/Pre-Commit-CI) Pull Request Approve and Merge
