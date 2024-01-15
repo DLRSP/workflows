@@ -126,9 +126,9 @@ build==1.0.3 \
     --hash=sha256:538aab1b64f9828977f84bc63ae570b060a8ed1be419e7870b8b4fc5e6ea553b \
     --hash=sha256:589bf99a67df7c9cf07ec0ac0e5e2ea5d4b37ac63301c4986d1acb126aa83f8f
     # via poetry
-bump-my-version==0.15.3 \
-    --hash=sha256:0894ac7f026054734c3386f8db87c8feb85c40f41c1fcbc3ebf674f56bc446b6 \
-    --hash=sha256:ecf1b1ecf1f4ec0db59cc83fb14dfbbb80196fcbeb446cfac8f25943714330d6
+bump-my-version==0.16.2 \
+    --hash=sha256:83820caf4f64465c674f41346a2135999d7c3359c35e42a67708cb957c5135be \
+    --hash=sha256:966dfc6cf9765a1d4a48fbaeb587a2e3a70ed5c13b04b5ee10c6e0134d4b8342
     # via -r requirements/requirements.in
 cachecontrol[filecache]==0.13.1 \
     --hash=sha256:95dedbec849f46dda3137866dc28b9d133fc9af55f5b805ab1291833e4457aa4 \
@@ -332,9 +332,6 @@ distlib==0.3.8 \
     --hash=sha256:034db59a0b96f8ca18035f36290806a9a6e6bd9d1ff91e45a7f172eb17e51784 \
     --hash=sha256:1530ea13e350031b6312d8580ddb6b27a104275a31106523b8f123787f494f64
     # via virtualenv
-dotted-notation==0.11.0 \
-    --hash=sha256:e1a214cb236cd647e56c79108e8eca2a50a635b7196077eab211869d9a93b0ed
-    # via bump-my-version
 dulwich==0.21.7 \
     --hash=sha256:0fc3078a1ba04c588fabb0969d3530efd5cd1ce2cf248eefb6baf7cbc15fc285 \
     --hash=sha256:10893105c6566fc95bc2a67b61df7cc1e8f9126d02a1df6a8b2b82eb59db8ab9 \
@@ -879,10 +876,6 @@ pygments==2.17.2 \
     --hash=sha256:b27c2826c47d0f3219f29554824c30c5e8945175d888647acd804ddd04af846c \
     --hash=sha256:da46cec9fd2de5be3a8a784f434e4c4ab670b4ff54d605c4c2717e9d49c4c367
     # via rich
-pyparsing==3.1.1 \
-    --hash=sha256:32c7c0b711493c72ff18a981d24f28aaf9c1fb7ed5e9667c9e84e3db623bdbfb \
-    --hash=sha256:ede28a1a32462f5a9705e07aea48001a08f7cf81a021585011deba701581a0db
-    # via dotted-notation
 pyproject-hooks==1.0.0 \
     --hash=sha256:283c11acd6b928d2f6a7c73fa0d01cb2bdc5f07c57a2eeb6e83d5e56b97976f8 \
     --hash=sha256:f271b298b97f5955d53fb12b72c1fb1948c22c1a6b70b315c54cedaca0264ef5
