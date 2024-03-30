@@ -88,7 +88,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: docs.txt
-          path: requirements/docs.txt
+          path: requirements/py-docs.txt
 
   pull-request:
     name: Open Pull Request
@@ -102,7 +102,7 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: *.txt
+          pattern: py*.txt
           path: tmp_artifacts/
 
       - name: Removing old files
