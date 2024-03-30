@@ -1,30 +1,40 @@
 ---
 "🆙 changelog":
-  - .github/workflows/changelog.yaml
-  - .github/workflows/release.yaml
-  - changelog.md
+  - changed-files:
+    - any-glob-to-any-file:
+      - .github/workflows/changelog.yaml
+      - .github/workflows/release.yaml
+      - changelog.md
 
 "🤖 ci":
-  - .github/**/*
-  - .github/workflows/release.yaml
-  - pyproject.toml
-  - .gitignore
+  - changed-files:
+    - any-glob-to-any-file:
+      - .github/**/*
+      - .github/workflows/release.yaml
+      - pyproject.toml
+      - .gitignore
 
 "📦 dependencies":
-  - .github/workflows/upgrade-dependency.yaml
-  - .github/dependabot.yaml
-  - requirements/*
-  - poetry.lock
-  - pyproject.toml
+  - changed-files:
+    - any-glob-to-any-file:
+      - .github/workflows/upgrade-dependency.yaml
+      - .github/dependabot.yaml
+      - requirements/*
+      - poetry.lock
+      - pyproject.toml
 
 "📚 documentation":
-  - .github/**/*label*
-  - .github/workflows/docs.yaml
-  - .github/code-of-conduct.md
-  - docs/**/*
-  - .mailmap
-  - LICENSE
-  - README.md
+  - changed-files:
+    - any-glob-to-any-file:
+      - .github/**/*label*
+      - .github/workflows/docs.yaml
+      - .github/code-of-conduct.md
+      - docs/**/*
+      - .mailmap
+      - LICENSE
+      - README.md
 
 "💖 sponsor":
-  - .github/funding.yml
+  - changed-files:
+    - any-glob-to-any-file:
+      - .github/funding.yml
