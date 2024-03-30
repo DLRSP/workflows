@@ -66,7 +66,7 @@ jobs:
           if [[ "${{ matrix.python-version }}" == "3.11" ]] ; then
             if [[ -f "requirements/docs.in" ]] ; then
               pip-compile --upgrade --generate-hashes --allow-unsafe \
-                      -o requirements/docs.txt \
+                      -o requirements/py-docs.txt \
                       requirements/docs.in
             fi
           fi
@@ -102,9 +102,9 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: my-artifact
+          path: requirements
           pattern: py*
-      - run: ls -R my-artifact
+      - run: ls -R *
 
       - name: Removing old files
         run: |
