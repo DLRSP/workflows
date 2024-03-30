@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.8.12 (2024-03-30)](https://github.com/DLRSP/workflows/compare/v1.6.11...v1.8.12)
+## [1.9.0 (unreleased)](
 
 ## [1.8.1 (2023-09-24)](https://github.com/DLRSP/workflows/compare/v1.6.11...v1.8.1)
 
