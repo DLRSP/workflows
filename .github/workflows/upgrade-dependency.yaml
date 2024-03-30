@@ -102,8 +102,9 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: py*.txt
-          path: tmp_artifacts/
+          path: my-artifact
+          pattern: py*
+      - run: ls -R my-artifact
 
       - name: Removing old files
         run: |
