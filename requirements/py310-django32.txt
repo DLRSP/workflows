@@ -36,9 +36,9 @@ build==1.0.3 \
     --hash=sha256:538aab1b64f9828977f84bc63ae570b060a8ed1be419e7870b8b4fc5e6ea553b \
     --hash=sha256:589bf99a67df7c9cf07ec0ac0e5e2ea5d4b37ac63301c4986d1acb126aa83f8f
     # via poetry
-bump-my-version==0.12.0 \
-    --hash=sha256:087e0ac95f56434d52bd8d8b5641280cf62f0024d754be463c86d250b2e01b98 \
-    --hash=sha256:6f5a4bd0d07e6338b0ac1b5e48188934cc6d529da91e147be786fd616236813d
+bump-my-version==0.20.0 \
+    --hash=sha256:886dd80f932dc9a231fc60958d208a8f9767e5a983af30a041537f5b14b72c8f \
+    --hash=sha256:9528943fdd577518608de54f32b28d81f6895d09de6eb8f8d9acf9d10c4d5de7
     # via -r requirements/requirements.in
 cachecontrol[filecache]==0.14.0 \
     --hash=sha256:7db1195b41c81f8274a7bbd97c956f44e8348265a1bc7641c37dfebc39f0c938 \
@@ -494,6 +494,10 @@ poetry-plugin-export==1.6.0 \
     --hash=sha256:091939434984267a91abf2f916a26b00cff4eee8da63ec2a24ba4b17cf969a59 \
     --hash=sha256:2dce6204c9318f1f6509a11a03921fb3f461b201840b59f1c237b6ab454dabcf
     # via poetry
+prompt-toolkit==3.0.36 \
+    --hash=sha256:3e163f254bef5a03b146397d7c1963bd3e2812f0964bb9a24e6ec761fd28db63 \
+    --hash=sha256:aa64ad242a462c5ff0363a7b9cfe696c20d55d9fc60c11fd8e632d064804d305
+    # via questionary
 ptyprocess==0.7.0 \
     --hash=sha256:4b41f3967fce3af57cc7e94b888626c18bf37a083e3651ca8feeb66d492fef35 \
     --hash=sha256:5c5d0a3b48ceee0b48485e0c26037c0acd7d29765ca3fbb5cb3831d347423220
@@ -633,6 +637,10 @@ python-dotenv==1.0.0 \
     --hash=sha256:a8df96034aae6d2d50a4ebe8216326c61c3eb64836776504fcca410e5937a3ba \
     --hash=sha256:f5971a9226b701070a4bf2c38c89e5a3f0d64de8debda981d1db98583009122a
     # via pydantic-settings
+questionary==2.0.1 \
+    --hash=sha256:8ab9a01d0b91b68444dff7f6652c1e754105533f083cbe27597c8110ecc230a2 \
+    --hash=sha256:bcce898bf3dbb446ff62830c86c5c6fb9a22a54146f0f5597d3da43b10d8fc8b
+    # via bump-my-version
 rapidfuzz==3.5.2 \
     --hash=sha256:00be97f9219355945c46f37ac9fa447046e6f7930f7c901e5d881120d1695458 \
     --hash=sha256:04e1e02b182283c43c866e215317735e91d22f5d34e65400121c04d5ed7ed859 \
@@ -782,6 +790,10 @@ virtualenv==20.25.0 \
     --hash=sha256:4238949c5ffe6876362d9c0180fc6c3a824a7b12b80604eeb8085f2ed7460de3 \
     --hash=sha256:bf51c0d9c7dd63ea8e44086fa1e4fb1093a31e963b86959257378aef020e1f1b
     # via poetry
+wcwidth==0.2.13 \
+    --hash=sha256:3da69048e4540d84af32131829ff948f1e022c1c6bdb8d6102117aac784f6859 \
+    --hash=sha256:72ea0c06399eb286d978fdedb6923a9eb47e1c486ce63e9b4e64fc18303972b5
+    # via prompt-toolkit
 zipp==3.17.0 \
     --hash=sha256:0e923e726174922dce09c53c59ad483ff7bbb8e572e00c7f7c46b88556409f31 \
     --hash=sha256:84e64a1c28cf7e91ed2078bb8cc8c259cb19b76942096c8d7b84947690cabaf0
