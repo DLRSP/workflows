@@ -104,7 +104,9 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
+          path: requirements
           pattern: py*
+          merge-multiple: true
 #      - run: ls -R *
 #
 #      - name: Removing old files
