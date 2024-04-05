@@ -182,7 +182,7 @@ jobs:
         run: gh pr review --approve "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+          GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
 
       # Sets the PR to allow auto-merging for patch, minor and major updates if all checks pass
       - name: Enable auto-merge for Bot PRs
@@ -190,7 +190,7 @@ jobs:
         run: gh pr merge --auto --rebase "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
-          GITHUB_TOKEN: ${{ secrets.BOT_PAT }}
+          GH_TOKEN: ${{ secrets.BOT_PAT }}
 
   release:
     name: GitHub Release
