@@ -73,7 +73,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           overwrite: true
-          name: docs.txt
+          name: py-docs.txt
           path: py-docs.txt
 
   pull-request:
