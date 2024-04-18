@@ -788,9 +788,9 @@ urllib3==2.2.1 \
     # via
     #   dulwich
     #   requests
-virtualenv==20.25.2 \
-    --hash=sha256:6e1281a57849c8a54da89ba82e5eb7c8937b9d057ff01aaf5bc9afaa3552e90f \
-    --hash=sha256:fa7edb8428620518010928242ec17aa7132ae435319c29c1651d1cf4c4173aad
+virtualenv==20.25.3 \
+    --hash=sha256:7bb554bbdfeaacc3349fa614ea5bff6ac300fc7c335e9facf3a3bcfc703f45be \
+    --hash=sha256:8aac4332f2ea6ef519c648d0bc48a5b1d324994753519919bddbb1aff25a104e
     # via poetry
 wcwidth==0.2.13 \
     --hash=sha256:3da69048e4540d84af32131829ff948f1e022c1c6bdb8d6102117aac784f6859 \
