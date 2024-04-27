@@ -204,6 +204,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
+        if: ${{ always() && hashFiles('setup.py') }}
 
       - name: Install OS dependencies Ubuntu
         if: ${{ always() && matrix.os == 'ubuntu-latest' && hashFiles('setup.py') }}
