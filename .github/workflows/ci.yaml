@@ -205,8 +205,8 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Install OS dependencies Ubuntu
-        if: ${{ always() && hashFiles('setup.py')
+      - name: Install OS dependencies
+        if: ${{ always() && hashFiles('setup.py') }}
         run: |
           sudo apt-get install -y gettext
 
