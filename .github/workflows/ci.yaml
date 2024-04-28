@@ -206,14 +206,9 @@ jobs:
           python-version: "3.x"
 
       - name: Install OS dependencies Ubuntu
-        if: ${{ always() && hashFiles('setup.py') && matrix.os == 'ubuntu-latest' }}
+        if: ${{ always() && hashFiles('setup.py')
         run: |
           sudo apt-get install -y gettext
-
-      - name: Install OS dependencies MacOS
-        if: ${{ always() && hashFiles('setup.py') && matrix.os == 'macos-*' }}
-        run: |
-          sudo brew install gettext
 
       - name: Install Python dependencies
         if: ${{ always() && hashFiles('setup.py') }}
