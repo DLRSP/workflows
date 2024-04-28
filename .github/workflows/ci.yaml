@@ -193,6 +193,39 @@ jobs:
           GH_TOKEN: ${{ secrets.BOT_PAT }}
 
   build:
+    name: Build wheels
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+    needs: [test, analyze]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        if: ${{ always() && hashFiles('setup.py') }}
+        with:
+          python-version: "3.x"
+
+      - name: Install OS dependencies Ubuntu
+        if: ${{ always() && hashFiles('setup.py') && matrix.os == 'ubuntu-latest' }}
+        run: |
+          sudo apt-get install -y gettext
+
+      - name: Install OS dependencies MacOS
+        if: ${{ always() && hashFiles('setup.py') && matrix.os == 'macos-*' }}
+        run: |
+          sudo brew install gettext
+
+      - name: Install Python dependencies
+        if: ${{ always() && hashFiles('setup.py') }}
+        run: |
+          python -m pip install --upgrade pip setuptools wheel django
+
+      - name: Build a binary wheel and source tarball with latest python version
+        if: ${{ always() && hashFiles('setup.py') }}
+        run: |
+          python setup.py sdist bdist_wheel
+
+  build-cross:
     name: Build wheels on ${{ matrix.os }}
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
     needs: [test, analyze]
@@ -205,24 +238,43 @@ jobs:
 
       - uses: actions/setup-python@v5
         if: ${{ always() && hashFiles('setup.py') }}
+        with:
+          python-version: "3.x"
+
+#      - name: Install OS dependencies
+#        if: ${{ always() && hashFiles('setup.py') }}
+#        run: |
+#          sudo apt-get install -y gettext
 
       - name: Install OS dependencies Ubuntu
-        if: ${{ always() && matrix.os == 'ubuntu-latest' && hashFiles('setup.py') }}
+        if: ${{ always() && hashFiles('setup.py') && matrix.os == 'ubuntu-latest' }}
         run: |
           sudo apt-get install -y gettext
 
       - name: Install OS dependencies MacOS
-        if: ${{ always() && matrix.os == 'ubuntu-*' && hashFiles('setup.py') }}
+        if: ${{ always() && hashFiles('setup.py') && matrix.os == 'macos-*' }}
         run: |
           sudo brew install gettext
 
+      - name: Install Python dependencies
+        if: ${{ always() && hashFiles('setup.py') }}
+        run: |
+          python -m pip install --upgrade pip setuptools wheel django
+
+      - name: Build a binary wheel and source tarball with latest python version
+        if: ${{ always() && hashFiles('setup.py') }}
+        run: |
+          python setup.py sdist bdist_wheel
+
       - name: Install cibuildwheel
         if: ${{ always() && hashFiles('setup.py') }}
-        run: python -m pip install cibuildwheel==2.17.0
+        run: |
+          python -m pip install cibuildwheel==2.17.0
 
       - name: Build wheels
         if: ${{ always() && hashFiles('setup.py') }}
-        run: python -m cibuildwheel --output-dir wheelhouse
+        run: |
+          python -m cibuildwheel --output-dir wheelhouse
 
       - uses: actions/upload-artifact@v4
         if: ${{ always() && hashFiles('setup.py') }}
@@ -260,26 +312,6 @@ jobs:
     needs: [test, analyze, build, release]
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        if: ${{ always() && hashFiles('setup.py') }}
-        with:
-          python-version: "3.x"
-
-      - name: Install OS dependencies
-        if: ${{ always() && hashFiles('setup.py') }}
-        run: |
-          sudo apt-get install -y gettext
-
-      - name: Install Python dependencies
-        if: ${{ always() && hashFiles('setup.py') }}
-        run: |
-          python -m pip install --upgrade pip setuptools wheel django
-
-      - name: Build a binary wheel and source tarball with latest python version
-        if: ${{ always() && hashFiles('setup.py') }}
-        run: |
-          python setup.py sdist bdist_wheel
 
       - name: Publish package
         if: ${{ always() && hashFiles('setup.py') }}
