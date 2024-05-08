@@ -740,9 +740,9 @@ rich==13.7.1 \
     # via
     #   bump-my-version
     #   rich-click
-rich-click==1.8.0 \
-    --hash=sha256:846f504eb83a948d864888b2d73c71e52c310490c2babceac57e388aead086e2 \
-    --hash=sha256:f8cad0d67d286d6cd6fc9f69f2d6f25c6c4c2d99fb9d6cb3b8987b593dbe6fa8
+rich-click==1.8.1 \
+    --hash=sha256:0cf0bf84404e78379bd2722db88cb07ffd0535440e20a05943d5b02249d90f8a \
+    --hash=sha256:73c2ec88a66d7bf6b8c32783539d1c9c92c7c75847f14186092d27f83b206e8a
     # via bump-my-version
 secretstorage==3.3.3 \
     --hash=sha256:2403533ef369eca6d2ba81718576c5e0f564d5cca1b58f73a8b23e7d4eeebd77 \
