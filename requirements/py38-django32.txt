@@ -40,9 +40,9 @@ build==1.2.1 \
     --hash=sha256:526263f4870c26f26c433545579475377b2b7588b6f1eac76a001e873ae3e19d \
     --hash=sha256:75e10f767a433d9a86e50d83f418e83efc18ede923ee5ff7df93b6cb0306c5d4
     # via poetry
-bump-my-version==0.23.0 \
-    --hash=sha256:984fcc5de3f6f67dd52bb4cfcddebad8e9725c0eb48b38d1fafb7ab19e15e527 \
-    --hash=sha256:c3017220bb70cade2cd865ac438fc8f9039ba65a4212fd37730197f512e10315
+bump-my-version==0.24.0 \
+    --hash=sha256:d2a3ef99474259edbf49fa7748048e4afc01f181254deafeb4b457f04f74e08d \
+    --hash=sha256:e0369b286ad1312b3b879bd329c47a14ad66a94e1da2e4d19228ed49d0a762c2
     # via -r requirements/requirements.in
 cachecontrol[filecache]==0.14.0 \
     --hash=sha256:7db1195b41c81f8274a7bbd97c956f44e8348265a1bc7641c37dfebc39f0c938 \
@@ -338,9 +338,9 @@ idna==3.7 \
     --hash=sha256:028ff3aadf0609c1fd278d8ea3089299412a7a8b9bd005dd08b9f8285bcb5cfc \
     --hash=sha256:82fee1fc78add43492d3a1898bfa6d8a904cc97d8427f683ed8e798d07761aa0
     # via requests
-importlib-metadata==7.2.1 \
-    --hash=sha256:509ecb2ab77071db5137c655e24ceb3eee66e7bbc6574165d0d114d9fc4bbe68 \
-    --hash=sha256:ffef94b0b66046dd8ea2d619b701fe978d9264d38f3998bc4c27ec3b146a87c8
+importlib-metadata==8.0.0 \
+    --hash=sha256:15584cf2b1bf449d98ff8a6ff1abef57bf20f3ac6454f431736cd3e660921b2f \
+    --hash=sha256:188bd24e4c346d3f0a933f275c2fec67050326a856b9a359881d7c2a697e8812
     # via
     #   build
     #   keyring
