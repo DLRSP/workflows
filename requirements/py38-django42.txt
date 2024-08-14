@@ -40,9 +40,9 @@ build==1.2.1 \
     --hash=sha256:526263f4870c26f26c433545579475377b2b7588b6f1eac76a001e873ae3e19d \
     --hash=sha256:75e10f767a433d9a86e50d83f418e83efc18ede923ee5ff7df93b6cb0306c5d4
     # via poetry
-bump-my-version==0.25.2 \
-    --hash=sha256:19d86623611ad6c9b3e662e1dae27736a43cdc99add0cc00d06f2f37f655c482 \
-    --hash=sha256:7dbfd3ef1b139a6c67892621628c33284607d8ea17a984b6d3d9ed84a18840f0
+bump-my-version==0.25.3 \
+    --hash=sha256:43638a60adee76d6d7112b7ab7403f0115a4db96d8e6276d935fcbed853673aa \
+    --hash=sha256:9a3752cccf5a4235d2e23705e09ba322f38b20ec162089b6af523049005c5245
     # via -r requirements/requirements.in
 cachecontrol[filecache]==0.14.0 \
     --hash=sha256:7db1195b41c81f8274a7bbd97c956f44e8348265a1bc7641c37dfebc39f0c938 \
@@ -802,9 +802,9 @@ tomli==2.0.1 \
     #   build
     #   mypy
     #   poetry
-tomlkit==0.13.0 \
-    --hash=sha256:08ad192699734149f5b97b45f1f18dad7eb1b6d16bc72ad0c2335772650d7b72 \
-    --hash=sha256:7075d3042d03b80f603482d69bf0c8f345c2b30e41699fd8883227f89972b264
+tomlkit==0.13.1 \
+    --hash=sha256:1be06879860054a26faba7acf2af62b45c94aa43b00a5f87fc445c5f930ad754 \
+    --hash=sha256:fb12e89373b28f3cd6679035324770123d6df04488431e1c7bcecf17820ee2e4
     # via
     #   bump-my-version
     #   poetry
