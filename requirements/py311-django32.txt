@@ -40,9 +40,9 @@ build==1.2.1 \
     --hash=sha256:526263f4870c26f26c433545579475377b2b7588b6f1eac76a001e873ae3e19d \
     --hash=sha256:75e10f767a433d9a86e50d83f418e83efc18ede923ee5ff7df93b6cb0306c5d4
     # via poetry
-bump-my-version==0.25.3 \
-    --hash=sha256:43638a60adee76d6d7112b7ab7403f0115a4db96d8e6276d935fcbed853673aa \
-    --hash=sha256:9a3752cccf5a4235d2e23705e09ba322f38b20ec162089b6af523049005c5245
+bump-my-version==0.25.4 \
+    --hash=sha256:06a96dd6bb36b39b1f8cf37368c52794f89ba392780ac3c697fcf751a134f9a5 \
+    --hash=sha256:cedcb408101cce6413d9b390c7af6c5424dbfde95549d3eef35b19f81940c5bb
     # via -r requirements/requirements.in
 cachecontrol[filecache]==0.14.0 \
     --hash=sha256:7db1195b41c81f8274a7bbd97c956f44e8348265a1bc7641c37dfebc39f0c938 \
@@ -787,9 +787,9 @@ shellingham==1.5.4 \
     --hash=sha256:7ecfff8f2fd72616f7481040475a65b2bf8af90a56c89140852d1120324e8686 \
     --hash=sha256:8dbca0739d487e5bd35ab3ca4b36e11c4078f3a234bfce294b0a0291363404de
     # via poetry
-tomlkit==0.13.1 \
-    --hash=sha256:1be06879860054a26faba7acf2af62b45c94aa43b00a5f87fc445c5f930ad754 \
-    --hash=sha256:fb12e89373b28f3cd6679035324770123d6df04488431e1c7bcecf17820ee2e4
+tomlkit==0.13.2 \
+    --hash=sha256:7a974427f6e119197f670fbbbeae7bef749a6c14e793db934baefc1b5f03efde \
+    --hash=sha256:fff5fe59a87295b278abd31bec92c15d9bc4a06885ab12bcea52c71119392e79
     # via
     #   bump-my-version
     #   poetry
