@@ -355,9 +355,9 @@ importlib-metadata==8.2.0 \
     #   build
     #   keyring
     #   poetry
-importlib-resources==6.4.2 \
-    --hash=sha256:6cbfbefc449cc6e2095dd184691b7a12a04f40bc75dd4c55d31c34f174cdf57a \
-    --hash=sha256:8bba8c54a8a3afaa1419910845fa26ebd706dc716dd208d9b158b4b6966f5c5c
+importlib-resources==6.4.3 \
+    --hash=sha256:2d6dfe3b9e055f72495c2085890837fc8c758984e209115c8792bddcb762cd93 \
+    --hash=sha256:4a202b9b9d38563b46da59221d77bb73862ab5d79d461307bcb826d725448b98
     # via keyring
 installer==0.7.0 \
     --hash=sha256:05d1933f0a5ba7d8d6296bb6d5018e7c94fa473ceb10cf198a92ccea19c27b53 \
