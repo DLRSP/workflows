@@ -36,13 +36,13 @@ bracex==2.5.post1 \
     --hash=sha256:12c50952415bfa773d2d9ccb8e79651b8cdb1f31a42f6091b804f6ba2b4a66b6 \
     --hash=sha256:13e5732fec27828d6af308628285ad358047cec36801598368cb28bc631dbaf6
     # via wcmatch
-build==1.2.2 \
-    --hash=sha256:119b2fb462adef986483438377a13b2f42064a2a3a4161f24a0cca698a07ac8c \
-    --hash=sha256:277ccc71619d98afdd841a0e96ac9fe1593b823af481d3b0cea748e8894e0613
+build==1.2.2.post1 \
+    --hash=sha256:1d61c0887fa860c01971625baae8bdd338e517b836a2f70dd1f7aa3a6b2fc5b5 \
+    --hash=sha256:b36993e92ca9375a219c99e606a122ff365a760a2d4bba0caa09bd5278b608b7
     # via poetry
-bump-my-version==0.26.1 \
-    --hash=sha256:af1cada726cf6f9a723d18941c68c325d5196453a180b3a42f8e0b38567d734d \
-    --hash=sha256:be09c48111eeba56f8c870b69718013f52b5b6c6e65bc3bda5bc928181901c48
+bump-my-version==0.27.0 \
+    --hash=sha256:483c517af91559644d45036648e5d99f4f8c85f8d01394097d3d3e42c9e6acad \
+    --hash=sha256:911bfaf7d847d4348844c8fd16f7a11322233fb8dc90123f638069a369003642
     # via -r requirements/requirements.in
 cachecontrol[filecache]==0.14.0 \
     --hash=sha256:7db1195b41c81f8274a7bbd97c956f44e8348265a1bc7641c37dfebc39f0c938 \
