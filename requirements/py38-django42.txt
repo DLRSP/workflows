@@ -831,9 +831,9 @@ tomlkit==0.13.2 \
     # via
     #   bump-my-version
     #   poetry
-trove-classifiers==2024.10.12 \
-    --hash=sha256:52528e3ed81d05ad81773251938ec84cc553e2bba688683f2e44b1c5f565b363 \
-    --hash=sha256:e3f595bb8c64a0e9192aeefd3ece2a78606cc1fdb71c0a7d27ce2d1da357b30b
+trove-classifiers==2024.10.13 \
+    --hash=sha256:4154432be880041d8cb1e01f7e0d9989a4ca24a71355bc036777919ec0a633f2 \
+    --hash=sha256:b820fc6f9544543afa15e5d9cfc426cde3b20fc2246dff6f019b835731508cef
     # via poetry
 typing-extensions==4.12.2 \
     --hash=sha256:04e5ca0351e0f3f85c6853954072df659d0d13fac324d0072316b67d7794700d \
