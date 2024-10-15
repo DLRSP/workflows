@@ -8,7 +8,7 @@ jobs:
   rebase-on-push:
     runs-on: ubuntu-latest
     steps:
-      - uses: peter-evans/rebase@v3.0.0
+      - uses: peter-evans/rebase@v3.1.0
         with:
           base: main
           token: ${{ secrets.BOT_PAT }}
