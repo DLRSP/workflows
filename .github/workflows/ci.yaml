@@ -75,7 +75,7 @@ jobs:
 #          codecov
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5.0.6
+        uses: codecov/codecov-action@v5.0.7
         if: ${{ always() && hashFiles('tox.ini') }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
