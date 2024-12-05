@@ -46,7 +46,7 @@ jobs:
           echo "PY_ENV=${RAW_PY_ENV//./}" >> "$GITHUB_ENV"
 
 #      - name: Cache Python dependencies ${{ matrix.python-version }} (dev)
-#        uses: actions/cache@v4.1.2
+#        uses: actions/cache@v4.2.0
 #        if: ${{ always() && hashFiles('setup.py') }}
 #        with:
 #          path: ~/.cache/pip
@@ -105,7 +105,7 @@ jobs:
       run: |
         echo "dir=$(pip cache dir)" >> "$GITHUB_OUTPUT"
 
-    - uses: actions/cache@v4.1.2
+    - uses: actions/cache@v4.2.0
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('requirements/*.txt') }}
