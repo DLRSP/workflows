@@ -297,6 +297,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
 
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
       - name: Update Release
         id: update_release
         uses: softprops/action-gh-release@v2
@@ -304,7 +310,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         with:
-          files: ./wheelhouse/*.whl
+          files: |
+            ./dist/*.whl
+            ./wheelhouse/*.whl
 
   deploy:
     name: PyPI Deploy
