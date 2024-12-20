@@ -40,9 +40,9 @@ build==1.2.2.post1 \
     --hash=sha256:1d61c0887fa860c01971625baae8bdd338e517b836a2f70dd1f7aa3a6b2fc5b5 \
     --hash=sha256:b36993e92ca9375a219c99e606a122ff365a760a2d4bba0caa09bd5278b608b7
     # via poetry
-bump-my-version==0.28.3 \
-    --hash=sha256:37086aaae3e1a0ffcfa82111cf271850d5ffbe1997a17b1630f2437d8a9a5160 \
-    --hash=sha256:d853bf0e92bf83beed88e129b9cb7e20eeacc87617bf4a7c2d78f6154cf2ba16
+bump-my-version==0.29.0 \
+    --hash=sha256:6566ab25bd3eeeec109f4ac7e4464227a3ac1fd57f847d259a24800423cd9037 \
+    --hash=sha256:e4149ed63b4772f5868b3fcabb8fa5e1191b8abae6d35effd0be980d4b0f55e3
     # via -r requirements/requirements.in
 cachecontrol[filecache]==0.14.1 \
     --hash=sha256:06ef916a1e4eb7dba9948cdfc9c76e749db2e02104a9a1277e8b642591a0f717 \
