@@ -214,14 +214,15 @@ jobs:
       - name: Install Python dependencies
         if: ${{ always() && hashFiles('setup.py') }}
         run: |
-          python -m pip install --upgrade pip setuptools wheel django
+          python -m pip install --upgrade pip build django
 
       - name: Build a binary wheel and source tarball with latest python version
         if: ${{ always() && hashFiles('setup.py') }}
         run: |
-          python setup.py sdist bdist_wheel
+          python -m build --sdist --wheel
 
       - name: Store the distribution packages
+        if: ${{ always() && hashFiles('setup.py') }}
         uses: actions/upload-artifact@v4
         with:
           name: python-package-distributions
