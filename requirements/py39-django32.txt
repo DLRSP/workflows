@@ -634,9 +634,9 @@ pydantic-settings==2.7.1 \
     --hash=sha256:10c9caad35e64bfb3c2fbf70a078c0e25cc92499782e5200747f942a065dec93 \
     --hash=sha256:590be9e6e24d06db33a4262829edef682500ef008565a969c73d39d5f8bfb3fd
     # via bump-my-version
-pygments==2.19.0 \
-    --hash=sha256:4755e6e64d22161d5b61432c0600c923c5927214e7c956e31c23923c89251a9b \
-    --hash=sha256:afc4146269910d4bdfabcd27c24923137a74d562a23a320a41a55ad303e19783
+pygments==2.19.1 \
+    --hash=sha256:61c16d2a8576dc0649d9f39e089b5f02bcd27fba10d8fb4dcc28173f7a45151f \
+    --hash=sha256:9ea1544ad55cecf4b8242fab6dd35a93bbce657034b0611ee383099054ab6d8c
     # via rich
 pyproject-hooks==1.2.0 \
     --hash=sha256:1e859bd5c40fae9448642dd871adf459e5e2084186e8d2c2a79a824c970da1f8 \
@@ -815,9 +815,9 @@ tomlkit==0.13.2 \
     # via
     #   bump-my-version
     #   poetry
-trove-classifiers==2024.10.21.16 \
-    --hash=sha256:0fb11f1e995a757807a8ef1c03829fbd4998d817319abcef1f33165750f103be \
-    --hash=sha256:17cbd055d67d5e9d9de63293a8732943fabc21574e4c7b74edf112b4928cf5f3
+trove-classifiers==2025.1.6.15 \
+    --hash=sha256:49ab0326e000c54be6adc945d8fd618265c27de1296cf17caf9106fef96d2da4 \
+    --hash=sha256:cd8e14d53158c72b68f7adcd119e3b4c7271d282999d3a8ec7486733a6202e4d
     # via poetry
 typing-extensions==4.12.2 \
     --hash=sha256:04e5ca0351e0f3f85c6853954072df659d0d13fac324d0072316b67d7794700d \
