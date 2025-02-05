@@ -185,7 +185,7 @@ jobs:
     # This was also discussed at: https://github.com/lycheeverse/lychee-action/issues/74#issuecomment-1587089689
     steps:
       - uses: actions/checkout@v4
-      - uses: lycheeverse/lychee-action@v2.2.0
+      - uses: lycheeverse/lychee-action@v2.3.0
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         with:
