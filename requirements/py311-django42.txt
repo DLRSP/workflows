@@ -523,9 +523,9 @@ pbs-installer[download,install]==2025.2.12 \
     --hash=sha256:3d9034047945b2d5f169cd9bb324f1f28c37d0ec120d6110ddb10aa07016fb79 \
     --hash=sha256:c6815165babf312c90d27ccd16afe598de641d616860f88e1855f183b0253b39
     # via poetry
-pkginfo==1.12.1.1 \
-    --hash=sha256:4a09d6ab00af353d24021a42c1b00ac9d0beef0ccc012a5c122430acbeb01c0e \
-    --hash=sha256:57f0b56061c84d5875556fb9437ef80b69863dea56dbad30b0b9a9887652b47c
+pkginfo==1.12.1.2 \
+    --hash=sha256:5cd957824ac36f140260964eba3c6be6442a8359b8c48f4adf90210f33a04b7b \
+    --hash=sha256:c783ac885519cab2c34927ccfa6bf64b5a704d7c69afaea583dd9b7afe969343
     # via poetry
 platformdirs==4.3.6 \
     --hash=sha256:357fb2acbc885b0419afd3ce3ed34564c13c9b95c89360cd9563f73aa5e2b907 \
@@ -787,9 +787,9 @@ rich==13.9.4 \
     # via
     #   bump-my-version
     #   rich-click
-rich-click==1.8.5 \
-    --hash=sha256:0fab7bb5b66c15da17c210b4104277cd45f3653a7322e0098820a169880baee0 \
-    --hash=sha256:a3eebe81da1c9da3c32f3810017c79bd687ff1b3fa35bfc9d8a3338797f1d1a1
+rich-click==1.8.6 \
+    --hash=sha256:55fb571bad7d3d69ac43ca45f05b44616fd019616161b1815ff053567b9a8e22 \
+    --hash=sha256:8a2448fd80e3d4e16fcb3815bfbc19be9bae75c9bb6aedf637901e45f3555752
     # via bump-my-version
 secretstorage==3.3.3 \
     --hash=sha256:2403533ef369eca6d2ba81718576c5e0f564d5cca1b58f73a8b23e7d4eeebd77 \
