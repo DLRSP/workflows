@@ -377,9 +377,9 @@ jaraco-functools==4.1.0 \
     --hash=sha256:70f7e0e2ae076498e212562325e805204fc092d7b4c17e0e86c959e249701a9d \
     --hash=sha256:ad159f13428bc4acbf5541ad6dec511f91573b90fba04df61dafa2a1231cf649
     # via keyring
-jeepney==0.8.0 \
-    --hash=sha256:5efe48d255973902f6badc3ce55e2aa6c5c3b3bc642059ef3a91247bcfcc5806 \
-    --hash=sha256:c0a454ad016ca575060802ee4d590dd912e35c122fa04e70306de3d076cce755
+jeepney==0.9.0 \
+    --hash=sha256:97e5714520c16fc0a45695e5365a2e11b81ea79bba796e26f9f1d178cb182683 \
+    --hash=sha256:cf0e9e845622b81e4a28df94c40345400256ec608d0e55bb8a3feaa9163f5732
     # via
     #   keyring
     #   secretstorage
@@ -658,9 +658,9 @@ pydantic-core==2.27.2 \
     --hash=sha256:fa8e459d4954f608fa26116118bb67f56b93b209c39b008277ace29937453dc9 \
     --hash=sha256:fd1aea04935a508f62e0d0ef1f5ae968774a32afc306fb8545e06f5ff5cdf3ad
     # via pydantic
-pydantic-settings==2.8.0 \
-    --hash=sha256:88e2ca28f6e68ea102c99c3c401d6c9078e68a5df600e97b43891c34e089500a \
-    --hash=sha256:c782c7dc3fb40e97b238e713c25d26f64314aece2e91abcff592fcac15f71820
+pydantic-settings==2.8.1 \
+    --hash=sha256:81942d5ac3d905f7f3ee1a70df5dfb62d5569c12f51a5a647defc1c3d9ee2e9c \
+    --hash=sha256:d5c663dfbe9db9d5e1c646b2e161da12f0d734d422ee56f567d0ea2cee4e8585
     # via bump-my-version
 pygments==2.19.1 \
     --hash=sha256:61c16d2a8576dc0649d9f39e089b5f02bcd27fba10d8fb4dcc28173f7a45151f \
