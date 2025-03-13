@@ -532,9 +532,9 @@ pathspec==0.12.1 \
     --hash=sha256:a0d503e138a4c123b27490a4f7beda6a01c6f288df0e4a8b79c7eb0dc7b4cc08 \
     --hash=sha256:a482d51503a1ab33b1c67a6c3813a26953dbdc71c31dacaef9a838c4e29f5712
     # via black
-pbs-installer[download,install]==2025.2.12 \
-    --hash=sha256:3d9034047945b2d5f169cd9bb324f1f28c37d0ec120d6110ddb10aa07016fb79 \
-    --hash=sha256:c6815165babf312c90d27ccd16afe598de641d616860f88e1855f183b0253b39
+pbs-installer[download,install]==2025.3.11 \
+    --hash=sha256:150986b56648e2d04e99fafe24c165fa94cfa8385b93d6bf9b82925c3d57d064 \
+    --hash=sha256:c5d17afdb41abbec2afda815d41a93276887f19e6bdc16e98b2dfed11d845968
     # via poetry
 pkginfo==1.12.1.2 \
     --hash=sha256:5cd957824ac36f140260964eba3c6be6442a8359b8c48f4adf90210f33a04b7b \
