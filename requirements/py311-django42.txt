@@ -335,9 +335,9 @@ fastjsonschema==2.21.1 \
     --hash=sha256:794d4f0a58f848961ba16af7b9c85a3e88cd360df008c59aac6fc5ae9323b5d4 \
     --hash=sha256:c9e5b7e908310918cf494a434eeb31384dd84a98b57a30bcb1f535015b554667
     # via poetry
-filelock==3.17.0 \
-    --hash=sha256:533dc2f7ba78dc2f0f531fc6c4940addf7b70a481e269a5a3b93be94ffbe8338 \
-    --hash=sha256:ee4e77401ef576ebb38cd7f13b9b28893194acc20a8e68e18730ba9c0e54660e
+filelock==3.18.0 \
+    --hash=sha256:adbc88eabb99d2fec8c9c1b229b171f18afa655400173ddc653d5d01501fb9f2 \
+    --hash=sha256:c401f4f8377c4464e6db25fff06205fd89bdd83b65eb0488ed1b160f780e21de
     # via
     #   cachecontrol
     #   virtualenv
@@ -824,9 +824,9 @@ tomlkit==0.13.2 \
     # via
     #   bump-my-version
     #   poetry
-trove-classifiers==2025.3.3.18 \
-    --hash=sha256:215630da61cf8757c373f81b602fc1283ec5a691cf12c5f9f96f11d6ad5fc7f2 \
-    --hash=sha256:3ffcfa90a428adfde1a5d90e3aa1b87fe474c5dbdbf5ccbca74ed69ba83c5ca7
+trove-classifiers==2025.3.13.13 \
+    --hash=sha256:2a5e24ddafb20da2225a825fe167c4fd4ecbf312cef4310d67f19dc40da7dc8d \
+    --hash=sha256:c1679d2876eef24584ad1619e3870177c216bab28bd5bc5b59ee78b491eb8a6b
     # via poetry
 typing-extensions==4.12.2 \
     --hash=sha256:04e5ca0351e0f3f85c6853954072df659d0d13fac324d0072316b67d7794700d \
