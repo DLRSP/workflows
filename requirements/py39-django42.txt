@@ -550,13 +550,13 @@ platformdirs==4.3.7 \
     #   black
     #   poetry
     #   virtualenv
-poetry==2.1.1 \
-    --hash=sha256:1d433880bd5b401327ddee789ccfe9ff197bf3b0cd240f0bc7cc99c84d14b16c \
-    --hash=sha256:d82673865bf13d6cd0dacf28c69a89670456d8df2f9e5da82bfb5f833ba00efc
+poetry==2.1.2 \
+    --hash=sha256:6a0694645ee24ba93cb94254db66e47971344562ddd5578e82bf35e572bc546d \
+    --hash=sha256:df7dfe7e5f9cd50ed3b8d1a013afcc379645f66d7e9aa43728689e34fb016216
     # via -r requirements/requirements.in
-poetry-core==2.1.1 \
-    --hash=sha256:bc3b0382ab4d00d5d780277fd0aad1580eb4403613b37fc60fec407b5bee1fe6 \
-    --hash=sha256:c1a1f6f00e4254742f40988a8caf665549101cf9991122cd5de1198897768b1a
+poetry-core==2.1.2 \
+    --hash=sha256:ecb1e8f7d4f071a21cd0feb8c19bd1aec80de6fb0e82aa9d809a591e544431b4 \
+    --hash=sha256:f9dbbbd0ebf9755476a1d57f04b30e9aecf71ca9dc2fcd4b17aba92c0002aa04
     # via poetry
 prompt-toolkit==3.0.50 \
     --hash=sha256:544748f3860a2623ca5cd6d2795e7a14f3d0e1c3c9728359013f79877fc89bab \
