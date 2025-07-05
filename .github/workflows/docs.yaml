@@ -45,7 +45,9 @@ jobs:
             ${{ runner.os }}-pip-
 
       - name: Install dependencies
-        run: python -m pip install --upgrade --no-deps -r https://raw.githubusercontent.com/DLRSP/requirements/main/py-docs.txt
+        run: >- 
+          python -m pip install --upgrade --no-deps
+          -r https://raw.githubusercontent.com/DLRSP/requirements/main/py-docs.txt
 
       - run: mkdocs build
 
