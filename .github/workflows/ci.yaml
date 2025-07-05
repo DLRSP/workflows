@@ -57,8 +57,9 @@ jobs:
 
       - name: Install Python dependencies ${{ matrix.python-version }} (dev)
         if: ${{ always() && hashFiles('setup.py') }}
-        run: |
-          python -m pip install --upgrade --no-deps -r https://raw.githubusercontent.com/DLRSP/requirements/main/${{ env.PY_ENV }}-dev.txt
+        run: >-
+          python -m pip install --upgrade --no-deps
+          -r https://raw.githubusercontent.com/DLRSP/requirements/main/${{ env.PY_ENV }}-dev.txt
 
       - name: Run tox targets for ${{ matrix.python-version }}
         if: ${{ always() && hashFiles('tox.ini') }}
@@ -121,7 +122,7 @@ jobs:
       run: pip install black flake8
 
     - name: Run linters
-      uses: wearerequired/lint-action@v2
+      uses: wearerequired/lint-action@v3
       with:
           black: true
           flake8: true
