@@ -27,7 +27,9 @@ jobs:
         python-version: [ "3.8", "3.9", "3.10" ]
         experimental: [ false ]
         include:
-          - python-version: [ "3.11", "3.12" ]
+          - python-version: "3.11"
+            experimental: true
+          - python-version: "3.12"
             experimental: true
     steps:
       - uses: actions/checkout@v4
