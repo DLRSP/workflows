@@ -19,11 +19,33 @@ jobs:
   upgrade:
     name: Upgrade & Open Pull Request
     runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
+      fail-fast: true
       max-parallel: 4
       matrix:
         python-version: [ "3.8", "3.9", "3.10", "3.11" ]
         django-version: [ "3.2", "4.2" ]
+        experimental: [ false ]
+        include:
+          - python-version: "3.12"
+            django-version: "3.2"
+            experimental: true
+          - python-version: "3.12"
+            django-version: "4.2"
+            experimental: true
+          - python-version: "3.9"
+            django-version: "5.2"
+            experimental: true
+          - python-version: "3.10"
+            django-version: "5.2"
+            experimental: true
+          - python-version: "3.11"
+            django-version: "5.2"
+            experimental: true
+          - python-version: "3.12"
+            django-version: "5.2"
+            experimental: true
     steps:
       - uses: actions/checkout@v4
 
