@@ -527,9 +527,9 @@ pathspec==0.12.1 \
     # via
     #   black
     #   mypy
-pbs-installer[download,install]==2025.8.27 \
-    --hash=sha256:145ed15f222af5157f5d4512a75041bc3c32784d4939d678231d41b15c0f16be \
-    --hash=sha256:606430ca10940f9600a1a7f20b2a4a0ea62d8e327dcaf8a7b9acf2a2a6a39cb4
+pbs-installer[download,install]==2025.8.28 \
+    --hash=sha256:3accb1a184a048e657323c17d1c48b2969e49501b165e7200a520af7022d9bb0 \
+    --hash=sha256:a42cd2532dbac5dc836db41cf1bc5ed26ef275214e8e30e35aff961883997048
     # via poetry
 pkginfo==1.12.1.2 \
     --hash=sha256:5cd957824ac36f140260964eba3c6be6442a8359b8c48f4adf90210f33a04b7b \
@@ -683,9 +683,9 @@ python-dotenv==1.1.1 \
     --hash=sha256:31f23644fe2602f88ff55e1f5c79ba497e01224ee7737937930c448e4d0e24dc \
     --hash=sha256:a8a6399716257f45be6a007360200409fce5cda2661e3dec71d23dc15f6189ab
     # via pydantic-settings
-questionary==2.1.0 \
-    --hash=sha256:44174d237b68bc828e4878c763a9ad6790ee61990e0ae72927694ead57bab8ec \
-    --hash=sha256:6302cdd645b19667d8f6e6634774e9538bfcd1aad9be287e743d96cacaf95587
+questionary==2.1.1 \
+    --hash=sha256:3d7e980292bb0107abaa79c68dd3eee3c561b83a0f89ae482860b181c8bd412d \
+    --hash=sha256:a51af13f345f1cdea62347589fbb6df3b290306ab8930713bfae4d475a7d4a59
     # via bump-my-version
 rapidfuzz==3.13.0 \
     --hash=sha256:09e908064d3684c541d312bd4c7b05acb99a2c764f6231bd507d4b4b65226c23 \
