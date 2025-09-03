@@ -385,9 +385,9 @@ mdurl==0.1.2 \
     --hash=sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8 \
     --hash=sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba
     # via markdown-it-py
-more-itertools==10.7.0 \
-    --hash=sha256:9fddd5403be01a94b204faadcff459ec3568cf110265d3c54323e1e866ad29d3 \
-    --hash=sha256:d43980384673cb07d2f7d2d918c616b30c659c089ee23953f601d6609c67510e
+more-itertools==10.8.0 \
+    --hash=sha256:52d4362373dcf7c52546bc4af9a86ee7c4579df9a8dc268be0a2f949d376cc9b \
+    --hash=sha256:f638ddf8a1a0d134181275fb5d58b086ead7c6a72429ad725c67503f13ba30bd
     # via
     #   jaraco-classes
     #   jaraco-functools
@@ -512,9 +512,9 @@ pathspec==0.12.1 \
     # via
     #   black
     #   mypy
-pbs-installer[download,install]==2025.8.28 \
-    --hash=sha256:3accb1a184a048e657323c17d1c48b2969e49501b165e7200a520af7022d9bb0 \
-    --hash=sha256:a42cd2532dbac5dc836db41cf1bc5ed26ef275214e8e30e35aff961883997048
+pbs-installer[download,install]==2025.9.2 \
+    --hash=sha256:0da1d59bb5c4d8cfb5aee29ac2a37b37d651a45ab5ede19d1331df9a92464b5d \
+    --hash=sha256:659a5399278c810761c1e7bc54095f38af11a5b593ce8d45c41a3a9d6759d8f1
     # via poetry
 pkginfo==1.12.1.2 \
     --hash=sha256:5cd957824ac36f140260964eba3c6be6442a8359b8c48f4adf90210f33a04b7b \
