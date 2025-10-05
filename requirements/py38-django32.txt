@@ -44,17 +44,17 @@ build==1.2.2.post1 \
     --hash=sha256:1d61c0887fa860c01971625baae8bdd338e517b836a2f70dd1f7aa3a6b2fc5b5 \
     --hash=sha256:b36993e92ca9375a219c99e606a122ff365a760a2d4bba0caa09bd5278b608b7
     # via poetry
-bump-my-version==1.2.3 \
-    --hash=sha256:620eac65828c86e60c6a9becf9eadc376181e81b47c0097a7b63e113b5cb256f \
-    --hash=sha256:7352af6f9454469a020493c2747cd7c88b0c7017dd216e3abb270a13745afa1b
+bump-my-version==1.2.4 \
+    --hash=sha256:998abb4f3774cf96137a77034a5a12a722b109b26a3afa044ec14622a0180fa3 \
+    --hash=sha256:b60ac52c8972c5a7e1e478d0334015a993ba5c27fad1b04bde558d25c667b0f5
     # via -r requirements/requirements.in
 cachecontrol[filecache]==0.14.2 \
     --hash=sha256:7d47d19f866409b98ff6025b6a0fca8e4c791fb31abbd95f622093894ce903a2 \
     --hash=sha256:ebad2091bf12d0d200dfc2464330db638c5deb41d546f6d7aca079e87290f3b0
     # via poetry
-certifi==2025.8.3 \
-    --hash=sha256:e564105f78ded564e3ae7c923924435e1daa7463faeab5bb932bc53ffae63407 \
-    --hash=sha256:f6c12493cfb1b06ba2ff328595af9350c65d6644968e5d3a2ffd78699af217a5
+certifi==2025.10.5 \
+    --hash=sha256:0f212c2744a9bb6de0c56639a6f68afe01ecd92d91f14ae897c4fe7bbeeef0de \
+    --hash=sha256:47c09d31ccf2acf0be3f701ea53595ee7e0b8fa08801c6624be771df09ae7b43
     # via
     #   httpcore
     #   httpx
@@ -849,9 +849,9 @@ rich==14.1.0 \
     # via
     #   bump-my-version
     #   rich-click
-rich-click==1.9.1 \
-    --hash=sha256:4f2620589d7287f86265432e6a909de4f281de909fe68d8c835fbba49265d268 \
-    --hash=sha256:ea6114a9e081b7d68cc07b315070398f806f01bb0e0c49da56f129e672877817
+rich-click==1.9.2 \
+    --hash=sha256:1c4212f05561be0cac6a9c1743e1ebcd4fe1fb1e311f9f672abfada3be649db6 \
+    --hash=sha256:5079dad67ed7df434a9ec1f20b1d62d831e58c78740026f968ce3d3b861f01a0
     # via bump-my-version
 secretstorage==3.3.3 \
     --hash=sha256:2403533ef369eca6d2ba81718576c5e0f564d5cca1b58f73a8b23e7d4eeebd77 \
