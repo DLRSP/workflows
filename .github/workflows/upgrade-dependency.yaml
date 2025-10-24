@@ -80,7 +80,7 @@ jobs:
                       requirements/requirements.in
 
       - name: Upload Python dependencies ${{ matrix.python-version }} for Django ${{ matrix.django-version }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ env.DJANGO_ENV }}.txt
           path: requirements/${{ env.DJANGO_ENV }}.txt
