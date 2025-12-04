@@ -664,9 +664,9 @@ pathspec==0.12.1 \
     # via
     #   black
     #   mypy
-pbs-installer[download,install]==2025.11.20 \
-    --hash=sha256:5588b40a41b03101514c71cadb37ad75a3476dee43ba5fdaeec699e51ec0e94a \
-    --hash=sha256:6469b854835fa316c24c938df4563a72adae3d14b659eb4b23fa4bb347fd45f3
+pbs-installer[download,install]==2025.12.2 \
+    --hash=sha256:906cb5346515a0e92ba1d37f4065d9229d6c0675c329e0a455396e01a796be71 \
+    --hash=sha256:ca26271b5643c6f2d0a378f99e4b410ef43728049f939b339abb042158d90ff8
     # via poetry
 pkginfo==1.12.1.2 \
     --hash=sha256:5cd957824ac36f140260964eba3c6be6442a8359b8c48f4adf90210f33a04b7b \
