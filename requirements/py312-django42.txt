@@ -12,10 +12,6 @@ anyio==4.12.0 \
     --hash=sha256:73c693b567b0c55130c104d0b43a9baf3aa6a31fc6110116509f27bf75e21ec0 \
     --hash=sha256:dad2376a628f98eeca4881fc56cd06affd18f659b17a747d3ff0307ced94b1bb
     # via httpx
-backports-tarfile==1.2.0 \
-    --hash=sha256:77e284d754527b01fb1e6fa8a1afe577858ebe4e9dad8919e34c862cb399bc34 \
-    --hash=sha256:d75e02c268746e1b8144c278978b6e98e85de6ad16f8e4b0844a154557eca991
-    # via jaraco-context
 black==25.12.0 \
     --hash=sha256:05dd459a19e218078a1f98178c13f861fe6a9a5f88fc969ca4d9b49eb1809783 \
     --hash=sha256:09524b0e6af8ba7a3ffabdfc7a9922fb9adef60fed008c7cd2fc01f3048e6e6f \
@@ -412,10 +408,6 @@ idna==3.11 \
     #   anyio
     #   httpx
     #   requests
-importlib-metadata==8.7.0 \
-    --hash=sha256:d13b81ad223b890aa16c5471f2ac3056cf76c5f10f82d6f9292f0b415f389000 \
-    --hash=sha256:e5dd1551894c77868a30651cef00984d50e1002d06942a7101d34870c5f02afd
-    # via keyring
 installer==0.7.0 \
     --hash=sha256:05d1933f0a5ba7d8d6296bb6d5018e7c94fa473ceb10cf198a92ccea19c27b53 \
     --hash=sha256:a26d3e3116289bb08216e0d0f7d925fcef0b0194eedfa0c944bcaaa106c4b631
@@ -974,7 +966,6 @@ typing-extensions==4.15.0 \
     --hash=sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548
     # via
     #   anyio
-    #   dulwich
     #   mypy
     #   pydantic
     #   pydantic-core
@@ -985,9 +976,9 @@ typing-inspection==0.4.2 \
     # via
     #   pydantic
     #   pydantic-settings
-urllib3==2.6.1 \
-    --hash=sha256:5379eb6e1aba4088bae84f8242960017ec8d8e3decf30480b3a1abdaa9671a3f \
-    --hash=sha256:e67d06fe947c36a7ca39f4994b08d73922d40e6cca949907be05efa6fd75110b
+urllib3==2.6.2 \
+    --hash=sha256:016f9c98bb7e98085cb2b4b17b87d2c702975664e4f060c6532e64d1c1a5e797 \
+    --hash=sha256:ec21cddfe7724fc7cb4ba4bea7aa8e2ef36f607a4bab81aa6ce42a13dc3f03dd
     # via
     #   dulwich
     #   requests
@@ -1003,10 +994,6 @@ wcwidth==0.2.14 \
     --hash=sha256:4d478375d31bc5395a3c55c40ccdf3354688364cd61c4f6adacaa9215d0b3605 \
     --hash=sha256:a7bb560c8aee30f9957e5f9895805edd20602f2d7f720186dfd906e82b4982e1
     # via prompt-toolkit
-zipp==3.23.0 \
-    --hash=sha256:071652d6115ed432f5ce1d34c336c0adfd6a884660d1e9712a256d3d3bd4b14e \
-    --hash=sha256:a07157588a12518c9d4034df3fbbee09c814741a33ff63c05fa29d26a2404166
-    # via importlib-metadata
 zstandard==0.25.0 \
     --hash=sha256:011d388c76b11a0c165374ce660ce2c8efa8e5d87f34996aa80f9c0816698b64 \
     --hash=sha256:01582723b3ccd6939ab7b3a78622c573799d5d8737b534b86d0e06ac18dbde4a \
