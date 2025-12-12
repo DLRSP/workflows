@@ -224,7 +224,7 @@ jobs:
 
       - name: Store the distribution packages
         if: ${{ always() && hashFiles('setup.py') }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: python-package-distributions
           path: dist/
@@ -280,7 +280,7 @@ jobs:
         run: |
           python -m cibuildwheel --output-dir wheelhouse
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         if: ${{ always() && hashFiles('setup.py') }}
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
