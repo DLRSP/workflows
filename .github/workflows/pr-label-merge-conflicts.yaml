@@ -15,8 +15,19 @@ jobs:
   label-merge-conflicts:
     if: github.repository_owner == 'DLRSP'
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
-      - uses: pradyunsg/auto-label-merge-conflicts@v3
+      - name: Label merge conflicts
+        id: label
+        uses: pradyunsg/auto-label-merge-conflicts@v3
         with:
-          CONFLICT_LABEL_NAME: "needs rebase or merge"
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CONFLICT_LABEL_NAME: "🔀 needs rebase or merge"
+          GITHUB_TOKEN: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+      
+      - name: Handle label error
+        if: steps.label.outcome == 'failure'
+        run: |
+          echo "⚠️  Warning: Label '🔀 needs rebase or merge' not found in repository"
+          echo "ℹ️  To fix this, add the label manually in repository settings or use the labels.yaml workflow to sync labels"
+          echo "ℹ️  This is a non-critical job and the workflow will continue"
