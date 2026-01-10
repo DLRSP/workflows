@@ -1,0 +1,96 @@
+{
+  "repositories": [
+    {
+      "name": "django-errors",
+      "full_name": "DLRSP/django-errors",
+      "stars": 4,
+      "description": "Django application for handling server errors.",
+      "url": "https://github.com/DLRSP/django-errors"
+    },
+    {
+      "name": "django-sp",
+      "full_name": "DLRSP/django-sp",
+      "stars": 2,
+      "description": "Django application for social authentication and other security integrations.",
+      "url": "https://github.com/DLRSP/django-sp"
+    },
+    {
+      "name": "django-iubenda",
+      "full_name": "DLRSP/django-iubenda",
+      "stars": 1,
+      "description": "Django application for privacy and cookies policy managed by Iubenda.",
+      "url": "https://github.com/DLRSP/django-iubenda"
+    },
+    {
+      "name": "django-requests-api",
+      "full_name": "DLRSP/django-requests-api",
+      "stars": 1,
+      "description": "Django application to provide simple and shared requests client.",
+      "url": "https://github.com/DLRSP/django-requests-api"
+    },
+    {
+      "name": "django-custom-storage",
+      "full_name": "DLRSP/django-custom-storage",
+      "stars": 1,
+      "description": "Django application provide custom storage uses S3 and Compressor",
+      "url": "https://github.com/DLRSP/django-custom-storage"
+    },
+    {
+      "name": "django-hashtag",
+      "full_name": "DLRSP/django-hashtag",
+      "stars": 0,
+      "description": "",
+      "url": "https://github.com/DLRSP/django-hashtag"
+    },
+    {
+      "name": "django-model-mixin",
+      "full_name": "DLRSP/django-model-mixin",
+      "stars": 0,
+      "description": "Django application provide simple model's mixins to add common reusable attributes.",
+      "url": "https://github.com/DLRSP/django-model-mixin"
+    },
+    {
+      "name": "django-lang",
+      "full_name": "DLRSP/django-lang",
+      "stars": 0,
+      "description": "Django application to provide useful utils and reusable parts of code for multi-languages sites.",
+      "url": "https://github.com/DLRSP/django-lang"
+    },
+    {
+      "name": "django-static-base",
+      "full_name": "DLRSP/django-static-base",
+      "stars": 0,
+      "description": "Django application to serve up-to-date common static files (JQuery, Bootstrap, Plugins, ...) as \"base\" static directory",
+      "url": "https://github.com/DLRSP/django-static-base"
+    },
+    {
+      "name": "django-sites-extra",
+      "full_name": "DLRSP/django-sites-extra",
+      "stars": 0,
+      "description": "Django application to extend the standard \"sites\" framework with extra utils.",
+      "url": "https://github.com/DLRSP/django-sites-extra"
+    },
+    {
+      "name": "django-filer-optimizer",
+      "full_name": "DLRSP/django-filer-optimizer",
+      "stars": 0,
+      "description": "Django application to extend the \"django-filer\" application with extra utils like.",
+      "url": "https://github.com/DLRSP/django-filer-optimizer"
+    },
+    {
+      "name": "requirements",
+      "full_name": "DLRSP/requirements",
+      "stars": 0,
+      "description": "",
+      "url": "https://github.com/DLRSP/requirements"
+    },
+    {
+      "name": "django-service",
+      "full_name": "DLRSP/django-service",
+      "stars": 0,
+      "description": "",
+      "url": "https://github.com/DLRSP/django-service"
+    }
+  ],
+  "count": 13
+}
