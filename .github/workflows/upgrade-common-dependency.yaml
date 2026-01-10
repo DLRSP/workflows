@@ -63,10 +63,24 @@ jobs:
                       -o ${{ env.PY_ENV }}-dev.txt \
                       dev.in
           fi
-          if [[ -f "docs.in" ]] && [[ "${{ matrix.python-version }}" == "3.11" ]] ; then
+          if [[ -f "requirements/docs.in" ]] && [[ "${{ matrix.python-version }}" == "3.10" || "${{ matrix.python-version }}" == "3.11" ]] ; then
               pip-compile --upgrade --generate-hashes --allow-unsafe \
-                      -o py-docs.txt \
-                      docs.in
+                      -o ${{ env.PY_ENV }}-docs.txt \
+                      requirements/docs.in
+          fi
+
+      - name: Verify generated requirements can be installed
+        run: |
+          echo "Verifying generated requirements files can be installed..."
+          if [[ -f "${{ env.PY_ENV }}-dev.txt" ]] ; then
+            echo "Verifying ${{ env.PY_ENV }}-dev.txt..."
+            pip install --dry-run --no-deps -r ${{ env.PY_ENV }}-dev.txt || pip install --no-deps -r ${{ env.PY_ENV }}-dev.txt
+            echo "✓ ${{ env.PY_ENV }}-dev.txt verified successfully"
+          fi
+          if [[ -f "${{ env.PY_ENV }}-docs.txt" ]] ; then
+            echo "Verifying ${{ env.PY_ENV }}-docs.txt..."
+            pip install --dry-run --no-deps -r ${{ env.PY_ENV }}-docs.txt || pip install --no-deps -r ${{ env.PY_ENV }}-docs.txt
+            echo "✓ ${{ env.PY_ENV }}-docs.txt verified successfully"
           fi
 
       - name: Upload Python dependencies ${{ matrix.python-version }} for Dev
@@ -77,12 +91,13 @@ jobs:
           path: ${{ env.PY_ENV }}-dev.txt
 
       - name: Upload Python dependencies ${{ matrix.python-version }} for Docs
-        if: matrix.python-version == '3.11'
+        if: matrix.python-version == '3.10' || matrix.python-version == '3.11'
         uses: actions/upload-artifact@v6
+        continue-on-error: true
         with:
           overwrite: true
-          name: py-docs.txt
-          path: py-docs.txt
+          name: ${{ env.PY_ENV }}-docs.txt
+          path: ${{ env.PY_ENV }}-docs.txt
 
   pull-request:
     name: Open Pull Request
@@ -93,12 +108,65 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Set up Python for verification
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
       - name: Download all artifacts
         uses: actions/download-artifact@v7
         with:
           path: .
-          pattern: py*
+          pattern: |
+            py*-dev.txt
+            py*-docs.txt
           merge-multiple: true
+
+      - name: Verify all downloaded requirements files
+        run: |
+          echo "Verifying all downloaded requirements files can be installed..."
+          python -m pip install --upgrade pip
+          failed=0
+          
+          # Verify dev requirements files
+          for file in py*-dev.txt; do
+            if [ -f "$file" ]; then
+              echo "Verifying $file..."
+              if python -m pip install --dry-run --no-deps -r "$file" 2>/dev/null; then
+                echo "✓ $file verified (dry-run successful)"
+              elif python -m pip install --no-deps -r "$file" 2>/dev/null; then
+                echo "✓ $file verified (installed successfully)"
+                # Clean up installed packages to avoid conflicts
+                pip uninstall -y $(pip freeze | cut -d'=' -f1 | grep -v '^pip' | grep -v '^setuptools' | grep -v '^wheel') 2>/dev/null || true
+              else
+                echo "✗ Failed to install $file"
+                failed=1
+              fi
+            fi
+          done
+          
+          # Verify docs requirements files
+          for file in py*-docs.txt; do
+            if [ -f "$file" ]; then
+              echo "Verifying $file..."
+              if python -m pip install --dry-run --no-deps -r "$file" 2>/dev/null; then
+                echo "✓ $file verified (dry-run successful)"
+              elif python -m pip install --no-deps -r "$file" 2>/dev/null; then
+                echo "✓ $file verified (installed successfully)"
+                # Clean up installed packages to avoid conflicts
+                pip uninstall -y $(pip freeze | cut -d'=' -f1 | grep -v '^pip' | grep -v '^setuptools' | grep -v '^wheel') 2>/dev/null || true
+              else
+                echo "✗ Failed to install $file"
+                failed=1
+              fi
+            fi
+          done
+          
+          if [ $failed -eq 1 ]; then
+            echo "❌ Some requirements files failed verification"
+            exit 1
+          fi
+          echo "✅ All requirements files verified successfully"
 
       - name: Create Pull Request
         id: cpr

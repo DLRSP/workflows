@@ -1,0 +1,550 @@
+---
+name: Release Requirements Updates
+
+on:
+  workflow_call:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+    paths:
+      - 'requirements/*.txt'
+      - 'py*-dev.txt'
+      - 'py*-docs.txt'
+      - 'dev.in'
+      - 'requirements/*.in'
+  push:
+    branches:
+      - main
+    paths:
+      - 'requirements/*.txt'
+      - 'py*-dev.txt'
+      - 'py*-docs.txt'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  detect-changes:
+    name: Detect Requirements Changes
+    runs-on: ubuntu-latest
+    # Skip if this is a patch-release PR merge (those are handled separately)
+    if: |
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true && !contains(github.event.pull_request.title, 'patch-release')) ||
+      (github.event_name == 'push' && !contains(github.event.head_commit.message, 'bump patch version to v')) ||
+      github.event_name == 'workflow_dispatch'
+    outputs:
+      has_changes: ${{ steps.check-changes.outputs.has_changes }}
+      changed_files: ${{ steps.check-changes.outputs.changed_files }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check for requirements changes
+        id: check-changes
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # Get base SHA for PR
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            # For push, check if it's from a requirements update (not a patch release)
+            # Skip if commit message indicates patch release
+            if echo "${{ github.event.head_commit.message }}" | grep -q "bump patch version"; then
+              echo "has_changes=false" >> "$GITHUB_OUTPUT"
+              echo "changed_files=" >> "$GITHUB_OUTPUT"
+              echo "This is a patch release commit, skipping requirements change detection"
+              exit 0
+            fi
+            # Get the previous commit for push
+            BASE_SHA=$(git rev-parse HEAD~1)
+            HEAD_SHA="${{ github.sha }}"
+          else
+            # For workflow_dispatch, compare with last tag
+            BASE_SHA=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+            HEAD_SHA="HEAD"
+          fi
+
+          if [ -z "$BASE_SHA" ]; then
+            echo "No base commit found, checking all requirements files"
+            changed_files=$(find . -name "*.txt" -path "*/requirements/*" -o -name "py*-dev.txt" -o -name "py*-docs.txt" 2>/dev/null | head -20)
+          else
+            changed_files=$(git diff --name-only --diff-filter=AM $BASE_SHA $HEAD_SHA | grep -E "(requirements/.*\.txt|py.*-dev\.txt|py.*-docs\.txt)" || echo "")
+          fi
+
+          if [ -z "$changed_files" ]; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "changed_files=" >> "$GITHUB_OUTPUT"
+            echo "No requirements files changed"
+            exit 0
+          fi
+
+          echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          echo "changed_files<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$changed_files" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+          echo "Changed files:"
+          echo "$changed_files"
+
+  analyze-dependencies:
+    name: Analyze Dependency Changes
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has_changes == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      release_notes: ${{ steps.generate-notes.outputs.release_notes }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Get last release tag
+        id: last-tag
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$LAST_TAG" ]; then
+            LAST_TAG=$(git rev-list --max-parents=0 HEAD)
+            echo "tag_type=commit" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag_type=tag" >> "$GITHUB_OUTPUT"
+          fi
+          echo "tag=$LAST_TAG" >> "$GITHUB_OUTPUT"
+          echo "Last release: $LAST_TAG"
+
+      - name: Extract dependency changes
+        id: generate-notes
+        run: |
+          python3 << 'EOF'
+          import re
+          import subprocess
+          import os
+          from pathlib import Path
+          from collections import defaultdict
+
+          last_tag = os.getenv('LAST_TAG', '')
+          tag_type = os.getenv('TAG_TYPE', 'tag')
+          
+          # Get changed files from previous step
+          changed_files = """${{ needs.detect-changes.outputs.changed_files }}""".strip().split('\n')
+          changed_files = [f.strip() for f in changed_files if f.strip()]
+          
+          if not changed_files and tag_type == 'tag' and last_tag:
+              # Compare current requirements with last tag
+              try:
+                  result = subprocess.run(['git', 'diff', '--name-only', last_tag, 'HEAD'], 
+                                        capture_output=True, text=True, check=False)
+                  changed_files = [f for f in result.stdout.split('\n') 
+                                 if 'requirements' in f or 'dev.txt' in f or 'docs.txt' in f]
+              except:
+                  pass
+
+          updated_packages = defaultdict(lambda: {'old': set(), 'new': set(), 'files': set()})
+          
+          def extract_packages(content):
+              """Extract package names and versions from requirements file"""
+              packages = {}
+              for line in content.split('\n'):
+                  line = line.strip()
+                  if not line or line.startswith('#'):
+                      continue
+                  # Match package name and version: package==version
+                  match = re.match(r'^([a-zA-Z0-9_-]+[a-zA-Z0-9_.-]*)==([0-9.]+[a-zA-Z0-9_.-]*)', line)
+                  if match:
+                      pkg_name = match.group(1).lower()
+                      pkg_version = match.group(2)
+                      packages[pkg_name] = pkg_version
+              return packages
+
+          for file_path in changed_files:
+              if not file_path or not Path(file_path).exists():
+                  continue
+              
+              file_name = Path(file_path).name
+              
+              # Get current version
+              try:
+                  with open(file_path, 'r', encoding='utf-8') as f:
+                      current_packages = extract_packages(f.read())
+              except:
+                  continue
+              
+              # Get old version if tag exists
+              old_packages = {}
+              if tag_type == 'tag' and last_tag:
+                  try:
+                      result = subprocess.run(['git', 'show', f'{last_tag}:{file_path}'], 
+                                            capture_output=True, text=True, check=False)
+                      if result.returncode == 0:
+                          old_packages = extract_packages(result.stdout)
+                  except:
+                      pass
+              
+              # Compare packages
+              all_packages = set(current_packages.keys()) | set(old_packages.keys())
+              for pkg in all_packages:
+                  old_ver = old_packages.get(pkg, None)
+                  new_ver = current_packages.get(pkg, None)
+                  
+                  if old_ver != new_ver:
+                      if old_ver:
+                          updated_packages[pkg]['old'].add(old_ver)
+                      if new_ver:
+                          updated_packages[pkg]['new'].add(new_ver)
+                      updated_packages[pkg]['files'].add(file_name)
+
+          # Generate release notes
+          if not updated_packages:
+              notes = "### Dependency Updates\n\nNo significant dependency changes detected."
+          else:
+              notes = "### Dependency Updates\n\n"
+              notes += f"Updated **{len(updated_packages)}** package(s):\n\n"
+              
+              # Sort packages alphabetically
+              for pkg in sorted(updated_packages.keys()):
+                  info = updated_packages[pkg]
+                  old_vers = ', '.join(sorted(info['old'])) if info['old'] else 'new'
+                  new_vers = ', '.join(sorted(info['new']))
+                  files = ', '.join(sorted(info['files']))
+                  
+                  if old_vers == 'new':
+                      notes += f"- **{pkg}**: Added `{new_vers}` (in {files})\n"
+                  else:
+                      notes += f"- **{pkg}**: `{old_vers}` → `{new_vers}` (in {files})\n"
+          
+          # Write to output
+          output_file = Path(os.getenv('GITHUB_OUTPUT'))
+          with open(output_file, 'a', encoding='utf-8') as f:
+              f.write(f"release_notes<<EOF\n{notes}\nEOF\n")
+          
+          print("Generated release notes:")
+          print(notes)
+          EOF
+        env:
+          LAST_TAG: ${{ steps.last-tag.outputs.tag }}
+          TAG_TYPE: ${{ steps.last-tag.outputs.tag_type }}
+
+  create-patch-release:
+    name: Create Patch Release
+    needs: [detect-changes, analyze-dependencies]
+    if: needs.detect-changes.outputs.has_changes == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.bump-version.outputs.new_version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.BOT_PAT || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install bump-my-version
+        run: |
+          if [ "${{ github.repository }}" = "DLRSP/workflows" ] && [ -f "requirements/py311-django42.txt" ]; then
+            python -m pip install --upgrade --no-deps -r requirements/py311-django42.txt
+          else
+            python -m pip install --upgrade --no-deps -r https://raw.githubusercontent.com/DLRSP/workflows/v1.15.8/requirements/py311-django42.txt
+          fi
+
+      - name: Get current version
+        id: current-version
+        run: |
+          CURRENT_VERSION=$(bump-my-version show current_version)
+          echo "current_version=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Current version: $CURRENT_VERSION"
+
+      - name: Bump patch version
+        id: bump-version
+        run: |
+          bump-my-version bump patch --verbose
+          NEW_VERSION=$(bump-my-version show current_version)
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "New patch version: $NEW_VERSION"
+
+      - name: Update changelog with dependency updates
+        run: |
+          python3 << 'EOF'
+          from pathlib import Path
+          from datetime import datetime
+          import re
+          import os
+          
+          changelog_path = Path("changelog.md")
+          if not changelog_path.exists():
+              print("changelog.md not found, skipping")
+              exit(0)
+          
+          current_version = os.getenv('CURRENT_VERSION', '')
+          new_version = os.getenv('NEW_VERSION', '')
+          release_notes = os.getenv('RELEASE_NOTES', '### Dependency Updates\n\nNo changes detected.')
+          repo = os.getenv('GITHUB_REPOSITORY', 'DLRSP/workflows')
+          date = datetime.now().strftime('%Y-%m-%d')
+          
+          content = changelog_path.read_text(encoding='utf-8')
+          
+          # Find any unreleased section (could be with current_version or different format)
+          # Pattern: ## [X.Y.Z (unreleased)] or ## [X.Y.Z(unreleased)]
+          unreleased_pattern = r'##\s*\[[0-9]+\.[0-9]+\.[0-9]+\s*\(unreleased\)\]'
+          
+          # Create the release section for the new version
+          release_section = f"## [{new_version} ({date})](https://github.com/{repo}/compare/v{current_version}...v{new_version})\n\n{release_notes}\n\n"
+          
+          # Replace the first unreleased section found
+          new_content = re.sub(
+              unreleased_pattern,
+              release_section,
+              content,
+              count=1,
+              flags=re.IGNORECASE | re.MULTILINE
+          )
+          
+          # Calculate next minor version for unreleased section
+          parts = new_version.split('.')
+          major = int(parts[0])
+          minor = int(parts[1])
+          next_unreleased = f"{major}.{minor + 1}.0"
+          
+          # Add new unreleased section at the top (after the title "# Changelog")
+          new_unreleased = f"## [{next_unreleased} (unreleased)](https://github.com/{repo}/compare/v{new_version}...main)\n```{{important}}\nThis version is not released yet and is under active development.\n```\n\n"
+          
+          # Find the title line and insert after it
+          lines = new_content.split('\n')
+          title_idx = -1
+          for i, line in enumerate(lines):
+              if line.strip().lower().startswith('# changelog'):
+                  title_idx = i
+                  break
+          
+          if title_idx >= 0:
+              # Insert after title line
+              lines.insert(title_idx + 1, '')
+              lines.insert(title_idx + 2, new_unreleased.strip())
+              new_content = '\n'.join(lines)
+          else:
+              # If no title found, prepend to content
+              new_content = f"# Changelog\n\n{new_unreleased}\n{new_content}"
+          
+          changelog_path.write_text(new_content, encoding='utf-8')
+          print(f"Updated changelog.md:")
+          print(f"  - Released version {current_version} → {new_version}")
+          print(f"  - Added unreleased section for {next_unreleased}")
+          EOF
+        env:
+          CURRENT_VERSION: ${{ steps.current-version.outputs.current_version }}
+          NEW_VERSION: ${{ steps.bump-version.outputs.new_version }}
+          RELEASE_NOTES: ${{ needs.analyze-dependencies.outputs.release_notes }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+
+      - name: Hard-code version in workflows
+        if: github.repository == 'DLRSP/workflows'
+        run: |
+          NEW_VERSION="${{ steps.bump-version.outputs.new_version }}"
+          find ./.github/workflows/ -type f -iname "*.yaml" -print -exec sed -i \
+            "s/\/workflows\/v[0-9]\+\.[0-9]\+\.[0-9]\+\//\/workflows\/v${NEW_VERSION}\//g" \
+            {} \;
+          echo "Updated workflow version references to v${NEW_VERSION}"
+
+      - name: Setup Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create release branch and commit
+        run: |
+          BRANCH_NAME="patch-release-v${{ steps.bump-version.outputs.new_version }}"
+          git checkout -b "$BRANCH_NAME"
+          git add changelog.md pyproject.toml .github/workflows/*.yaml requirements/*.txt py*-dev.txt py*-docs.txt 2>/dev/null || true
+          # Use [changelog] prefix to prevent changelog.yaml from processing this commit when PR is merged
+          RELEASE_NOTES="${{ needs.analyze-dependencies.outputs.release_notes }}"
+          git commit -m "[changelog] Release v${{ steps.bump-version.outputs.new_version }} - Requirements Updates
+
+          ${RELEASE_NOTES}" || echo "No changes to commit"
+          git push origin "$BRANCH_NAME" || echo "Branch already exists or push failed"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.BOT_PAT || secrets.GITHUB_TOKEN }}
+          branch: patch-release-v${{ steps.bump-version.outputs.new_version }}
+          base: main
+          delete-branch: true
+          title: "[changelog] Release v${{ steps.bump-version.outputs.new_version }} - Requirements Updates"
+          body: |
+            ## Requirements Update Release
+
+            This PR increments the **patch version** to `v${{ steps.bump-version.outputs.new_version }}` due to dependency updates.
+
+            ${{ needs.analyze-dependencies.outputs.release_notes }}
+
+            ### Next Steps
+
+            1. Review the dependency changes above
+            2. Click **"Ready for review"** to mark this PR as ready
+            3. Click **"Rebase and merge"** to merge this PR
+            4. The merge will trigger automatic GitHub release creation
+
+            ---
+
+            <details><summary><code>Workflow metadata</code></summary>
+
+            > Auto-generated by `release-requirements.yaml` workflow run [#${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+            </details>
+          labels: |
+            📦 dependencies
+            🆙 changelog
+            patch-release
+          assignees: ${{ github.actor }}
+          draft: false
+
+  create-release-after-merge:
+    name: Create Tag and GitHub Release
+    # Trigger when patch-release PR is merged - check for version bump in files
+    if: |
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install bump-my-version
+        run: |
+          if [ "${{ github.repository }}" = "DLRSP/workflows" ] && [ -f "requirements/py311-django42.txt" ]; then
+            python -m pip install --upgrade --no-deps -r requirements/py311-django42.txt
+          else
+            python -m pip install --upgrade --no-deps -r https://raw.githubusercontent.com/DLRSP/workflows/v1.15.8/requirements/py311-django42.txt
+          fi
+
+      - name: Check if this is a patch release commit
+        id: is-patch-release
+        run: |
+          # Check if commit message indicates patch release OR if changelog was updated with a release date
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          
+          # Check commit message
+          if echo "$COMMIT_MSG" | grep -qiE "(bump patch version|patch.*release|requirements.*update)"; then
+            echo "is_patch=true" >> "$GITHUB_OUTPUT"
+            echo "Detected patch release from commit message"
+          else
+            # Check if changelog has a release entry with today's date
+            TODAY=$(date +'%Y-%m-%d')
+            if grep -qE "## \[[0-9]+\.[0-9]+\.[0-9]+ \(${TODAY}\)\]" changelog.md 2>/dev/null; then
+              echo "is_patch=true" >> "$GITHUB_OUTPUT"
+              echo "Detected patch release from changelog date"
+            else
+              echo "is_patch=false" >> "$GITHUB_OUTPUT"
+              echo "Not a patch release commit, skipping"
+            fi
+          fi
+
+      - name: Extract version
+        id: extract-version
+        if: steps.is-patch-release.outputs.is_patch == 'true'
+        run: |
+          # Try to extract from commit message first
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          VERSION=$(echo "$COMMIT_MSG" | grep -oP '(?:bump patch version to v|release v)\K[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+          
+          if [ -z "$VERSION" ]; then
+            # Try to extract from changelog (latest release entry with today's date)
+            TODAY=$(date +'%Y-%m-%d')
+            VERSION=$(grep -oP "## \[\K[0-9]+\.[0-9]+\.[0-9]+(?= \(${TODAY}\))" changelog.md | head -1)
+          fi
+          
+          if [ -z "$VERSION" ]; then
+            # Fallback: get current version from pyproject.toml
+            VERSION=$(bump-my-version show current_version)
+          fi
+          
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Release version: $VERSION"
+
+      - name: Check if tag already exists
+        id: check-tag
+        if: steps.is-patch-release.outputs.is_patch == 'true' && steps.extract-version.outputs.version != ''
+        run: |
+          VERSION="${{ steps.extract-version.outputs.version }}"
+          if git rev-parse "v${VERSION}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Tag v${VERSION} already exists, skipping release creation"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Tag v${VERSION} does not exist, will create release"
+          fi
+
+      - name: Extract release notes from changelog
+        id: extract-notes
+        if: steps.is-patch-release.outputs.is_patch == 'true' && steps.check-tag.outputs.exists == 'false' && steps.extract-version.outputs.version != ''
+        run: |
+          python3 << 'EOF'
+          from pathlib import Path
+          import re
+          import os
+          
+          changelog = Path("changelog.md")
+          if not changelog.exists():
+              print("changelog.md not found")
+              notes = "### Requirements Updates\n\nDependency upgrades and requirements file updates."
+          else:
+              content = changelog.read_text(encoding='utf-8')
+              version = os.getenv('VERSION', '')
+              
+              # Find the section for this version
+              pattern = rf'##\s*\[{re.escape(version)}\s*\([^\)]+\)\].*?(?=##\s*\[|\Z)'
+              match = re.search(pattern, content, re.DOTALL | re.IGNORECASE)
+              
+              if match:
+                  notes = match.group(0).strip()
+              else:
+                  notes = f"## Release v{version}\n\n### Requirements Updates\n\nDependency upgrades and requirements file updates."
+          
+          # Write to output
+          output_file = Path(os.getenv('GITHUB_OUTPUT'))
+          with open(output_file, 'a', encoding='utf-8') as f:
+              f.write(f"release_notes<<EOF\n{notes}\nEOF\n")
+          
+          print(f"Release notes extracted for v{version}")
+          print(notes[:300])
+          EOF
+        env:
+          VERSION: ${{ steps.extract-version.outputs.version }}
+
+      - name: Create Git tag
+        if: steps.is-patch-release.outputs.is_patch == 'true' && steps.check-tag.outputs.exists == 'false' && steps.extract-version.outputs.version != ''
+        run: |
+          VERSION="${{ steps.extract-version.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v${VERSION}" -m "Release v${VERSION} - Requirements Updates"
+          git push origin "v${VERSION}"
+
+      - name: Create GitHub Release
+        if: steps.is-patch-release.outputs.is_patch == 'true' && steps.check-tag.outputs.exists == 'false' && steps.extract-version.outputs.version != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.extract-version.outputs.version }}
+          name: Release v${{ steps.extract-version.outputs.version }} - Requirements Updates
+          body: ${{ steps.extract-notes.outputs.release_notes }}
+          draft: false
+          prerelease: false
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

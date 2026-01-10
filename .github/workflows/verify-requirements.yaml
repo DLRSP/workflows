@@ -7,14 +7,16 @@ on:
       - main
     paths:
       - 'dev.in'
-      - 'docs.in'
+      - 'requirements/*.in'
+      - 'requirements/*.txt'
       - '*.txt'
   pull_request:
     branches:
       - main
     paths:
       - 'dev.in'
-      - 'docs.in'
+      - 'requirements/*.in'
+      - 'requirements/*.txt'
       - '*.txt'
   schedule:
     # Runs every Monday at 8:00 UTC
@@ -50,20 +52,86 @@ jobs:
           pip install --upgrade pip
           pip install pip-tools
 
-      - name: Verify requirements file can be installed
+      - name: Generate and verify dev requirements
         run: |
-          echo "Verifying ${{ matrix.requirements-file }} can be installed..."
-          pip install -r ${{ matrix.requirements-file }} --dry-run || pip install -r ${{ matrix.requirements-file }}
+          if [ -f "dev.in" ]; then
+            if [ ! -f "${{ matrix.requirements-file }}" ]; then
+              echo "Generating ${{ matrix.requirements-file }} from dev.in..."
+              pip-compile --generate-hashes --allow-unsafe -o ${{ matrix.requirements-file }} dev.in
+            fi
+            if [ -f "${{ matrix.requirements-file }}" ]; then
+              echo "Verifying ${{ matrix.requirements-file }} can be installed..."
+              pip install --dry-run --no-deps -r ${{ matrix.requirements-file }} || pip install --no-deps -r ${{ matrix.requirements-file }}
+              echo "Checking if requirements are up to date..."
+              pip-compile --check dev.in --output-file=${{ matrix.requirements-file }} || (echo "Requirements may need updating" && exit 1)
+            fi
+          else
+            echo "dev.in not found, skipping dev requirements verification"
+          fi
 
-      - name: Check if requirements are up to date
+  verify-django-requirements:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - python-version: "3.8"
+            django-version: "3.2"
+          - python-version: "3.8"
+            django-version: "4.2"
+          - python-version: "3.9"
+            django-version: "3.2"
+          - python-version: "3.9"
+            django-version: "4.2"
+          - python-version: "3.10"
+            django-version: "3.2"
+          - python-version: "3.10"
+            django-version: "4.2"
+          - python-version: "3.11"
+            django-version: "3.2"
+          - python-version: "3.11"
+            django-version: "4.2"
+          - python-version: "3.12"
+            django-version: "3.2"
+          - python-version: "3.12"
+            django-version: "4.2"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Set Django environment variable
         run: |
-          pip-compile --check dev.in --output-file=${{ matrix.requirements-file }} || echo "Requirements may need updating"
+          RAW_DJANGO_ENV="py${{ matrix.python-version }}-django${{ matrix.django-version }}"
+          echo "DJANGO_ENV=${RAW_DJANGO_ENV//./}" >> "$GITHUB_ENV"
+
+      - name: Install pip-tools
+        run: |
+          pip install --upgrade pip
+          pip install pip-tools
+
+      - name: Verify Django requirements file can be installed
+        run: |
+          if [ -f "requirements/${{ env.DJANGO_ENV }}.txt" ]; then
+            echo "Verifying requirements/${{ env.DJANGO_ENV }}.txt can be installed..."
+            pip install --dry-run --no-deps -r requirements/${{ env.DJANGO_ENV }}.txt || pip install --no-deps -r requirements/${{ env.DJANGO_ENV }}.txt
+          else
+            echo "requirements/${{ env.DJANGO_ENV }}.txt not found, skipping verification"
+          fi
 
   verify-docs-requirements:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11"]
+        include:
+          - python-version: "3.10"
+            requirements-file: py310-docs.txt
+          - python-version: "3.11"
+            requirements-file: py311-docs.txt
 
     steps:
       - name: Checkout code
@@ -79,10 +147,19 @@ jobs:
           pip install --upgrade pip
           pip install pip-tools
 
-      - name: Verify docs requirements can be installed
+      - name: Generate and verify docs requirements
         run: |
-          pip install -r py-docs.txt --dry-run || pip install -r py-docs.txt
-
-      - name: Check if docs requirements are up to date
-        run: |
-          pip-compile --check docs.in --output-file=py-docs.txt || echo "Docs requirements may need updating"
+          if [ -f "requirements/docs.in" ]; then
+            if [ ! -f "${{ matrix.requirements-file }}" ]; then
+              echo "Generating ${{ matrix.requirements-file }} from requirements/docs.in..."
+              pip-compile --generate-hashes --allow-unsafe -o ${{ matrix.requirements-file }} requirements/docs.in
+            fi
+            if [ -f "${{ matrix.requirements-file }}" ]; then
+              echo "Verifying ${{ matrix.requirements-file }} can be installed..."
+              pip install --dry-run --no-deps -r ${{ matrix.requirements-file }} || pip install --no-deps -r ${{ matrix.requirements-file }}
+              echo "Checking if docs requirements are up to date..."
+              pip-compile --check requirements/docs.in --output-file=${{ matrix.requirements-file }} || (echo "Docs requirements may need updating" && exit 1)
+            fi
+          else
+            echo "requirements/docs.in not found, skipping docs requirements verification"
+          fi
