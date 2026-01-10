@@ -40,8 +40,8 @@ jobs:
           python -m pip install --upgrade pip
       - name: Install bump-my-version
         run: >
-          python -m pip install --requirement
-          https://raw.githubusercontent.com/DLRSP/workflows/v1.6.11/requirements/py311-django42.txt
+            python -m pip install --upgrade --no-deps
+            -r https://raw.githubusercontent.com/DLRSP/workflows/main/requirements/py311-django42.txt
       - name: ${{ matrix.part }} version bump
         run: |
           bump-my-version bump --verbose ${{ matrix.part }}
@@ -107,8 +107,8 @@ jobs:
           python -m pip install --upgrade pip
       - name: Install bump-my-version
         run: >
-          python -m pip install --requirement
-          https://raw.githubusercontent.com/DLRSP/workflows/v1.6.11/requirements/py311-django42.txt
+            python -m pip install --upgrade --no-deps
+            -r https://raw.githubusercontent.com/DLRSP/workflows/v1.15.8/requirements/py311-django42.txt
       - name: Extract version
         id: get_version
         run: |
@@ -265,8 +265,8 @@ jobs:
             1. publication of a [GitHub release](${{ github.event.repository.html_url }}/releases)
 
 
-            [^1]: as [defined by `release.yaml`](${{ github.event.repository.html_url }}/blob/${{
-            github.sha }}/.github/workflows/release.yaml).
+            [^1]: as [defined by `cd-release.yaml`](${{ github.event.repository.html_url }}/blob/${{
+            github.sha }}/.github/workflows/cd-release.yaml) workflow, which detects the commit message `[changelog] Release vX.Y.Z` and creates the tag automatically.
 
 
             ### How-to release v${{ steps.get_version.outputs.current_version }}
