@@ -292,20 +292,42 @@ jobs:
           content = changelog_path.read_text(encoding='utf-8')
           
           # Find any unreleased section (could be with current_version or different format)
-          # Pattern: ## [X.Y.Z (unreleased)] or ## [X.Y.Z(unreleased)]
-          unreleased_pattern = r'##\s*\[[0-9]+\.[0-9]+\.[0-9]+\s*\(unreleased\)\]'
+          # Pattern: ## [X.Y.Z (unreleased)](optional-link) or ## [X.Y.Z(unreleased)]
+          # Use a simpler approach: match line by line and replace the header
+          lines = content.split('\n')
+          new_lines = []
+          replaced = False
+          skip_until_next_section = False
           
-          # Create the release section for the new version
-          release_section = f"## [{new_version} ({date})](https://github.com/{repo}/compare/v{current_version}...v{new_version})\n\n{release_notes}\n\n"
+          for i, line in enumerate(lines):
+              # Check if this line matches unreleased pattern
+              # Pattern: ## [version (unreleased)](optional-link)
+              if not replaced and re.match(r'^##\s*\[[0-9]+\.[0-9]+\.[0-9]+\s*\(unreleased\)\].*$', line, re.IGNORECASE):
+                  # Replace with new release section header
+                  release_header = f"## [{new_version} ({date})](https://github.com/{repo}/compare/v{current_version}...v{new_version})"
+                  new_lines.append(release_header)
+                  new_lines.append('')  # Empty line
+                  # Add release notes (split by lines to maintain formatting)
+                  new_lines.extend(release_notes.split('\n'))
+                  new_lines.append('')  # Empty line after release notes
+                  replaced = True
+                  # Skip everything until next section (##)
+                  skip_until_next_section = True
+                  continue
+              
+              # Skip everything until next section (##) after unreleased header
+              if skip_until_next_section:
+                  # Stop skipping when we hit the next section
+                  if line.strip().startswith('##'):
+                      skip_until_next_section = False
+                      new_lines.append(line)
+                  # Otherwise skip this line
+                  continue
+              
+              # Add line normally
+              new_lines.append(line)
           
-          # Replace the first unreleased section found
-          new_content = re.sub(
-              unreleased_pattern,
-              release_section,
-              content,
-              count=1,
-              flags=re.IGNORECASE | re.MULTILINE
-          )
+          new_content = '\n'.join(new_lines)
           
           # Calculate next minor version for unreleased section
           parts = new_version.split('.')
@@ -438,21 +460,39 @@ jobs:
           # Check if commit message indicates patch release OR if changelog was updated with a release date
           COMMIT_MSG="${{ github.event.head_commit.message }}"
           
-          # Check commit message
-          if echo "$COMMIT_MSG" | grep -qiE "(bump patch version|patch.*release|requirements.*update)"; then
+          echo "Checking commit message: $COMMIT_MSG"
+          
+          # Check commit message for various patch release patterns
+          # Pattern 1: "bump patch version"
+          # Pattern 2: "[changelog] Release vX.Y.Z - Requirements Updates" (from create-patch-release)
+          # Pattern 3: "patch.*release" or "patch-release"
+          # Pattern 4: "requirements.*update" or "Requirements Updates"
+          if echo "$COMMIT_MSG" | grep -qiE "(bump patch version|\[changelog\] Release.*Requirements|patch.*release|requirements.*update|Requirements Updates)"; then
             echo "is_patch=true" >> "$GITHUB_OUTPUT"
-            echo "Detected patch release from commit message"
-          else
-            # Check if changelog has a release entry with today's date
-            TODAY=$(date +'%Y-%m-%d')
-            if grep -qE "## \[[0-9]+\.[0-9]+\.[0-9]+ \(${TODAY}\)\]" changelog.md 2>/dev/null; then
-              echo "is_patch=true" >> "$GITHUB_OUTPUT"
-              echo "Detected patch release from changelog date"
-            else
-              echo "is_patch=false" >> "$GITHUB_OUTPUT"
-              echo "Not a patch release commit, skipping"
-            fi
+            echo "✅ Detected patch release from commit message"
+            exit 0
           fi
+          
+          # Check if changelog has a release entry with today's date
+          TODAY=$(date +'%Y-%m-%d')
+          echo "Checking changelog for release entry with date: $TODAY"
+          if grep -qE "## \[[0-9]+\.[0-9]+\.[0-9]+ \(${TODAY}\)\]" changelog.md 2>/dev/null; then
+            echo "is_patch=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Detected patch release from changelog date"
+            exit 0
+          fi
+          
+          # Check if this commit is part of a patch release by looking at recent commits
+          # (Sometimes the merge commit might not have the right message, but the actual commit does)
+          echo "Checking recent commits for patch release pattern..."
+          if git log --oneline -10 | grep -qiE "(bump patch|patch.*release|\[changelog\] Release.*Requirements)"; then
+            echo "is_patch=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Detected patch release from recent commit history"
+            exit 0
+          fi
+          
+          echo "is_patch=false" >> "$GITHUB_OUTPUT"
+          echo "ℹ️  Not a patch release commit, skipping"
 
       - name: Extract version
         id: extract-version
@@ -460,12 +500,28 @@ jobs:
         run: |
           # Try to extract from commit message first
           COMMIT_MSG="${{ github.event.head_commit.message }}"
-          VERSION=$(echo "$COMMIT_MSG" | grep -oP '(?:bump patch version to v|release v)\K[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+          echo "Extracting version from commit message: $COMMIT_MSG"
+          
+          # Try various patterns: "[changelog] Release vX.Y.Z", "bump patch version to vX.Y.Z", "Release vX.Y.Z"
+          VERSION=$(echo "$COMMIT_MSG" | grep -oP '(?:\[changelog\] Release v|bump patch version to v|release v)\K[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+          
+          if [ -z "$VERSION" ]; then
+            # Try to extract from recent commit history (in case merge commit doesn't have the right message)
+            echo "Trying to extract version from recent commit history..."
+            VERSION=$(git log --oneline -10 | grep -oP '(?:\[changelog\] Release v|release v)\K[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+          fi
           
           if [ -z "$VERSION" ]; then
             # Try to extract from changelog (latest release entry with today's date)
             TODAY=$(date +'%Y-%m-%d')
+            echo "Trying to extract version from changelog (date: $TODAY)..."
             VERSION=$(grep -oP "## \[\K[0-9]+\.[0-9]+\.[0-9]+(?= \(${TODAY}\))" changelog.md | head -1)
+          fi
+          
+          if [ -z "$VERSION" ]; then
+            # Last resort: get latest version from changelog (most recent release entry)
+            echo "Trying to extract latest version from changelog..."
+            VERSION=$(grep -oP "^## \[\K[0-9]+\.[0-9]+\.[0-9]+(?= \()" changelog.md | head -1)
           fi
           
           if [ -z "$VERSION" ]; then
@@ -507,7 +563,12 @@ jobs:
               version = os.getenv('VERSION', '')
               
               # Find the section for this version
-              pattern = rf'##\s*\[{re.escape(version)}\s*\([^\)]+\)\].*?(?=##\s*\[|\Z)'
+              # Pattern must match: ## [X.Y.Z (date)](link) or ## [X.Y.Z (date)]
+              # re.escape handles dots in version number
+              escaped_version = re.escape(version)
+              # Match version with date and optional link, then everything until next section or end
+              # Pattern: ## [version (date)](optional-link) ... content ... until next ## or end
+              pattern = rf'##\s*\[{escaped_version}\s*\([^\)]+\)\](?:\([^\)\n]+\))?.*?(?=##\s*\[|\Z)'
               match = re.search(pattern, content, re.DOTALL | re.IGNORECASE)
               
               if match:
@@ -546,5 +607,5 @@ jobs:
           prerelease: false
           generate_release_notes: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
 
