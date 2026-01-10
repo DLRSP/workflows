@@ -64,7 +64,16 @@ jobs:
               echo "Verifying ${{ matrix.requirements-file }} can be installed..."
               pip install --dry-run --no-deps -r ${{ matrix.requirements-file }} || pip install --no-deps -r ${{ matrix.requirements-file }}
               echo "Checking if requirements are up to date..."
-              pip-compile --check dev.in --output-file=${{ matrix.requirements-file }} || (echo "Requirements may need updating" && exit 1)
+              # Generate a temporary file and compare with existing
+              TEMP_FILE=$(mktemp)
+              pip-compile --generate-hashes --allow-unsafe -o "$TEMP_FILE" dev.in || (echo "Failed to compile requirements" && rm "$TEMP_FILE" && exit 1)
+              if ! cmp -s "${{ matrix.requirements-file }}" "$TEMP_FILE"; then
+                echo "Requirements are out of date. Run: pip-compile --generate-hashes --allow-unsafe -o ${{ matrix.requirements-file }} dev.in"
+                rm "$TEMP_FILE"
+                exit 1
+              fi
+              rm "$TEMP_FILE"
+              echo "Requirements are up to date"
             fi
           else
             echo "dev.in not found, skipping dev requirements verification"
@@ -159,7 +168,16 @@ jobs:
               echo "Verifying ${{ matrix.requirements-file }} can be installed..."
               pip install --dry-run --no-deps -r ${{ matrix.requirements-file }} || pip install --no-deps -r ${{ matrix.requirements-file }}
               echo "Checking if docs requirements are up to date..."
-              pip-compile --check requirements/docs.in --output-file=${{ matrix.requirements-file }} || (echo "Docs requirements may need updating" && exit 1)
+              # Generate a temporary file and compare with existing
+              TEMP_FILE=$(mktemp)
+              pip-compile --generate-hashes --allow-unsafe -o "$TEMP_FILE" requirements/docs.in || (echo "Failed to compile requirements" && rm "$TEMP_FILE" && exit 1)
+              if ! cmp -s "${{ matrix.requirements-file }}" "$TEMP_FILE"; then
+                echo "Docs requirements are out of date. Run: pip-compile --generate-hashes --allow-unsafe -o ${{ matrix.requirements-file }} requirements/docs.in"
+                rm "$TEMP_FILE"
+                exit 1
+              fi
+              rm "$TEMP_FILE"
+              echo "Docs requirements are up to date"
             fi
           else
             echo "requirements/docs.in not found, skipping docs requirements verification"
