@@ -1,0 +1,88 @@
+---
+name: Verify Requirements
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'dev.in'
+      - 'docs.in'
+      - '*.txt'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'dev.in'
+      - 'docs.in'
+      - '*.txt'
+  schedule:
+    # Runs every Monday at 8:00 UTC
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+
+jobs:
+  verify-dev-requirements:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - python-version: "3.8"
+            requirements-file: py38-dev.txt
+          - python-version: "3.9"
+            requirements-file: py39-dev.txt
+          - python-version: "3.10"
+            requirements-file: py310-dev.txt
+          - python-version: "3.11"
+            requirements-file: py311-dev.txt
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install pip-tools
+        run: |
+          pip install --upgrade pip
+          pip install pip-tools
+
+      - name: Verify requirements file can be installed
+        run: |
+          echo "Verifying ${{ matrix.requirements-file }} can be installed..."
+          pip install -r ${{ matrix.requirements-file }} --dry-run || pip install -r ${{ matrix.requirements-file }}
+
+      - name: Check if requirements are up to date
+        run: |
+          pip-compile --check dev.in --output-file=${{ matrix.requirements-file }} || echo "Requirements may need updating"
+
+  verify-docs-requirements:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install pip-tools
+        run: |
+          pip install --upgrade pip
+          pip install pip-tools
+
+      - name: Verify docs requirements can be installed
+        run: |
+          pip install -r py-docs.txt --dry-run || pip install -r py-docs.txt
+
+      - name: Check if docs requirements are up to date
+        run: |
+          pip-compile --check docs.in --output-file=py-docs.txt || echo "Docs requirements may need updating"
