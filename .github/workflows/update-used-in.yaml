@@ -1,0 +1,279 @@
+---
+name: Update Used In Section
+
+on:
+  schedule:
+    # Runs every Monday at 2:00 UTC
+    - cron: '0 2 * * 1'
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/*.yaml'
+      - 'README.md'
+
+jobs:
+  update-used-in:
+    if: github.repository == 'DLRSP/workflows'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install PyGithub
+
+      - name: Find repositories using workflows
+        id: find-repos
+        env:
+          GITHUB_TOKEN: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          python3 << 'EOF'
+          import os
+          import re
+          import json
+          from github import Github
+
+          token = os.getenv('GITHUB_TOKEN')
+          if not token:
+              print("❌ GITHUB_TOKEN not found")
+              exit(1)
+
+          g = Github(token)
+          org_name = "DLRSP"
+          workflows_repo = "DLRSP/workflows"
+          
+          print(f"🔍 Searching for repositories in {org_name} that use workflows from {workflows_repo}...")
+          
+          # Pattern to match workflow references
+          pattern = r'DLRSP/workflows/\.github/workflows/[^@]+@'
+          
+          repos_found = {}
+          
+          try:
+              org = g.get_organization(org_name)
+              
+              # Get all repositories in the organization
+              for repo in org.get_repos(type='all'):
+                  repo_full_name = repo.full_name
+                  
+                  # Skip the workflows repository itself
+                  if repo_full_name == workflows_repo:
+                      continue
+                  
+                  # Only process public repositories
+                  if repo.private:
+                      continue
+                  
+                  try:
+                      # Check if .github/workflows directory exists
+                      try:
+                          contents = repo.get_contents(".github/workflows")
+                          if not isinstance(contents, list):
+                              continue
+                      except:
+                          # No workflows directory
+                          continue
+                      
+                      # Search in workflow files
+                      uses_workflows = False
+                      for content_file in contents:
+                          if not content_file.name.endswith(('.yaml', '.yml')):
+                              continue
+                          
+                          try:
+                              file_content = content_file.decoded_content.decode('utf-8')
+                              if re.search(pattern, file_content):
+                                  uses_workflows = True
+                                  break
+                          except:
+                              continue
+                      
+                      if uses_workflows:
+                          # Get repository info
+                          stars = repo.stargazers_count
+                          description = repo.description or ""
+                          repos_found[repo_full_name] = {
+                              'name': repo.name,
+                              'full_name': repo.full_name,
+                              'stars': stars,
+                              'description': description,
+                              'url': repo.html_url
+                          }
+                          print(f"✅ Found: {repo_full_name} ({stars} ⭐)")
+                      
+                  except Exception as e:
+                      print(f"⚠️  Error checking {repo_full_name}: {e}")
+                      continue
+              
+              # Sort by stars (descending)
+              sorted_repos = sorted(
+                  repos_found.values(),
+                  key=lambda x: x['stars'],
+                  reverse=True
+              )
+              
+              # Save to output
+              output = {
+                  'repositories': sorted_repos,
+                  'count': len(sorted_repos)
+              }
+              
+              output_file = os.getenv('GITHUB_OUTPUT')
+              with open(output_file, 'a', encoding='utf-8') as f:
+                  f.write(f"repositories<<EOF\n{json.dumps(output, indent=2)}\nEOF\n")
+              
+              print(f"\n✅ Found {len(sorted_repos)} repositories using these workflows")
+              for repo in sorted_repos[:5]:  # Show first 5
+                  print(f"  - {repo['full_name']}: {repo['stars']} ⭐")
+          
+          except Exception as e:
+              print(f"❌ Error: {e}")
+              import traceback
+              traceback.print_exc()
+              exit(1)
+          EOF
+
+      - name: Update README.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          python3 << 'EOF'
+          import os
+          import re
+          import json
+          
+          # Read repositories from output
+          output = """${{ steps.find-repos.outputs.repositories }}"""
+          try:
+              repos_data = json.loads(output)
+              repos = repos_data.get('repositories', [])
+          except Exception as e:
+              print(f"❌ Failed to parse repositories data: {e}")
+              repos = []
+          
+          if not repos:
+              print("ℹ️  No repositories found, skipping README update")
+              exit(0)
+          
+          # Read README.md
+          readme_path = "README.md"
+          with open(readme_path, 'r', encoding='utf-8') as f:
+              readme_content = f.read()
+          
+          # Generate new "Used in" section
+          used_in_lines = [
+              "## Used in",
+              "",
+              "Check these projects to get real-life examples of usage and inspiration:",
+              ""
+          ]
+          
+          for repo in repos:
+              owner, repo_name = repo['full_name'].split('/')
+              stars = repo['stars']
+              description = repo['description']
+              url = repo['url']
+              
+              # Format: - ![GitHub stars](badge_url) [repo-name](url) - description
+              badge_url = f"https://img.shields.io/github/stars/{owner}/{repo_name}?label=%E2%AD%90&style=flat-square"
+              entry = f"- ![GitHub stars]({badge_url}) [{repo_name}]({url}#readme)"
+              if description:
+                  entry += f" - {description}"
+              used_in_lines.append(entry)
+          
+          used_in_lines.append("")
+          used_in_lines.append("Feel free to send a PR to add your project in this list if you are relying on these scripts.")
+          used_in_section = "\n".join(used_in_lines)
+          
+          # Replace the "Used in" section in README
+          pattern = r'(## Used in\n.*?\nFeel free to send a PR to add your project in this list if you are relying on these scripts\.)'
+          
+          if re.search(pattern, readme_content, re.DOTALL):
+              new_content = re.sub(
+                  pattern,
+                  used_in_section,
+                  readme_content,
+                  flags=re.DOTALL
+              )
+              
+              # Write back
+              with open(readme_path, 'w', encoding='utf-8') as f:
+                  f.write(new_content)
+              
+              print(f"✅ Updated README.md with {len(repos)} repositories")
+              for repo in repos[:3]:
+                  print(f"  - {repo['full_name']}: {repo['stars']} ⭐")
+          else:
+              print("⚠️  'Used in' section not found in README.md")
+              # Try to insert after "## Changelog" section
+              if "## Changelog" in readme_content:
+                  new_content = readme_content.replace(
+                      "## Changelog",
+                      f"## Changelog\n\n{used_in_section}\n\n"
+                  )
+                  with open(readme_path, 'w', encoding='utf-8') as f:
+                      f.write(new_content)
+                  print("✅ Added 'Used in' section after 'Changelog' section")
+              else:
+                  print("❌ Could not find suitable location in README.md")
+                  exit(1)
+          EOF
+
+      - name: Check for changes
+        id: check-changes
+        run: |
+          if git diff --quiet README.md; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "ℹ️  No changes to README.md"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Changes detected in README.md"
+            git diff README.md
+          fi
+
+      - name: Setup Git
+        if: steps.check-changes.outputs.changed == 'true'
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit changes
+        if: steps.check-changes.outputs.changed == 'true'
+        run: |
+          git add README.md
+          git commit -m "docs: Update 'Used in' section with repositories sorted by stars"
+
+      - name: Create Pull Request
+        if: steps.check-changes.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
+          commit-message: "docs: Update 'Used in' section with repositories sorted by stars"
+          title: "docs: Update 'Used in' section"
+          body: |
+            ## 📝 Updated "Used in" Section
+            
+            This PR automatically updates the "Used in" section in README.md with all repositories that use workflows from `DLRSP/workflows`.
+            
+            Repositories are sorted by GitHub stars (most popular first).
+            
+            ---
+            Auto-generated by `update-used-in.yaml` workflow.
+          branch: update-used-in
+          delete-branch: true
+          labels: |
+            📚 documentation
+          draft: false
