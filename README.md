@@ -39,15 +39,18 @@ A [detailed changelog](changelog.md) is available.
 Check these projects to get real-life examples of usage and inspiration:
 
 - ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-errors?label=%E2%AD%90&style=flat-square) [django-errors](https://github.com/DLRSP/django-errors#readme) - Django application for handling server errors.
+- ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-sp?label=%E2%AD%90&style=flat-square) [django-sp](https://github.com/DLRSP/django-sp#readme) - Django application for social authentication and other security integrations.
+- ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-iubenda?label=%E2%AD%90&style=flat-square) [django-iubenda](https://github.com/DLRSP/django-iubenda#readme) - Django application for privacy and cookies policy managed by Iubenda.
 - ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-requests-api?label=%E2%AD%90&style=flat-square) [django-requests-api](https://github.com/DLRSP/django-requests-api#readme) - Django application to provide simple and shared requests client.
-- ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-sp?label=%E2%AD%90&style=flat-square) [django-sp](https://github.com/DLRSP/django-sp#readme) - Django application for custom Social Profile Auth and User model.
-- ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-custom-storage?label=%E2%AD%90&style=flat-square) [django-custom-storage](https://github.com/DLRSP/django-custom-storage#readme) - Django application provide custom storage uses S3 and Compressor.
-- ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-iubenda?label=%E2%AD%90&style=flat-square) [django-iubenda](https://github.com/DLRSP/django-iubenda#readme) - Django application for handling privacy and cookie policies configured with Iubenda.
-- ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-hashtag?label=%E2%AD%90&style=flat-square) [django-hashtag](https://github.com/DLRSP/django-hashtag#readme) - Django application provide hashtag functionality.
+- ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-custom-storage?label=%E2%AD%90&style=flat-square) [django-custom-storage](https://github.com/DLRSP/django-custom-storage#readme) - Django application provide custom storage uses S3 and Compressor
+- ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-hashtag?label=%E2%AD%90&style=flat-square) [django-hashtag](https://github.com/DLRSP/django-hashtag#readme)
 - ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-model-mixin?label=%E2%AD%90&style=flat-square) [django-model-mixin](https://github.com/DLRSP/django-model-mixin#readme) - Django application provide simple model's mixins to add common reusable attributes.
 - ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-lang?label=%E2%AD%90&style=flat-square) [django-lang](https://github.com/DLRSP/django-lang#readme) - Django application to provide useful utils and reusable parts of code for multi-languages sites.
-- ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-static-base?label=%E2%AD%90&style=flat-square) [django-static-base](https://github.com/DLRSP/django-static-base#readme) - Django's application to serve up-to-date common static files (JQuery, Bootstrap, Plugins, ...) as "base" static directory
+- ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-static-base?label=%E2%AD%90&style=flat-square) [django-static-base](https://github.com/DLRSP/django-static-base#readme) - Django application to serve up-to-date common static files (JQuery, Bootstrap, Plugins, ...) as "base" static directory
 - ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-sites-extra?label=%E2%AD%90&style=flat-square) [django-sites-extra](https://github.com/DLRSP/django-sites-extra#readme) - Django application to extend the standard "sites" framework with extra utils.
+- ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-filer-optimizer?label=%E2%AD%90&style=flat-square) [django-filer-optimizer](https://github.com/DLRSP/django-filer-optimizer#readme) - Django application to extend the "django-filer" application with extra utils like.
+- ![GitHub stars](https://img.shields.io/github/stars/DLRSP/requirements?label=%E2%AD%90&style=flat-square) [requirements](https://github.com/DLRSP/requirements#readme)
+- ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-service?label=%E2%AD%90&style=flat-square) [django-service](https://github.com/DLRSP/django-service#readme)
 
 Feel free to send a PR to add your project in this list if you are relying on these scripts.
 
