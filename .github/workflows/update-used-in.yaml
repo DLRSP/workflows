@@ -104,7 +104,11 @@ jobs:
                       if uses_workflows:
                           # Get repository info
                           stars = repo.stargazers_count
-                          description = repo.description or ""
+                          # Clean description to avoid JSON parsing issues
+                          description = (repo.description or "").strip()
+                          # Remove problematic characters that could break JSON
+                          description = description.replace('\n', ' ').replace('\r', '')
+                          
                           repos_found[repo_full_name] = {
                               'name': repo.name,
                               'full_name': repo.full_name,
@@ -125,15 +129,21 @@ jobs:
                   reverse=True
               )
               
-              # Save to output
+              # Save to output file (using artifacts instead of GITHUB_OUTPUT for large data)
               output = {
                   'repositories': sorted_repos,
                   'count': len(sorted_repos)
               }
               
+              # Save to file for next step
+              output_file_path = 'repos_data.json'
+              with open(output_file_path, 'w', encoding='utf-8') as f:
+                  json.dump(output, f, indent=2)
+              
+              # Also save count to GITHUB_OUTPUT for conditional checks
               output_file = os.getenv('GITHUB_OUTPUT')
               with open(output_file, 'a', encoding='utf-8') as f:
-                  f.write(f"repositories<<EOF\n{json.dumps(output, indent=2)}\nEOF\n")
+                  f.write(f"count={len(sorted_repos)}\n")
               
               print(f"\n✅ Found {len(sorted_repos)} repositories using these workflows")
               for repo in sorted_repos[:5]:  # Show first 5
@@ -155,14 +165,22 @@ jobs:
           import re
           import json
           
-          # Read repositories from output
-          output = """${{ steps.find-repos.outputs.repositories }}"""
-          try:
-              repos_data = json.loads(output)
-              repos = repos_data.get('repositories', [])
-          except Exception as e:
-              print(f"❌ Failed to parse repositories data: {e}")
+          # Read repositories from file (saved in previous step)
+          repos_data_file = 'repos_data.json'
+          if not os.path.exists(repos_data_file):
+              print(f"❌ File {repos_data_file} not found")
               repos = []
+          else:
+              try:
+                  with open(repos_data_file, 'r', encoding='utf-8') as f:
+                      repos_data = json.load(f)
+                  repos = repos_data.get('repositories', [])
+                  print(f"✅ Loaded {len(repos)} repositories from {repos_data_file}")
+              except Exception as e:
+                  print(f"❌ Failed to parse repositories data: {e}")
+                  import traceback
+                  traceback.print_exc()
+                  repos = []
           
           if not repos:
               print("ℹ️  No repositories found, skipping README update")
