@@ -158,7 +158,7 @@ jobs:
         # TODO: encode this search and replace pattern in bump-my-version's TOML.
         run: >
           bump-my-version replace --no-configured-files
-          --search "(unreleased)"
+          --regex --search "\(unreleased\)"
           --replace "({now:%Y-%m-%d})"
           ./changelog.md
       - name: Update comparison URL in changelog
