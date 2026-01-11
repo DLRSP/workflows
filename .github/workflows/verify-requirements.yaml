@@ -38,6 +38,12 @@ jobs:
             requirements-file: py310-dev.txt
           - python-version: "3.11"
             requirements-file: py311-dev.txt
+          - python-version: "3.12"
+            requirements-file: py312-dev.txt
+          - python-version: "3.13"
+            requirements-file: py313-dev.txt
+          - python-version: "3.14"
+            requirements-file: py314-dev.txt
 
     steps:
       - name: Checkout code
@@ -102,6 +108,8 @@ jobs:
             django-version: "3.2"
           - python-version: "3.10"
             django-version: "4.2"
+          - python-version: "3.10"
+            django-version: "5.2"
           - python-version: "3.11"
             django-version: "3.2"
           - python-version: "3.11"
@@ -110,6 +118,12 @@ jobs:
             django-version: "3.2"
           - python-version: "3.12"
             django-version: "4.2"
+          - python-version: "3.12"
+            django-version: "5.2"
+          - python-version: "3.13"
+            django-version: "5.2"
+          - python-version: "3.14"
+            django-version: "5.2"
 
     steps:
       - name: Checkout code
