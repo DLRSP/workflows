@@ -119,7 +119,7 @@ jobs:
   analyze-dependencies:
     name: Analyze Dependency Changes
     needs: detect-changes
-    if: needs.detect-changes.outputs.has_changes == 'true'
+    if: always() && needs.detect-changes.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
     outputs:
       release_notes: ${{ steps.generate-notes.outputs.release_notes }}
@@ -260,7 +260,7 @@ jobs:
   create-patch-release:
     name: Create Patch Release
     needs: [detect-changes, analyze-dependencies]
-    if: needs.detect-changes.outputs.has_changes == 'true'
+    if: always() && needs.detect-changes.outputs.has_changes == 'true' && (needs.analyze-dependencies.result == 'success' || needs.analyze-dependencies.result == 'skipped')
     runs-on: ubuntu-latest
     outputs:
       new_version: ${{ steps.bump-version.outputs.new_version }}
