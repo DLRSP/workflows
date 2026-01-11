@@ -2,6 +2,7 @@
 name: Recap PR
 
 on:
+  workflow_call:
   pull_request:
     types: [opened]
 

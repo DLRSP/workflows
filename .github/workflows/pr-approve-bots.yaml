@@ -1,0 +1,63 @@
+---
+name: Approve and Auto-Merge Bot PRs
+
+on:
+  workflow_call:
+    inputs:
+      enable_auto_merge:
+        description: 'Enable auto-merge for bot PRs'
+        required: false
+        default: 'true'
+        type: boolean
+
+jobs:
+  approve-bots:
+    name: Approve and Auto-Merge Bot PRs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    # Only run for bot PRs and non-draft PRs (when called from workflow_call, github.event is still available)
+    # NOTE: BOT_PAT must be configured in the calling repository and the bot account must have write/admin permissions
+    # in that repository to approve PRs. The bot does not need to be the owner, but must be a collaborator with write access.
+    if: |
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.draft == false &&
+      (
+        github.actor == 'dependabot[bot]' ||
+        github.actor == 'pre-commit-ci[bot]' ||
+        github.actor == 'dlrsp-bot' ||
+        github.event.pull_request.user.login == 'dependabot[bot]' ||
+        github.event.pull_request.user.login == 'pre-commit-ci[bot]' ||
+        github.event.pull_request.user.login == 'dlrsp-bot'
+      )
+    steps:
+      - name: Setup GitHub CLI
+        uses: cli/setup-github-cli@v2
+        with:
+          version: latest
+
+      - name: Approve Bot PRs
+        run: |
+          PR_URL="${{ github.event.pull_request.html_url }}"
+          if [ -z "$PR_URL" ]; then
+            echo "❌ PR URL not found"
+            exit 1
+          fi
+          echo "✅ Approving PR: $PR_URL"
+          gh pr review --approve "$PR_URL"
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+
+      - name: Enable auto-merge for Bot PRs
+        if: ${{ inputs.enable_auto_merge != 'false' }}
+        run: |
+          PR_URL="${{ github.event.pull_request.html_url }}"
+          if [ -z "$PR_URL" ]; then
+            echo "❌ PR URL not found"
+            exit 1
+          fi
+          echo "✅ Enabling auto-merge for PR: $PR_URL"
+          gh pr merge --auto --rebase "$PR_URL" || echo "⚠️  Auto-merge may already be enabled or PR may not be mergeable"
+        env:
+          GH_TOKEN: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
