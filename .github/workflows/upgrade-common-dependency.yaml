@@ -160,9 +160,7 @@ jobs:
         continue-on-error: true
         with:
           path: .
-          pattern: |
-            py*-dev.txt
-            py*-docs.txt
+          pattern: py*
           merge-multiple: true
 
       - name: Check if artifacts were downloaded
