@@ -103,15 +103,36 @@ jobs:
             echo "✓ ${{ env.PY_ENV }}-docs.txt verified successfully"
           fi
 
+      - name: Check if dev file exists for upload
+        id: check-dev-file
+        if: steps.upgrade-deps.outputs.has_changes == 'true'
+        run: |
+          if [ -f "${{ env.PY_ENV }}-dev.txt" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Upload Python dependencies ${{ matrix.python-version }} for Dev
+        if: steps.check-dev-file.outputs.exists == 'true'
         uses: actions/upload-artifact@v6
         with:
           overwrite: true
           name: ${{ env.PY_ENV }}-dev.txt
           path: ${{ env.PY_ENV }}-dev.txt
 
+      - name: Check if docs file exists for upload
+        id: check-docs-file
+        if: steps.upgrade-deps.outputs.has_changes == 'true' && (matrix.python-version == '3.10' || matrix.python-version == '3.11')
+        run: |
+          if [ -f "${{ env.PY_ENV }}-docs.txt" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Upload Python dependencies ${{ matrix.python-version }} for Docs
-        if: matrix.python-version == '3.10' || matrix.python-version == '3.11'
+        if: steps.check-docs-file.outputs.exists == 'true'
         uses: actions/upload-artifact@v6
         continue-on-error: true
         with:
@@ -147,10 +168,34 @@ jobs:
       - name: Check if artifacts were downloaded
         id: check-artifacts
         run: |
-          if ls py*-dev.txt py*-docs.txt 2>/dev/null | head -1 > /dev/null; then
+          echo "🔍 Checking for downloaded artifacts..."
+          echo "Current directory: $(pwd)"
+          echo "Listing all files:"
+          ls -la 2>/dev/null || echo "Directory listing failed"
+          
+          ARTIFACTS_FOUND=false
+          
+          # Check for dev requirements files
+          if ls py*-dev.txt 2>/dev/null | head -1 > /dev/null; then
+            echo "✅ Found dev requirements files:"
+            ls -la py*-dev.txt 2>/dev/null
+            ARTIFACTS_FOUND=true
+          else
+            echo "ℹ️  No dev requirements files found (py*-dev.txt)"
+          fi
+          
+          # Check for docs requirements files
+          if ls py*-docs.txt 2>/dev/null | head -1 > /dev/null; then
+            echo "✅ Found docs requirements files:"
+            ls -la py*-docs.txt 2>/dev/null
+            ARTIFACTS_FOUND=true
+          else
+            echo "ℹ️  No docs requirements files found (py*-docs.txt)"
+          fi
+          
+          if [ "$ARTIFACTS_FOUND" = "true" ]; then
             echo "has_artifacts=true" >> "$GITHUB_OUTPUT"
-            echo "✅ Found artifacts to process"
-            ls -la py*-dev.txt py*-docs.txt 2>/dev/null || true
+            echo "✅ Artifacts found, will create PR"
           else
             echo "has_artifacts=false" >> "$GITHUB_OUTPUT"
             echo "⚠️  No artifacts found - no .in files were processed, skipping PR creation"
@@ -208,7 +253,7 @@ jobs:
         if: steps.check-artifacts.outputs.has_artifacts == 'true'
         uses: peter-evans/create-pull-request@v8
         with:
-          token: ${{ secrets.BOT_PAT }}
+          token: ${{ secrets.BOT_PAT || secrets.GITHUB_TOKEN }}
           commit-message: "Automated common dependency upgrades"
           committer: GitHub <noreply@github.com>
           author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
