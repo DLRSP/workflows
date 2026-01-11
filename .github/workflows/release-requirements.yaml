@@ -31,9 +31,10 @@ jobs:
     name: Detect Requirements Changes
     runs-on: ubuntu-latest
     # Skip if this is a patch-release PR merge (those are handled separately)
+    # Note: We still run the job to detect changes, but skip if it's a patch release commit
     if: |
       (github.event_name == 'pull_request' && github.event.pull_request.merged == true && !contains(github.event.pull_request.title, 'patch-release')) ||
-      (github.event_name == 'push' && !contains(github.event.head_commit.message, 'bump patch version to v')) ||
+      (github.event_name == 'push') ||
       github.event_name == 'workflow_dispatch'
     outputs:
       has_changes: ${{ steps.check-changes.outputs.has_changes }}
@@ -46,47 +47,73 @@ jobs:
       - name: Check for requirements changes
         id: check-changes
         run: |
+          echo "🔍 Debug: Event name: ${{ github.event_name }}"
+          echo "🔍 Debug: Head commit message: ${{ github.event.head_commit.message }}"
+          
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             # Get base SHA for PR
             BASE_SHA="${{ github.event.pull_request.base.sha }}"
             HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+            echo "🔍 Debug: PR mode - BASE_SHA=$BASE_SHA, HEAD_SHA=$HEAD_SHA"
           elif [ "${{ github.event_name }}" = "push" ]; then
             # For push, check if it's from a requirements update (not a patch release)
             # Skip if commit message indicates patch release
-            if echo "${{ github.event.head_commit.message }}" | grep -q "bump patch version"; then
+            COMMIT_MSG="${{ github.event.head_commit.message }}"
+            if echo "$COMMIT_MSG" | grep -qE "(bump patch version|\[changelog\] Release)"; then
               echo "has_changes=false" >> "$GITHUB_OUTPUT"
               echo "changed_files=" >> "$GITHUB_OUTPUT"
               echo "This is a patch release commit, skipping requirements change detection"
               exit 0
             fi
             # Get the previous commit for push
-            BASE_SHA=$(git rev-parse HEAD~1)
+            BASE_SHA=$(git rev-parse HEAD~1 2>/dev/null || echo "")
             HEAD_SHA="${{ github.sha }}"
+            echo "🔍 Debug: Push mode - BASE_SHA=$BASE_SHA, HEAD_SHA=$HEAD_SHA"
           else
-            # For workflow_dispatch, compare with last tag
-            BASE_SHA=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+            # For workflow_dispatch, compare with last tag or initial commit
+            BASE_SHA=$(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD 2>/dev/null || echo "")
             HEAD_SHA="HEAD"
+            echo "🔍 Debug: workflow_dispatch mode - BASE_SHA=$BASE_SHA, HEAD_SHA=$HEAD_SHA"
           fi
 
-          if [ -z "$BASE_SHA" ]; then
-            echo "No base commit found, checking all requirements files"
-            changed_files=$(find . -name "*.txt" -path "*/requirements/*" -o -name "py*-dev.txt" -o -name "py*-docs.txt" 2>/dev/null | head -20)
+          # Debug: Show what files exist
+          echo "🔍 Debug: Listing requirements files in repository:"
+          find . -type f \( -name "*.txt" -path "*/requirements/*" -o -name "py*-dev.txt" -o -name "py*-docs.txt" \) 2>/dev/null | head -20 || echo "No files found with find"
+
+          if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "$HEAD_SHA" ]; then
+            echo "🔍 Debug: No base commit or same commit, checking all requirements files"
+            changed_files=$(find . -type f \( -name "*.txt" -path "*/requirements/*" -o -name "py*-dev.txt" -o -name "py*-docs.txt" \) 2>/dev/null | head -20 || echo "")
+            echo "🔍 Debug: Found files with find:"
+            echo "$changed_files"
           else
-            changed_files=$(git diff --name-only --diff-filter=AM $BASE_SHA $HEAD_SHA | grep -E "(requirements/.*\.txt|py.*-dev\.txt|py.*-docs\.txt)" || echo "")
+            echo "🔍 Debug: Comparing commits $BASE_SHA..$HEAD_SHA"
+            # Get all changed files first
+            ALL_CHANGED=$(git diff --name-only --diff-filter=AM $BASE_SHA $HEAD_SHA 2>/dev/null || echo "")
+            echo "🔍 Debug: All changed files:"
+            echo "$ALL_CHANGED"
+            
+            # Filter for requirements files - improved pattern matching
+            changed_files=$(echo "$ALL_CHANGED" | grep -E "(requirements/.*\.txt|^py[0-9]+-dev\.txt$|^py[0-9]+-docs\.txt$|dev\.in|requirements/.*\.in)" || echo "")
+            echo "🔍 Debug: Filtered requirements files:"
+            echo "$changed_files"
           fi
 
+          # Trim whitespace and check if empty
+          changed_files=$(echo "$changed_files" | sed '/^$/d' | tr '\n' '\n')
+          
           if [ -z "$changed_files" ]; then
             echo "has_changes=false" >> "$GITHUB_OUTPUT"
             echo "changed_files=" >> "$GITHUB_OUTPUT"
-            echo "No requirements files changed"
+            echo "⚠️  No requirements files changed"
+            echo "🔍 Debug: Empty changed_files, exiting"
             exit 0
           fi
 
-          echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          echo "✅ has_changes=true" >> "$GITHUB_OUTPUT"
           echo "changed_files<<EOF" >> "$GITHUB_OUTPUT"
           echo "$changed_files" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
-          echo "Changed files:"
+          echo "✅ Changed files detected:"
           echo "$changed_files"
 
   analyze-dependencies:
