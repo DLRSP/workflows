@@ -1,0 +1,862 @@
+---
+name: Upgrade Static Files (CSS/JS)
+
+on:
+  workflow_call:
+    inputs:
+      libraries:
+        description: 'Comma-separated list of libraries to check (e.g., "jquery,bootstrap")'
+        required: false
+        type: string
+      static_base_path:
+        description: 'Path to static_base directory (default: auto-detect)'
+        required: false
+        type: string
+      upgrade_level:
+        description: 'Level of upgrades to perform: patch, minor, or major (default: patch)'
+        required: false
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
+  workflow_dispatch:
+    inputs:
+      libraries:
+        description: 'Comma-separated list of libraries to check (e.g., "jquery,bootstrap")'
+        required: false
+        type: string
+      static_base_path:
+        description: 'Path to static_base directory (default: auto-detect)'
+        required: false
+        type: string
+      upgrade_level:
+        description: 'Level of upgrades to perform: patch, minor, or major (default: patch)'
+        required: false
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
+  schedule:
+    # Runs every Monday at 6:00 UTC
+    - cron: '0 6 * * 1'
+
+jobs:
+  check-updates:
+    name: Check for Static File Updates
+    runs-on: ubuntu-latest
+    outputs:
+      has_updates: ${{ steps.check.outputs.has_updates }}
+      updates_summary: ${{ steps.check.outputs.summary }}
+      has_major_upgrades: ${{ steps.check.outputs.has_major_upgrades }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install requests beautifulsoup4
+
+      - name: Check for library updates
+        id: check
+        run: |
+          python3 << 'EOF'
+          import os
+          import re
+          import json
+          import requests
+          from pathlib import Path
+          from bs4 import BeautifulSoup
+          from urllib.parse import urljoin
+
+          # Get upgrade level parameter
+          upgrade_level = os.getenv('UPGRADE_LEVEL', 'patch').lower()
+          if upgrade_level not in ['patch', 'minor', 'major']:
+              upgrade_level = 'patch'
+          print(f"📊 Upgrade level: {upgrade_level}")
+          
+          # Auto-detect libraries from static files if not specified
+          libraries_input = os.getenv('LIBRARIES_INPUT', '').strip()
+          
+          if libraries_input:
+              libraries = [lib.strip() for lib in libraries_input.split(',') if lib.strip()]
+              print(f"🔍 Using specified libraries: {', '.join(libraries)}")
+          else:
+              # Auto-detect libraries from static files
+              print("🔍 Auto-detecting libraries from static files...")
+              static_dirs = list(Path('.').glob('**/static_base/**/static/**')) + list(Path('.').glob('**/static/**'))
+              
+              detected_libraries = set()
+              library_patterns = {
+                  'jquery': [r'jquery', r'jq'],
+                  'bootstrap': [r'bootstrap'],
+                  'popper': [r'popper'],
+                  'font-awesome': [r'font.?awesome', r'fa\.'],
+                  'datatables': [r'datatables'],
+                  'select2': [r'select2'],
+                  'moment': [r'moment'],
+                  'lodash': [r'lodash'],
+                  'chart.js': [r'chart\.js', r'chartjs'],
+                  'sweetalert': [r'sweetalert'],
+                  'toastr': [r'toastr'],
+                  'animate.css': [r'animate\.css'],
+                  'highlight.js': [r'highlight\.js', r'highlightjs'],
+              }
+              
+              for static_dir in static_dirs[:10]:  # Limit search
+                  for file_path in static_dir.rglob('*'):
+                      if file_path.is_file() and (file_path.suffix in ['.js', '.css', '.min.js', '.min.css']):
+                          filename_lower = file_path.name.lower()
+                          for lib_name, patterns in library_patterns.items():
+                              for pattern in patterns:
+                                  if re.search(pattern, filename_lower, re.IGNORECASE):
+                                      detected_libraries.add(lib_name)
+                                      break
+              
+              if detected_libraries:
+                  libraries = sorted(list(detected_libraries))
+                  print(f"✅ Auto-detected libraries: {', '.join(libraries)}")
+              else:
+                  # Fallback to default if nothing detected
+                  libraries = ['jquery', 'bootstrap', 'popper.js', 'font-awesome']
+                  print(f"ℹ️  No libraries auto-detected, using defaults: {', '.join(libraries)}")
+          
+          # Common CDN sources and version detection patterns
+          cdn_sources = {
+              'jquery': {
+                  'url': 'https://api.cdnjs.com/libraries/jquery',
+                  'version_key': 'version',
+                  'latest_url': 'https://code.jquery.com/jquery.min.js'
+              },
+              'bootstrap': {
+                  'url': 'https://api.cdnjs.com/libraries/bootstrap',
+                  'version_key': 'version',
+                  'latest_url': 'https://cdn.jsdelivr.net/npm/bootstrap@latest/dist/js/bootstrap.bundle.min.js'
+              },
+              'popper': {
+                  'url': 'https://api.cdnjs.com/libraries/popper.js',
+                  'version_key': 'version',
+                  'latest_url': 'https://cdn.jsdelivr.net/npm/@popperjs/core@latest/dist/umd/popper.min.js'
+              },
+              'popper.js': {
+                  'url': 'https://api.cdnjs.com/libraries/popper.js',
+                  'version_key': 'version',
+                  'latest_url': 'https://cdn.jsdelivr.net/npm/@popperjs/core@latest/dist/umd/popper.min.js'
+              },
+              'font-awesome': {
+                  'url': 'https://api.cdnjs.com/libraries/font-awesome',
+                  'version_key': 'version',
+                  'latest_url': 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/latest/css/all.min.css'
+              },
+              'datatables': {
+                  'url': 'https://api.cdnjs.com/libraries/datatables',
+                  'version_key': 'version',
+                  'latest_url': 'https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js'
+              },
+              'select2': {
+                  'url': 'https://api.cdnjs.com/libraries/select2',
+                  'version_key': 'version',
+                  'latest_url': 'https://cdn.jsdelivr.net/npm/select2@latest/dist/js/select2.min.js'
+              },
+              'moment': {
+                  'url': 'https://api.cdnjs.com/libraries/moment.js',
+                  'version_key': 'version',
+                  'latest_url': 'https://cdnjs.cloudflare.com/ajax/libs/moment.js/latest/moment.min.js'
+              },
+              'lodash': {
+                  'url': 'https://api.cdnjs.com/libraries/lodash.js',
+                  'version_key': 'version',
+                  'latest_url': 'https://cdn.jsdelivr.net/npm/lodash@latest/lodash.min.js'
+              },
+              'chart.js': {
+                  'url': 'https://api.cdnjs.com/libraries/Chart.js',
+                  'version_key': 'version',
+                  'latest_url': 'https://cdn.jsdelivr.net/npm/chart.js@latest/dist/chart.umd.min.js'
+              },
+              'sweetalert': {
+                  'url': 'https://api.cdnjs.com/libraries/sweetalert',
+                  'version_key': 'version',
+                  'latest_url': 'https://cdn.jsdelivr.net/npm/sweetalert2@latest/dist/sweetalert2.min.js'
+              },
+              'toastr': {
+                  'url': 'https://api.cdnjs.com/libraries/toastr.js',
+                  'version_key': 'version',
+                  'latest_url': 'https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js'
+              },
+              'animate.css': {
+                  'url': 'https://api.cdnjs.com/libraries/animate.css',
+                  'version_key': 'version',
+                  'latest_url': 'https://cdn.jsdelivr.net/npm/animate.css@latest/animate.min.css'
+              },
+              'highlight.js': {
+                  'url': 'https://api.cdnjs.com/libraries/highlight.js',
+                  'version_key': 'version',
+                  'latest_url': 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/latest/highlight.min.js'
+              }
+          }
+          
+          # Find version files in repository
+          version_files = []
+          for pattern in ['**/versions.json', '**/versions.txt', '**/VERSION', '**/package.json', '**/static_base/versions.py']:
+              version_files.extend(Path('.').glob(pattern))
+          
+          current_versions = {}
+          if version_files:
+              print(f"📄 Found version files: {[str(f) for f in version_files]}")
+              # Try to extract versions from files
+              for vfile in version_files:
+                  try:
+                      content = vfile.read_text(encoding='utf-8')
+                      # Try JSON
+                      if vfile.suffix == '.json':
+                          data = json.loads(content)
+                          for lib in libraries:
+                              lib_lower = lib.lower().replace('-', '_').replace('.', '_')
+                              if lib_lower in data:
+                                  current_versions[lib] = str(data[lib_lower])
+                      # Try Python dict
+                      elif vfile.suffix == '.py':
+                          # Simple regex to find version assignments
+                          for lib in libraries:
+                              pattern = rf"{lib.lower().replace('-', '_')}\s*[=:]\s*['\"]([^'\"]+)['\"]"
+                              match = re.search(pattern, content, re.IGNORECASE)
+                              if match:
+                                  current_versions[lib] = match.group(1)
+                      # Try simple key=value format
+                      else:
+                          for line in content.split('\n'):
+                              for lib in libraries:
+                                  pattern = rf"{lib}\s*[=:]\s*([^\s]+)"
+                                  match = re.search(pattern, line, re.IGNORECASE)
+                                  if match:
+                                      current_versions[lib] = match.group(1).strip('"\'')
+                  except:
+                      continue
+          
+          # If no version files found, try to detect from static files
+          if not current_versions:
+              print("📁 No version files found, checking static files...")
+              static_dirs = list(Path('.').glob('**/static/**'))
+              for static_dir in static_dirs[:5]:  # Limit search
+                  for js_file in static_dir.glob('**/*.min.js'):
+                      for lib in libraries:
+                          if lib.lower() in js_file.name.lower():
+                              # Try to extract version from filename or content
+                              match = re.search(r'([0-9]+\.[0-9]+\.[0-9]+)', js_file.name)
+                              if match:
+                                  current_versions[lib] = match.group(1)
+          
+          print(f"📌 Current versions found: {current_versions}")
+          
+          # Helper function to determine version upgrade type
+          def get_version_upgrade_type(current_ver, latest_ver):
+              """Determine if upgrade is patch, minor, or major"""
+              try:
+                  current = version.parse(current_ver)
+                  latest = version.parse(latest_ver)
+                  
+                  if latest.major > current.major:
+                      return 'major'
+                  elif latest.minor > current.minor:
+                      return 'minor'
+                  elif latest.micro > current.micro:
+                      return 'patch'
+                  else:
+                      return None  # Same or older version
+              except:
+                  # If version parsing fails, assume patch for safety
+                  return 'patch'
+          
+          # Check latest versions from CDN
+          updates_available = {}
+          major_versions_available = {}  # Track major versions not applied
+          for lib in libraries:
+              # Try multiple key variations
+              lib_key = lib.lower().replace('.', '-').replace('_', '-')
+              lib_key_alt = lib.lower().replace('-', '.').replace('_', '.')
+              
+              # Find matching source
+              source = None
+              for key in [lib_key, lib_key_alt, lib.lower()]:
+                  if key in cdn_sources:
+                      source = cdn_sources[key]
+                      break
+              
+              if source:
+                  try:
+                      response = requests.get(source['url'], timeout=10)
+                      if response.status_code == 200:
+                          data = response.json()
+                          latest_version = data.get(source['version_key'], '')
+                          
+                          if latest_version:
+                              current = current_versions.get(lib, 'unknown')
+                              if current != latest_version and latest_version != 'unknown' and current != 'unknown':
+                                  # Determine upgrade type
+                                  upgrade_type = get_version_upgrade_type(current, latest_version)
+                                  
+                                  if upgrade_type is None:
+                                      print(f"ℹ️  {lib}: {current} (up to date)")
+                                      continue
+                                  
+                                  upgrade_info = {
+                                      'current': current,
+                                      'latest': latest_version,
+                                      'source': source,
+                                      'upgrade_type': upgrade_type
+                                  }
+                                  
+                                  # Filter by upgrade_level
+                                  if upgrade_level == 'patch' and upgrade_type in ['minor', 'major']:
+                                      # Skip minor/major, but log major
+                                      if upgrade_type == 'major':
+                                          major_versions_available[lib] = upgrade_info
+                                          print(f"⚠️  {lib}: {current} → {latest_version} ({upgrade_type}, skipped - only patch allowed)")
+                                      else:
+                                          print(f"ℹ️  {lib}: {current} → {latest_version} ({upgrade_type}, skipped - only patch allowed)")
+                                  elif upgrade_level == 'minor' and upgrade_type == 'major':
+                                      # Skip major, log it
+                                      major_versions_available[lib] = upgrade_info
+                                      print(f"⚠️  {lib}: {current} → {latest_version} ({upgrade_type}, skipped - only minor/patch allowed)")
+                                  else:
+                                      # Apply update
+                                      updates_available[lib] = upgrade_info
+                                      print(f"✅ {lib}: {current} → {latest_version} ({upgrade_type})")
+                              elif current == 'unknown':
+                                  print(f"⚠️  {lib}: version unknown, skipping")
+                              else:
+                                  print(f"ℹ️  {lib}: {current} (up to date)")
+                      else:
+                          print(f"⚠️  Failed to fetch version for {lib}: HTTP {response.status_code}")
+                  except Exception as e:
+                      print(f"⚠️  Error checking {lib}: {e}")
+              else:
+                  print(f"⚠️  No CDN source configured for {lib}, skipping...")
+          
+          # Save results
+          output_file = os.getenv('GITHUB_OUTPUT')
+          has_updates = len(updates_available) > 0
+          
+          with open(output_file, 'a', encoding='utf-8') as f:
+              f.write(f"has_updates={'true' if has_updates else 'false'}\n")
+              
+              if updates_available:
+                  summary = f"Found {len(updates_available)} update(s) (level: {upgrade_level}):\n"
+                  for lib, info in updates_available.items():
+                      summary += f"- {lib}: {info['current']} → {info['latest']} ({info['upgrade_type']})\n"
+                  f.write(f"summary<<EOF\n{summary}EOF\n")
+                  
+                  # Save JSON for next step
+                  updates_file = Path('updates_available.json')
+                  with open(updates_file, 'w', encoding='utf-8') as json_file:
+                      json.dump(updates_available, json_file, indent=2)
+              
+              # Save major versions info
+              if major_versions_available:
+                  major_file = Path('major_versions_available.json')
+                  with open(major_file, 'w', encoding='utf-8') as json_file:
+                      json.dump(major_versions_available, json_file, indent=2)
+                  with open(output_file, 'a', encoding='utf-8') as f:
+                      f.write(f"has_major_upgrades=true\n")
+              else:
+                  with open(output_file, 'a', encoding='utf-8') as f:
+                      f.write(f"has_major_upgrades=false\n")
+          
+          if has_updates:
+              print(f"\n✅ Found {len(updates_available)} update(s) available for {upgrade_level} level")
+          else:
+              print(f"\nℹ️  No {upgrade_level} level updates available")
+          
+          if major_versions_available:
+              print(f"\n⚠️  Found {len(major_versions_available)} major version(s) available but not applied:")
+              for lib, info in major_versions_available.items():
+                  print(f"   - {lib}: {info['current']} → {info['latest']}")
+          EOF
+        env:
+          LIBRARIES_INPUT: ${{ inputs.libraries || '' }}
+          STATIC_BASE_PATH: ${{ inputs.static_base_path || '' }}
+
+      - name: Upload updates data
+        if: steps.check.outputs.has_updates == 'true'
+        uses: actions/upload-artifact@v6
+        with:
+          name: updates-data
+          path: updates_available.json
+          retention-days: 1
+      
+      - name: Upload major versions data
+        if: steps.check.outputs.has_major_upgrades == 'true'
+        uses: actions/upload-artifact@v6
+        continue-on-error: true
+        with:
+          name: major-versions-data
+          path: major_versions_available.json
+          retention-days: 1
+      
+      - name: Upload major versions data
+        if: steps.check.outputs.has_major_upgrades == 'true'
+        uses: actions/upload-artifact@v6
+        continue-on-error: true
+        with:
+          name: major-versions-data
+          path: major_versions_available.json
+          retention-days: 1
+
+  download-updates:
+    name: Download Updated Static Files
+    needs: check-updates
+    if: needs.check-updates.outputs.has_updates == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      files_updated: ${{ steps.download.outputs.files_updated }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install requests beautifulsoup4
+
+      - name: Download updates data
+        uses: actions/download-artifact@v6
+        with:
+          name: updates-data
+          path: .
+      
+      - name: Download major versions data
+        uses: actions/download-artifact@v6
+        continue-on-error: true
+        with:
+          name: major-versions-data
+          path: .
+      
+      - name: Download major versions data
+        uses: actions/download-artifact@v6
+        continue-on-error: true
+        with:
+          name: major-versions-data
+          path: .
+
+      - name: Download updated files
+        id: download
+        run: |
+          python3 << 'EOF'
+          import os
+          import json
+          import requests
+          from pathlib import Path
+          from urllib.parse import urljoin, urlparse
+
+          updates_file = Path('updates_available.json')
+          if not updates_file.exists():
+              print("❌ updates_available.json not found")
+              exit(1)
+          
+          with open(updates_file, 'r', encoding='utf-8') as f:
+              updates = json.load(f)
+          
+          print(f"📥 Downloading {len(updates)} updated library files...")
+          
+          # Function to generate download URLs based on library name and version
+          def get_download_urls(lib_name, version):
+              lib_lower = lib_name.lower().replace('.', '-').replace('_', '-')
+              
+              urls = {}
+              
+              if lib_lower == 'jquery':
+                  urls = {
+                      'js': f"https://code.jquery.com/jquery-{version}.min.js",
+                      'js_map': f"https://code.jquery.com/jquery-{version}.min.map"
+                  }
+              elif lib_lower == 'bootstrap':
+                  urls = {
+                      'css': f"https://cdn.jsdelivr.net/npm/bootstrap@{version}/dist/css/bootstrap.min.css",
+                      'js': f"https://cdn.jsdelivr.net/npm/bootstrap@{version}/dist/js/bootstrap.bundle.min.js",
+                      'css_map': f"https://cdn.jsdelivr.net/npm/bootstrap@{version}/dist/css/bootstrap.min.css.map",
+                      'js_map': f"https://cdn.jsdelivr.net/npm/bootstrap@{version}/dist/js/bootstrap.bundle.min.js.map"
+                  }
+              elif lib_lower in ['popper', 'popper.js']:
+                  urls = {
+                      'js': f"https://cdn.jsdelivr.net/npm/@popperjs/core@{version}/dist/umd/popper.min.js",
+                      'js_map': f"https://cdn.jsdelivr.net/npm/@popperjs/core@{version}/dist/umd/popper.min.js.map"
+                  }
+              elif lib_lower == 'font-awesome':
+                  urls = {
+                      'css': f"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/{version}/css/all.min.css"
+                  }
+              elif lib_lower == 'datatables':
+                  urls = {
+                      'css': f"https://cdn.datatables.net/{version}/css/jquery.dataTables.min.css",
+                      'js': f"https://cdn.datatables.net/{version}/js/jquery.dataTables.min.js"
+                  }
+              elif lib_lower == 'select2':
+                  urls = {
+                      'css': f"https://cdn.jsdelivr.net/npm/select2@{version}/dist/css/select2.min.css",
+                      'js': f"https://cdn.jsdelivr.net/npm/select2@{version}/dist/js/select2.min.js"
+                  }
+              elif lib_lower == 'moment':
+                  urls = {
+                      'js': f"https://cdnjs.cloudflare.com/ajax/libs/moment.js/{version}/moment.min.js"
+                  }
+              elif lib_lower == 'lodash':
+                  urls = {
+                      'js': f"https://cdn.jsdelivr.net/npm/lodash@{version}/lodash.min.js"
+                  }
+              elif lib_lower == 'chart.js':
+                  urls = {
+                      'js': f"https://cdn.jsdelivr.net/npm/chart.js@{version}/dist/chart.umd.min.js"
+                  }
+              elif lib_lower == 'sweetalert':
+                  urls = {
+                      'css': f"https://cdn.jsdelivr.net/npm/sweetalert2@{version}/dist/sweetalert2.min.css",
+                      'js': f"https://cdn.jsdelivr.net/npm/sweetalert2@{version}/dist/sweetalert2.min.js"
+                  }
+              elif lib_lower == 'toastr':
+                  urls = {
+                      'css': f"https://cdnjs.cloudflare.com/ajax/libs/toastr.js/{version}/toastr.min.css",
+                      'js': f"https://cdnjs.cloudflare.com/ajax/libs/toastr.js/{version}/toastr.min.js"
+                  }
+              elif lib_lower == 'animate.css':
+                  urls = {
+                      'css': f"https://cdn.jsdelivr.net/npm/animate.css@{version}/animate.min.css"
+                  }
+              elif lib_lower == 'highlight.js':
+                  urls = {
+                      'css': f"https://cdnjs.cloudflare.com/ajax/libs/highlight.js/{version}/styles/default.min.css",
+                      'js': f"https://cdnjs.cloudflare.com/ajax/libs/highlight.js/{version}/highlight.min.js"
+                  }
+              else:
+                  # Generic fallback: try to get from cdnjs
+                  print(f"⚠️  No specific download URLs for {lib_name}, trying generic CDN...")
+                  urls = {
+                      'js': f"https://cdnjs.cloudflare.com/ajax/libs/{lib_lower}/{version}/{lib_lower}.min.js",
+                      'css': f"https://cdnjs.cloudflare.com/ajax/libs/{lib_lower}/{version}/{lib_lower}.min.css"
+                  }
+              
+              return urls
+          
+          # Find static_base directory
+          static_base_dirs = list(Path('.').glob('**/static_base/**/static/**'))
+          if not static_base_dirs:
+              static_base_dirs = list(Path('.').glob('**/static/**'))
+          
+          if not static_base_dirs:
+              print("❌ Could not find static files directory")
+              exit(1)
+          
+          static_dir = static_base_dirs[0]
+          print(f"📁 Using static directory: {static_dir}")
+          
+          files_updated = []
+          
+          for lib, info in updates.items():
+              lib_lower = lib.lower().replace('.', '-').replace('_', '-')
+              version = info['latest']
+              
+              # Get download URLs using the function
+              urls = get_download_urls(lib, version)
+              
+              if not urls:
+                  print(f"⚠️  No download URLs found for {lib}, skipping...")
+                  continue
+                  
+                  for file_type, url in urls.items():
+                      try:
+                          print(f"⬇️  Downloading {lib} {file_type} from {url}...")
+                          response = requests.get(url, timeout=30)
+                          response.raise_for_status()
+                          
+                          # Determine target path
+                          if 'css' in file_type:
+                              target_dir = static_dir / 'base' / 'css'
+                          elif 'js' in file_type:
+                              target_dir = static_dir / 'base' / 'js'
+                          else:
+                              target_dir = static_dir / 'base'
+                          
+                          target_dir.mkdir(parents=True, exist_ok=True)
+                          
+                          # Determine filename
+                          if lib_lower == 'jquery':
+                              filename = 'jquery.min.js' if 'js' in file_type else 'jquery.min.js.map'
+                          elif lib_lower == 'bootstrap':
+                              if 'css' in file_type:
+                                  filename = 'bootstrap.min.css' if 'css' == file_type else 'bootstrap.min.css.map'
+                              else:
+                                  filename = 'bootstrap.bundle.min.js' if 'js' == file_type else 'bootstrap.bundle.min.js.map'
+                          elif lib_lower == 'popper.js':
+                              filename = 'popper.min.js' if 'js' == file_type else 'popper.min.js.map'
+                          elif lib_lower == 'font-awesome':
+                              filename = 'all.min.css'
+                          else:
+                              filename = url.split('/')[-1]
+                          
+                          target_path = target_dir / filename
+                          
+                          # Save file
+                          target_path.write_bytes(response.content)
+                          files_updated.append(str(target_path))
+                          print(f"✅ Saved: {target_path}")
+                          
+                      except Exception as e:
+                          print(f"⚠️  Error downloading {lib} {file_type}: {e}")
+          
+          # Update version file if exists
+          version_files = list(Path('.').glob('**/versions.json')) + list(Path('.').glob('**/static_base/versions.py'))
+          for vfile in version_files:
+              try:
+                  if vfile.suffix == '.json':
+                      data = json.loads(vfile.read_text(encoding='utf-8'))
+                      for lib, info in updates.items():
+                          lib_key = lib.lower().replace('-', '_').replace('.', '_')
+                          data[lib_key] = info['latest']
+                      vfile.write_text(json.dumps(data, indent=2) + '\n', encoding='utf-8')
+                      files_updated.append(str(vfile))
+                      print(f"✅ Updated version file: {vfile}")
+              except:
+                  continue
+          
+          # Update documentation files (README.md, CHANGELOG.md, docs/*.md, docs/references/*.md)
+          print("\n📚 Checking documentation files for version references...")
+          doc_files = []
+          for pattern in ['README.md', 'CHANGELOG.md', '**/docs/**/*.md', 'docs/references/**/*.md', '**/*.rst']:
+              doc_files.extend(Path('.').glob(pattern))
+          
+          # Remove duplicates
+          doc_files = list(set(doc_files))
+          
+          for doc_file in doc_files:
+              if not doc_file.exists() or not doc_file.is_file():
+                  continue
+              
+              try:
+                  content = doc_file.read_text(encoding='utf-8')
+                  original_content = content
+                  updated = False
+                  
+                  # Update version references for each library
+                  for lib, info in updates.items():
+                      lib_lower = lib.lower()
+                      old_version = info['current']
+                      new_version = info['latest']
+                      
+                      # Skip if old_version is 'unknown' - can't safely update
+                      if old_version == 'unknown' or not old_version:
+                          continue
+                      
+                      # Pattern 1: "jquery: 3.7.0" or "jQuery: 3.7.0" or "jquery 3.7.0"
+                      pattern1 = rf'({lib}|{lib.title()}|{lib.upper()})\s*[:\-]\s*{re.escape(old_version)}'
+                      if re.search(pattern1, content, re.IGNORECASE):
+                          content = re.sub(pattern1, rf'\1: {new_version}', content, flags=re.IGNORECASE)
+                          updated = True
+                      
+                      # Pattern 2: "jquery==3.7.0" or "jquery@3.7.0"
+                      pattern2 = rf'({lib_lower})\s*[=@]\s*{re.escape(old_version)}'
+                      if re.search(pattern2, content, re.IGNORECASE):
+                          content = re.sub(pattern2, rf'\1@{new_version}', content, flags=re.IGNORECASE)
+                          updated = True
+                      
+                      # Pattern 3: "v3.7.0" or "version 3.7.0" near library name
+                      pattern3 = rf'({lib_lower})(\s+[vV]?|[-_]){re.escape(old_version)}'
+                      if re.search(pattern3, content, re.IGNORECASE):
+                          content = re.sub(pattern3, rf'\1\2{new_version}', content, flags=re.IGNORECASE)
+                          updated = True
+                      
+                      # Pattern 4: In tables or lists "| jQuery | 3.7.0 |"
+                      pattern4 = rf'(\|\s*{lib}\s*\|\s*){re.escape(old_version)}(\s*\|)'
+                      if re.search(pattern4, content, re.IGNORECASE):
+                          content = re.sub(pattern4, rf'\1{new_version}\2', content, flags=re.IGNORECASE)
+                          updated = True
+                      
+                      # Pattern 5: "jquery-3.7.0" in file paths or URLs
+                      pattern5 = rf'({lib_lower.replace(".", "")})-{re.escape(old_version)}'
+                      if re.search(pattern5, content, re.IGNORECASE):
+                          content = re.sub(pattern5, rf'\1-{new_version}', content, flags=re.IGNORECASE)
+                          updated = True
+                      
+                      # Pattern 6: In URLs "jquery/3.7.0"
+                      pattern6 = rf'({lib_lower})\/{re.escape(old_version)}'
+                      if re.search(pattern6, content, re.IGNORECASE):
+                          content = re.sub(pattern6, rf'\1/{new_version}', content, flags=re.IGNORECASE)
+                          updated = True
+                      
+                      # Pattern 7: Version comparison format "jquery 3.7.0 → 3.7.1"
+                      pattern7 = rf'({lib_lower})\s+{re.escape(old_version)}\s*→\s*([0-9.]+)'
+                      if re.search(pattern7, content, re.IGNORECASE):
+                          content = re.sub(pattern7, rf'\1 {new_version}', content, flags=re.IGNORECASE)
+                          updated = True
+                  
+                  if updated:
+                      doc_file.write_text(content, encoding='utf-8')
+                      files_updated.append(str(doc_file))
+                      print(f"✅ Updated documentation: {doc_file}")
+              except Exception as e:
+                  print(f"⚠️  Error updating {doc_file}: {e}")
+                  continue
+          
+          # Load major versions if exists (from artifact)
+          major_versions_available = {}
+          major_file = Path('major_versions_available.json')
+          if major_file.exists():
+              try:
+                  with open(major_file, 'r', encoding='utf-8') as f:
+                      major_versions_available = json.load(f)
+              except:
+                  pass
+          
+          # Update docs/references/*.md files with major versions info
+          if major_versions_available:
+              print("\n📝 Updating docs/references/*.md with major version availability notices...")
+              ref_files = list(Path('.').glob('docs/references/**/*.md'))
+              
+              for ref_file in ref_files:
+                  if not ref_file.exists() or not ref_file.is_file():
+                      continue
+                  
+                  try:
+                      content = ref_file.read_text(encoding='utf-8')
+                      original_content = content
+                      
+                      # Add or update a section about available major versions
+                      major_section = "\n\n## Available Major Version Upgrades\n\n"
+                      major_section += "⚠️ **Note**: The following libraries have major version upgrades available but were not applied:\n\n"
+                      
+                      for lib, info in major_versions_available.items():
+                          major_section += f"- **{lib}**: Currently `{info['current']}`, latest major: `{info['latest']}`\n"
+                      
+                      major_section += "\nThese major versions are available but require manual review due to potential breaking changes.\n"
+                      
+                      # Check if section already exists
+                      if "## Available Major Version Upgrades" in content:
+                          # Replace existing section
+                          pattern = r'## Available Major Version Upgrades.*?(?=\n##|\Z)'
+                          content = re.sub(pattern, major_section.strip(), content, flags=re.DOTALL)
+                      else:
+                          # Append at the end
+                          content = content.rstrip() + major_section
+                      
+                      if content != original_content:
+                          ref_file.write_text(content, encoding='utf-8')
+                          files_updated.append(str(ref_file))
+                          print(f"✅ Updated reference file with major versions: {ref_file}")
+                  except Exception as e:
+                      print(f"⚠️  Error updating reference file {ref_file}: {e}")
+                      continue
+          
+          # Save list of updated files
+          output_file = os.getenv('GITHUB_OUTPUT')
+          with open(output_file, 'a', encoding='utf-8') as f:
+              f.write(f"files_updated<<EOF\n{chr(10).join(files_updated)}\nEOF\n")
+          
+          print(f"\n✅ Updated {len(files_updated)} file(s)")
+          EOF
+
+      - name: Upload updated files
+        uses: actions/upload-artifact@v6
+        with:
+          name: updated-static-files
+          path: |
+            **/static_base/**/*.min.js
+            **/static_base/**/*.min.css
+            **/versions.json
+            **/static_base/versions.py
+            README.md
+            CHANGELOG.md
+            **/docs/**/*.md
+            docs/references/**/*.md
+          retention-days: 1
+
+  create-pr:
+    name: Create Pull Request
+    needs: [check-updates, download-updates]
+    if: needs.check-updates.outputs.has_updates == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Download updated files
+        uses: actions/download-artifact@v6
+        with:
+          name: updated-static-files
+          path: .
+
+      - name: Setup Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create branch and commit
+        run: |
+          BRANCH_NAME="update-static-files-$(date +%Y%m%d-%H%M%S)"
+          git checkout -b "$BRANCH_NAME"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "chore: Update static files (CSS/JS) to latest versions
+
+          ${{ needs.check-updates.outputs.updates_summary }}
+
+          Auto-generated by upgrade-static-files workflow."
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
+          branch: ${{ env.BRANCH_NAME }}
+          delete-branch: true
+          title: "chore: Update static files (CSS/JS) to latest versions"
+          body: |
+            ## 📦 Static Files Update
+            
+            This PR updates CSS and JavaScript libraries to their latest versions.
+            
+            ${{ needs.check-updates.outputs.updates_summary }}
+            
+            ${{ needs.check-updates.outputs.has_major_upgrades == 'true' && format('### ⚠️ Major Version Upgrades Available\n\nSome libraries have major version upgrades available but were not applied. Check `docs/references/*.md` files for details.\n\n') || '' }}
+            
+            ### Updated Files
+            
+            The following files have been updated:
+            - CSS files in `static_base/static/base/css/`
+            - JavaScript files in `static_base/static/base/js/`
+            - Version configuration files (`versions.json`, `versions.py`, etc.)
+            - Documentation files (`README.md`, `CHANGELOG.md`, `docs/*.md`) with updated version references
+            
+            ### Testing
+            
+            Please verify that:
+            - [ ] All static files load correctly
+            - [ ] No breaking changes in functionality
+            - [ ] CSS styling remains consistent
+            - [ ] JavaScript functionality works as expected
+            
+            ---
+            Auto-generated by `upgrade-static-files.yaml` workflow.
+          labels: |
+            📦 dependencies
+            🎨 frontend
+          draft: false
