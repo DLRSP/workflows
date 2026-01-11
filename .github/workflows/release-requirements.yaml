@@ -411,12 +411,28 @@ jobs:
         run: |
           BRANCH_NAME="patch-release-v${{ steps.bump-version.outputs.new_version }}"
           git checkout -b "$BRANCH_NAME"
-          git add changelog.md pyproject.toml .github/workflows/*.yaml requirements/*.txt py*-dev.txt py*-docs.txt 2>/dev/null || true
+          
+          # Add all modified and new files
+          git add changelog.md pyproject.toml 2>/dev/null || true
+          git add .github/workflows/*.yaml 2>/dev/null || true
+          
+          # Add requirements files (check if they exist and were modified)
+          git add requirements/*.txt 2>/dev/null || true
+          git add py*-dev.txt py*-docs.txt 2>/dev/null || true
+          
+          # Check if there are any changes to commit
+          if git diff --staged --quiet && git diff --quiet; then
+            echo "⚠️  No changes to commit"
+            # Still push the branch even if no changes (branch might exist from previous run)
+            git push origin "$BRANCH_NAME" || echo "Branch push skipped"
+            exit 0
+          fi
+          
           # Use [changelog] prefix to prevent changelog.yaml from processing this commit when PR is merged
           RELEASE_NOTES="${{ needs.analyze-dependencies.outputs.release_notes }}"
           git commit -m "[changelog] Release v${{ steps.bump-version.outputs.new_version }} - Requirements Updates
 
-          ${RELEASE_NOTES}" || echo "No changes to commit"
+          ${RELEASE_NOTES}"
           git push origin "$BRANCH_NAME" || echo "Branch already exists or push failed"
 
       - name: Create Pull Request

@@ -54,17 +54,39 @@ jobs:
           echo "PY_ENV=${RAW_PY_ENV//./}" >> "$GITHUB_ENV"
 
       - name: Upgrade Python dependencies ${{ matrix.python-version }}
+        id: upgrade-deps
         run: |
           pip install -U pip pip-tools
+          
+          HAS_CHANGES=false
+          
           if [[ -f "dev.in" ]] ; then
+            echo "🔍 Found dev.in, compiling dev requirements..."
             pip-compile --upgrade --generate-hashes --allow-unsafe \
                       -o ${{ env.PY_ENV }}-dev.txt \
                       dev.in
+            HAS_CHANGES=true
+            echo "✅ Generated ${{ env.PY_ENV }}-dev.txt"
+          else
+            echo "ℹ️  dev.in not found, skipping dev requirements"
           fi
+          
           if [[ -f "requirements/docs.in" ]] && [[ "${{ matrix.python-version }}" == "3.10" || "${{ matrix.python-version }}" == "3.11" ]] ; then
-              pip-compile --upgrade --generate-hashes --allow-unsafe \
+            echo "🔍 Found requirements/docs.in, compiling docs requirements..."
+            pip-compile --upgrade --generate-hashes --allow-unsafe \
                       -o ${{ env.PY_ENV }}-docs.txt \
                       requirements/docs.in
+            HAS_CHANGES=true
+            echo "✅ Generated ${{ env.PY_ENV }}-docs.txt"
+          else
+            echo "ℹ️  requirements/docs.in not found or Python version not supported, skipping docs requirements"
+          fi
+          
+          if [[ "$HAS_CHANGES" == "false" ]]; then
+            echo "⚠️  No .in files found or processed, no changes to commit"
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Verify generated requirements can be installed
@@ -112,7 +134,9 @@ jobs:
           python-version: "3.11"
 
       - name: Download all artifacts
+        id: download-artifacts
         uses: actions/download-artifact@v7
+        continue-on-error: true
         with:
           path: .
           pattern: |
@@ -120,7 +144,20 @@ jobs:
             py*-docs.txt
           merge-multiple: true
 
+      - name: Check if artifacts were downloaded
+        id: check-artifacts
+        run: |
+          if ls py*-dev.txt py*-docs.txt 2>/dev/null | head -1 > /dev/null; then
+            echo "has_artifacts=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Found artifacts to process"
+            ls -la py*-dev.txt py*-docs.txt 2>/dev/null || true
+          else
+            echo "has_artifacts=false" >> "$GITHUB_OUTPUT"
+            echo "⚠️  No artifacts found - no .in files were processed, skipping PR creation"
+          fi
+
       - name: Verify all downloaded requirements files
+        if: steps.check-artifacts.outputs.has_artifacts == 'true'
         run: |
           echo "Verifying all downloaded requirements files can be installed..."
           python -m pip install --upgrade pip
@@ -168,6 +205,7 @@ jobs:
 
       - name: Create Pull Request
         id: cpr
+        if: steps.check-artifacts.outputs.has_artifacts == 'true'
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.BOT_PAT }}
