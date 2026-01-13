@@ -434,20 +434,20 @@ jobs:
           pip install requests beautifulsoup4
 
       - name: Download updates data
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: updates-data
           path: .
       
       - name: Download major versions data
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         continue-on-error: true
         with:
           name: major-versions-data
           path: .
       
       - name: Download major versions data
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         continue-on-error: true
         with:
           name: major-versions-data
@@ -797,7 +797,7 @@ jobs:
           token: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Download updated files
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: updated-static-files
           path: .
