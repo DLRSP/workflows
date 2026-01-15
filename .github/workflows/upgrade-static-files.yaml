@@ -699,47 +699,47 @@ jobs:
               if not urls:
                   print(f"⚠️  No download URLs found for {lib}, skipping...")
                   continue
-                  
-                  for file_type, url in urls.items():
-                      try:
-                          print(f"⬇️  Downloading {lib} {file_type} from {url}...")
-                          response = requests.get(url, timeout=30)
-                          response.raise_for_status()
-                          
-                          # Determine target path
-                          if 'css' in file_type:
-                              target_dir = static_dir / 'base' / 'css'
-                          elif 'js' in file_type:
-                              target_dir = static_dir / 'base' / 'js'
-                          else:
-                              target_dir = static_dir / 'base'
-                          
-                          target_dir.mkdir(parents=True, exist_ok=True)
-                          
-                          # Determine filename
-                          if lib_lower == 'jquery':
-                              filename = 'jquery.min.js' if 'js' in file_type else 'jquery.min.js.map'
-                          elif lib_lower == 'bootstrap':
-                              if 'css' in file_type:
-                                  filename = 'bootstrap.min.css' if 'css' == file_type else 'bootstrap.min.css.map'
-                              else:
-                                  filename = 'bootstrap.bundle.min.js' if 'js' == file_type else 'bootstrap.bundle.min.js.map'
-                          elif lib_lower == 'popper.js':
-                              filename = 'popper.min.js' if 'js' == file_type else 'popper.min.js.map'
-                          elif lib_lower == 'font-awesome':
-                              filename = 'all.min.css'
-                          else:
-                              filename = url.split('/')[-1]
-                          
-                          target_path = target_dir / filename
-                          
-                          # Save file
-                          target_path.write_bytes(response.content)
-                          files_updated.append(str(target_path))
-                          print(f"✅ Saved: {target_path}")
-                          
-                      except Exception as e:
-                          print(f"⚠️  Error downloading {lib} {file_type}: {e}")
+              
+              for file_type, url in urls.items():
+                  try:
+                      print(f"⬇️  Downloading {lib} {file_type} from {url}...")
+                      response = requests.get(url, timeout=30)
+                      response.raise_for_status()
+                      
+                      # Determine target path
+                  if 'css' in file_type:
+                      target_dir = static_dir / 'base' / 'css'
+                  elif 'js' in file_type:
+                      target_dir = static_dir / 'base' / 'js'
+                  else:
+                      target_dir = static_dir / 'base'
+
+                  target_dir.mkdir(parents=True, exist_ok=True)
+
+                  # Determine filename
+                  if lib_lower == 'jquery':
+                      filename = 'jquery.min.js' if 'js' in file_type else 'jquery.min.js.map'
+                  elif lib_lower == 'bootstrap':
+                      if 'css' in file_type:
+                          filename = 'bootstrap.min.css' if 'css' == file_type else 'bootstrap.min.css.map'
+                      else:
+                          filename = 'bootstrap.bundle.min.js' if 'js' == file_type else 'bootstrap.bundle.min.js.map'
+                  elif lib_lower == 'popper.js':
+                      filename = 'popper.min.js' if 'js' == file_type else 'popper.min.js.map'
+                  elif lib_lower == 'font-awesome':
+                      filename = 'all.min.css'
+                  else:
+                      filename = url.split('/')[-1]
+
+                  target_path = target_dir / filename
+
+                  # Save file
+                  target_path.write_bytes(response.content)
+                  files_updated.append(str(target_path))
+                      print(f"✅ Saved: {target_path}")
+                      
+                  except Exception as e:
+                      print(f"⚠️  Error downloading {lib} {file_type}: {e}")
           
           # Update version file if exists and read current versions
           current_versions = {}  # Dictionary to hold all current library versions
@@ -966,14 +966,11 @@ jobs:
         with:
           name: updated-static-files
           path: |
-            **/static_base/**/*.min.js
-            **/static_base/**/*.min.css
-            **/versions.json
-            **/static_base/versions.py
+            static_base/
+            versions.json
             README.md
             CHANGELOG.md
-            **/docs/**/*.md
-            docs/references/**/*.md
+            docs/
           retention-days: 1
 
   create-pr:
@@ -1005,15 +1002,28 @@ jobs:
             echo "❌ versions.json NOT found"
             exit 1
           fi
+          # Check if JS/CSS files are present
+          if find . -path "*/static_base/*/*.min.js" -o -path "*/static_base/*/*.min.css" | head -1 > /dev/null; then
+            echo "✅ Found JS/CSS files in artifact"
+            find . -path "*/static_base/*/*.min.js" -o -path "*/static_base/*/*.min.css" | head -5
+          else
+            echo "⚠️  No JS/CSS files found in artifact"
+          fi
           echo "✅ Artifact files downloaded successfully"
           # The create-pull-request action will automatically detect changes
           # compared to main and create the branch/commit/PR
+
+      - name: Set branch name
+        run: |
+          BRANCH_NAME="update-static-files-$(date +%Y%m%d-%H%M%S)"
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+          echo "Branch name: $BRANCH_NAME"
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
-          branch: update-static-files-$(date +%Y%m%d-%H%M%S)
+          branch: ${{ env.BRANCH_NAME }}
           base: main
           delete-branch: true
           commit-message: "chore: Update static files (CSS/JS) to latest versions
