@@ -214,6 +214,8 @@ jobs:
               version_files.extend(Path('.').glob(pattern))
           
           current_versions = {}
+          libraries_from_versions = set()  # Track libraries found in versions.json
+          
           if version_files:
               print(f"📄 Found version files: {[str(f) for f in version_files]}")
               # Try to extract versions from files
@@ -223,10 +225,61 @@ jobs:
                       # Try JSON
                       if vfile.suffix == '.json':
                           data = json.loads(content)
+                          
+                          # First, read versions for already detected libraries
                           for lib in libraries:
                               lib_lower = lib.lower().replace('-', '_').replace('.', '_')
                               if lib_lower in data:
                                   current_versions[lib] = str(data[lib_lower])
+                          
+                          # Also discover new libraries from versions.json
+                          # Map from normalized keys back to library names
+                          for key, version in data.items():
+                              if not isinstance(version, str):
+                                  continue
+                              
+                              # Try to find matching library name from patterns
+                              key_normalized = key.lower().replace('_', '-').replace('.', '-')
+                              key_alt = key.lower().replace('_', '.').replace('.', '.')
+                              
+                              # Check if this matches any library pattern
+                              matched_lib = None
+                              for lib_name in library_patterns.keys():
+                                  lib_normalized = lib_name.lower()
+                                  # Normalize both to same format for comparison
+                                  key_for_compare = key_normalized.replace('.', '-')
+                                  lib_for_compare = lib_normalized.replace('.', '-')
+                                  if key_for_compare == lib_for_compare or key_alt == lib_normalized or key.lower() == lib_normalized.replace('-', '_').replace('.', '_'):
+                                      matched_lib = lib_name
+                                      break
+                              
+                              # If no exact match, try fuzzy matching
+                              if not matched_lib:
+                                  for lib_name in library_patterns.keys():
+                                      if key_normalized in lib_name.lower() or lib_name.lower() in key_normalized:
+                                          matched_lib = lib_name
+                                          break
+                              
+                              # If still no match, construct library name from key
+                              if not matched_lib:
+                                  # Try common mappings
+                                  lib_name_map = {
+                                      'animate_css': 'animate.css',
+                                      'chart_js': 'chart.js',
+                                      'font_awesome': 'font-awesome',
+                                      'highlight_js': 'highlight.js',
+                                      'popper_js': 'popper',
+                                  }
+                                  matched_lib = lib_name_map.get(key, key.replace('_', '-'))
+                              
+                              # Add to libraries if it's in our supported list
+                              if matched_lib in library_patterns:
+                                  if matched_lib not in libraries:
+                                      libraries.append(matched_lib)
+                                      libraries_from_versions.add(matched_lib)
+                                  current_versions[matched_lib] = str(version)
+                                  print(f"📋 Found library in versions.json: {matched_lib} = {version}")
+                          
                       # Try Python dict
                       elif vfile.suffix == '.py':
                           # Simple regex to find version assignments
@@ -245,6 +298,11 @@ jobs:
                                       current_versions[lib] = match.group(1).strip('"\'')
                   except:
                       continue
+          
+          # Sort libraries list after adding from versions.json
+          if libraries_from_versions:
+              libraries = sorted(list(set(libraries)))
+              print(f"📚 Added libraries from versions.json: {', '.join(sorted(libraries_from_versions))}")
           
           # If no version files found, try to detect from static files
           if not current_versions:
