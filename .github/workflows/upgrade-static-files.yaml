@@ -849,6 +849,7 @@ jobs:
         with:
           token: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
           branch: ${{ env.BRANCH_NAME }}
+          base: main
           delete-branch: true
           title: "chore: Update static files (CSS/JS) to latest versions"
           body: |
