@@ -96,25 +96,33 @@ jobs:
                   'jquery': [r'jquery', r'jq'],
                   'bootstrap': [r'bootstrap'],
                   'popper': [r'popper'],
-                  'font-awesome': [r'font.?awesome', r'fa\.'],
-                  'datatables': [r'datatables'],
+                  'font-awesome': [r'font[-_]?awesome', r'fa\.(min\.)?(css|js)', r'all\.min\.css'],
+                  'datatables': [r'datatables', r'data[-_]?tables'],
                   'select2': [r'select2'],
-                  'moment': [r'moment'],
+                  'moment': [r'moment(?!um)'],
                   'lodash': [r'lodash'],
-                  'chart.js': [r'chart\.js', r'chartjs'],
+                  'chart.js': [r'chart\.js', r'chartjs', r'chart\.'],
                   'sweetalert': [r'sweetalert'],
                   'toastr': [r'toastr'],
-                  'animate.css': [r'animate\.css'],
-                  'highlight.js': [r'highlight\.js', r'highlightjs'],
+                  'animate.css': [r'animate\.css', r'animate'],
+                  'highlight.js': [r'highlight\.js', r'highlightjs', r'highlight'],
               }
               
               for static_dir in static_dirs[:10]:  # Limit search
+                  if not static_dir.is_dir():
+                      continue
                   for file_path in static_dir.rglob('*'):
                       if file_path.is_file() and (file_path.suffix in ['.js', '.css', '.min.js', '.min.css']):
                           filename_lower = file_path.name.lower()
+                          relative_path_lower = str(file_path.relative_to(static_dir)).lower().replace('\\', '/')
+                          
                           for lib_name, patterns in library_patterns.items():
+                              if lib_name in detected_libraries:  # Skip if already detected
+                                  continue
                               for pattern in patterns:
-                                  if re.search(pattern, filename_lower, re.IGNORECASE):
+                                  # Check both filename and relative path
+                                  if re.search(pattern, filename_lower, re.IGNORECASE) or \
+                                     re.search(pattern, relative_path_lower, re.IGNORECASE):
                                       detected_libraries.add(lib_name)
                                       break
               
@@ -257,8 +265,12 @@ jobs:
           def get_version_upgrade_type(current_ver, latest_ver):
               """Determine if upgrade is patch, minor, or major"""
               try:
-                  current = version.parse(current_ver)
-                  latest = version.parse(latest_ver)
+                  # Clean version strings - remove any prefixes like 'v' or suffixes
+                  current_clean = re.sub(r'^v?(\d+\.\d+\.\d+).*$', r'\1', str(current_ver).strip())
+                  latest_clean = re.sub(r'^v?(\d+\.\d+\.\d+).*$', r'\1', str(latest_ver).strip())
+                  
+                  current = version.parse(current_clean)
+                  latest = version.parse(latest_clean)
                   
                   if latest.major > current.major:
                       return 'major'
@@ -268,9 +280,22 @@ jobs:
                       return 'patch'
                   else:
                       return None  # Same or older version
-              except:
-                  # If version parsing fails, assume patch for safety
-                  return 'patch'
+              except Exception as e:
+                  # If parsing fails, try to manually compare version numbers
+                  try:
+                      current_parts = [int(x) for x in str(current_ver).split('.')[:3]]
+                      latest_parts = [int(x) for x in str(latest_ver).split('.')[:3]]
+                      
+                      if latest_parts[0] > current_parts[0]:
+                          return 'major'
+                      elif latest_parts[1] > current_parts[1]:
+                          return 'minor'
+                      elif len(latest_parts) > 2 and len(current_parts) > 2 and latest_parts[2] > current_parts[2]:
+                          return 'patch'
+                      return None
+                  except:
+                      # Last resort: assume patch for safety
+                      return 'patch'
           
           # Check latest versions from CDN
           updates_available = {}
