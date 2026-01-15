@@ -741,15 +741,48 @@ jobs:
                       except Exception as e:
                           print(f"⚠️  Error downloading {lib} {file_type}: {e}")
           
-          # Update version file if exists
+          # Update version file if exists and read current versions
+          current_versions = {}  # Dictionary to hold all current library versions
           version_files = list(Path('.').glob('**/versions.json')) + list(Path('.').glob('**/static_base/versions.py'))
           for vfile in version_files:
               try:
                   if vfile.suffix == '.json':
                       data = json.loads(vfile.read_text(encoding='utf-8'))
+                      
+                      # First, read all current versions from the file
+                      # Map normalized keys back to library names
+                      lib_name_map = {
+                          'animate_css': 'animate.css',
+                          'chart_js': 'chart.js',
+                          'font_awesome': 'font-awesome',
+                          'highlight_js': 'highlight.js',
+                          'popper_js': 'popper',
+                          'popper': 'popper',
+                          'datatables': 'datatables',
+                          'select2': 'select2',
+                          'moment': 'moment',
+                          'lodash': 'lodash',
+                          'sweetalert': 'sweetalert',
+                          'toastr': 'toastr',
+                          'jquery': 'jquery',
+                          'bootstrap': 'bootstrap',
+                      }
+                      
+                      for key, version in data.items():
+                          if not isinstance(version, str):
+                              continue
+                          key_lower = key.lower()
+                          # Map key to library name
+                          lib_name = lib_name_map.get(key_lower, key.replace('_', '-'))
+                          current_versions[lib_name] = version
+                      
+                      # Now update versions for libraries being updated
                       for lib, info in updates.items():
                           lib_key = lib.lower().replace('-', '_').replace('.', '_')
                           data[lib_key] = info['latest']
+                          # Update current_versions with new version
+                          current_versions[lib] = info['latest']
+                      
                       vfile.write_text(json.dumps(data, indent=2) + '\n', encoding='utf-8')
                       files_updated.append(str(vfile))
                       print(f"✅ Updated version file: {vfile}")
