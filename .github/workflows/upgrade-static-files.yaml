@@ -585,6 +585,7 @@ jobs:
           python3 << 'EOF'
           import os
           import json
+          import re
           import requests
           from pathlib import Path
           from urllib.parse import urljoin, urlparse
@@ -599,8 +600,86 @@ jobs:
           
           print(f"📥 Downloading {len(updates)} updated library files...")
           
+          # Read CDN URLs from versions.json if available (priority over hardcoded patterns)
+          cdn_urls_from_json = {}
+          version_files = list(Path('.').glob('**/versions.json')) + list(Path('.').glob('**/static_base/versions.py'))
+          for vfile in version_files:
+              if vfile.suffix == '.json':
+                  try:
+                      data = json.loads(vfile.read_text(encoding='utf-8'))
+                      for key, value in data.items():
+                          key_lower = key.lower()
+                          # Check if this is a CDN URL entry (ends with _cdn or _urls)
+                          if key_lower.endswith('_cdn') or key_lower.endswith('_urls'):
+                              # Extract library name (remove _cdn or _urls suffix)
+                              lib_key = key_lower.replace('_cdn', '').replace('_urls', '')
+                              # Map to library name
+                              lib_name_map = {
+                                  'animate_css': 'animate.css',
+                                  'chart_js': 'chart.js',
+                                  'font_awesome': 'font-awesome',
+                                  'highlight_js': 'highlight.js',
+                                  'popper_js': 'popper',
+                                  'popper': 'popper',
+                                  'datatables': 'datatables',
+                                  'select2': 'select2',
+                                  'moment': 'moment',
+                                  'lodash': 'lodash',
+                                  'sweetalert': 'sweetalert',
+                                  'toastr': 'toastr',
+                                  'jquery': 'jquery',
+                                  'bootstrap': 'bootstrap',
+                              }
+                              lib_name = lib_name_map.get(lib_key, lib_key.replace('_', '-'))
+                              # If value is a dict, it contains the URLs
+                              if isinstance(value, dict):
+                                  cdn_urls_from_json[lib_name] = value
+                                  print(f"📋 Found CDN URLs in versions.json for {lib_name}")
+                          # Also check if value is a dict with 'cdn' or 'urls' key
+                          elif isinstance(value, dict) and ('cdn' in value or 'urls' in value):
+                              lib_key = key_lower
+                              lib_name_map = {
+                                  'animate_css': 'animate.css',
+                                  'chart_js': 'chart.js',
+                                  'font_awesome': 'font-awesome',
+                                  'highlight_js': 'highlight.js',
+                                  'popper_js': 'popper',
+                                  'popper': 'popper',
+                                  'datatables': 'datatables',
+                                  'select2': 'select2',
+                                  'moment': 'moment',
+                                  'lodash': 'lodash',
+                                  'sweetalert': 'sweetalert',
+                                  'toastr': 'toastr',
+                                  'jquery': 'jquery',
+                                  'bootstrap': 'bootstrap',
+                              }
+                              lib_name = lib_name_map.get(lib_key, lib_key.replace('_', '-'))
+                              cdn_urls = value.get('cdn') or value.get('urls')
+                              if isinstance(cdn_urls, dict):
+                                  cdn_urls_from_json[lib_name] = cdn_urls
+                                  print(f"📋 Found CDN URLs in versions.json for {lib_name}")
+                  except Exception as e:
+                      print(f"⚠️  Error reading CDN URLs from {vfile}: {e}")
+                      continue
+          
+          if cdn_urls_from_json:
+              print(f"✅ Will use CDN URLs from versions.json for: {', '.join(sorted(cdn_urls_from_json.keys()))}")
+          
           # Function to generate download URLs based on library name and version
+          # Priority: 1) URLs from versions.json, 2) Hardcoded patterns
           def get_download_urls(lib_name, version):
+              # First, check if URLs are provided in versions.json
+              if lib_name in cdn_urls_from_json:
+                  urls = cdn_urls_from_json[lib_name].copy()
+                  # Replace {version} placeholder if present in URLs
+                  for key, url in urls.items():
+                      if isinstance(url, str) and '{version}' in url:
+                          urls[key] = url.replace('{version}', version)
+                  print(f"✅ Using CDN URLs from versions.json for {lib_name}")
+                  return urls
+              
+              # Fallback to hardcoded patterns
               lib_lower = lib_name.lower().replace('.', '-').replace('_', '-')
               
               urls = {}
@@ -993,7 +1072,7 @@ jobs:
         with:
           name: updated-static-files
           path: |
-            static_base/
+            **/static_base/
             versions.json
             README.md
             CHANGELOG.md
@@ -1023,19 +1102,36 @@ jobs:
       - name: Verify downloaded files
         run: |
           echo "🔍 Verifying downloaded files..."
+          echo "Current directory: $(pwd)"
+          echo ""
+          echo "All files in current directory:"
+          find . -maxdepth 3 -type f | head -20
+          echo ""
+          
           if [ -f "versions.json" ]; then
             echo "✅ versions.json found"
           else
             echo "❌ versions.json NOT found"
             exit 1
           fi
-          # Check if JS/CSS files are present
-          if find . -path "*/static_base/*/*.min.js" -o -path "*/static_base/*/*.min.css" | head -1 > /dev/null; then
-            echo "✅ Found JS/CSS files in artifact"
-            find . -path "*/static_base/*/*.min.js" -o -path "*/static_base/*/*.min.css" | head -5
+          
+          # Check if JS/CSS files are present in artifact
+          echo ""
+          echo "🔍 Searching for JS/CSS files..."
+          if find . -type f \( -name "*.min.js" -o -name "*.min.css" \) 2>/dev/null | head -1 > /dev/null; then
+            echo "✅ Found JS/CSS files in artifact:"
+            find . -type f \( -name "*.min.js" -o -name "*.min.css" \) 2>/dev/null | head -10
           else
             echo "⚠️  No JS/CSS files found in artifact"
+            echo "Checking for static_base directories:"
+            find . -type d -name "static_base" 2>/dev/null | head -5
           fi
+          
+          echo ""
+          echo "🔍 Checking git status to see what files would be in PR:"
+          git status --short || echo "Git status unavailable"
+          
+          echo ""
           echo "✅ Artifact files downloaded successfully"
           # The create-pull-request action will automatically detect changes
           # compared to main and create the branch/commit/PR
