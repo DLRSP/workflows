@@ -15,11 +15,7 @@ on:
       upgrade_level:
         description: 'Level of upgrades to perform: patch, minor, or major (default: patch)'
         required: false
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
+        type: string
         default: patch
   workflow_dispatch:
     inputs:
