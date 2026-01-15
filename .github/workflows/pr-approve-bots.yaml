@@ -7,7 +7,7 @@ on:
       enable_auto_merge:
         description: 'Enable auto-merge for bot PRs'
         required: false
-        default: 'true'
+        default: true
         type: boolean
 
 jobs:
