@@ -765,6 +765,20 @@ jobs:
           # Remove duplicates
           doc_files = list(set(doc_files))
           
+          # Combine updates with current_versions to update documentation for all libraries
+          # This ensures documentation reflects all library versions, not just those being updated
+          all_library_versions = {}
+          for lib, info in updates.items():
+              # Use new version for libraries being updated
+              all_library_versions[lib] = info['latest']
+          
+          # Also include all other libraries from current_versions (even if not being updated)
+          for lib, version in current_versions.items():
+              if lib not in all_library_versions:
+                  all_library_versions[lib] = version
+          
+          print(f"📚 Will update documentation for {len(all_library_versions)} libraries: {', '.join(sorted(all_library_versions.keys()))}")
+          
           for doc_file in doc_files:
               if not doc_file.exists() or not doc_file.is_file():
                   continue
@@ -774,14 +788,37 @@ jobs:
                   original_content = content
                   updated = False
                   
-                  # Update version references for each library
-                  for lib, info in updates.items():
+                  # Update version references for each library (all libraries, not just updated ones)
+                  for lib, new_version in all_library_versions.items():
                       lib_lower = lib.lower()
-                      old_version = info['current']
-                      new_version = info['latest']
                       
-                      # Skip if old_version is 'unknown' - can't safely update
-                      if old_version == 'unknown' or not old_version:
+                      # Skip if version is 'unknown' - can't safely update
+                      if new_version == 'unknown' or not new_version:
+                          continue
+                      
+                      # Try to find the old version in the document first
+                      # Look for common patterns to find current version references
+                      old_version_patterns = [
+                          rf'{lib}\s*[:\-]\s*([0-9]+\.[0-9]+\.[0-9]+)',
+                          rf'{lib_lower}\s*[=@]\s*([0-9]+\.[0-9]+\.[0-9]+)',
+                          rf'{lib_lower}[\s\-_v]+([0-9]+\.[0-9]+\.[0-9]+)',
+                          rf'\|\s*{lib}\s*\|\s*([0-9]+\.[0-9]+\.[0-9]+)',
+                      ]
+                      
+                      old_version = None
+                      for pattern in old_version_patterns:
+                          match = re.search(pattern, content, re.IGNORECASE)
+                          if match:
+                              old_version = match.group(1)
+                              break
+                      
+                      # If we can't find old version, skip this library for this file
+                      # (to avoid replacing unrelated version numbers)
+                      if not old_version:
+                          continue
+                      
+                      # Skip if old version matches new version (already up to date)
+                      if old_version == new_version:
                           continue
                       
                       # Pattern 1: "jquery: 3.7.0" or "jQuery: 3.7.0" or "jquery 3.7.0"
