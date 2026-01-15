@@ -707,35 +707,35 @@ jobs:
                       response.raise_for_status()
                       
                       # Determine target path
-                  if 'css' in file_type:
-                      target_dir = static_dir / 'base' / 'css'
-                  elif 'js' in file_type:
-                      target_dir = static_dir / 'base' / 'js'
-                  else:
-                      target_dir = static_dir / 'base'
-
-                  target_dir.mkdir(parents=True, exist_ok=True)
-
-                  # Determine filename
-                  if lib_lower == 'jquery':
-                      filename = 'jquery.min.js' if 'js' in file_type else 'jquery.min.js.map'
-                  elif lib_lower == 'bootstrap':
                       if 'css' in file_type:
-                          filename = 'bootstrap.min.css' if 'css' == file_type else 'bootstrap.min.css.map'
+                          target_dir = static_dir / 'base' / 'css'
+                      elif 'js' in file_type:
+                          target_dir = static_dir / 'base' / 'js'
                       else:
-                          filename = 'bootstrap.bundle.min.js' if 'js' == file_type else 'bootstrap.bundle.min.js.map'
-                  elif lib_lower == 'popper.js':
-                      filename = 'popper.min.js' if 'js' == file_type else 'popper.min.js.map'
-                  elif lib_lower == 'font-awesome':
-                      filename = 'all.min.css'
-                  else:
-                      filename = url.split('/')[-1]
+                          target_dir = static_dir / 'base'
 
-                  target_path = target_dir / filename
+                      target_dir.mkdir(parents=True, exist_ok=True)
 
-                  # Save file
-                  target_path.write_bytes(response.content)
-                  files_updated.append(str(target_path))
+                      # Determine filename
+                      if lib_lower == 'jquery':
+                          filename = 'jquery.min.js' if 'js' in file_type else 'jquery.min.js.map'
+                      elif lib_lower == 'bootstrap':
+                          if 'css' in file_type:
+                              filename = 'bootstrap.min.css' if 'css' == file_type else 'bootstrap.min.css.map'
+                          else:
+                              filename = 'bootstrap.bundle.min.js' if 'js' == file_type else 'bootstrap.bundle.min.js.map'
+                      elif lib_lower == 'popper.js':
+                          filename = 'popper.min.js' if 'js' == file_type else 'popper.min.js.map'
+                      elif lib_lower == 'font-awesome':
+                          filename = 'all.min.css'
+                      else:
+                          filename = url.split('/')[-1]
+
+                      target_path = target_dir / filename
+
+                      # Save file
+                      target_path.write_bytes(response.content)
+                      files_updated.append(str(target_path))
                       print(f"✅ Saved: {target_path}")
                       
                   except Exception as e:
