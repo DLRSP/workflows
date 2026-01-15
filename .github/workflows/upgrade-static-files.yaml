@@ -831,6 +831,7 @@ jobs:
       - name: Create branch and commit
         run: |
           BRANCH_NAME="update-static-files-$(date +%Y%m%d-%H%M%S)"
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
           git checkout -b "$BRANCH_NAME"
           git add -A
           if git diff --staged --quiet; then
