@@ -234,51 +234,84 @@ jobs:
                           
                           # Also discover new libraries from versions.json
                           # Map from normalized keys back to library names
+                          print(f"🔍 Checking versions.json for additional libraries...")
+                          print(f"📝 Keys found in versions.json: {list(data.keys())}")
+                          
+                          # Common mappings from versions.json keys to library names
+                          lib_name_map = {
+                              'animate_css': 'animate.css',
+                              'chart_js': 'chart.js',
+                              'font_awesome': 'font-awesome',
+                              'highlight_js': 'highlight.js',
+                              'popper_js': 'popper',
+                              'popper': 'popper',
+                              'datatables': 'datatables',
+                              'select2': 'select2',
+                              'moment': 'moment',
+                              'lodash': 'lodash',
+                              'sweetalert': 'sweetalert',
+                              'toastr': 'toastr',
+                          }
+                          
                           for key, version in data.items():
                               if not isinstance(version, str):
                                   continue
                               
+                              # Normalize the key
+                              key_lower = key.lower().strip()
+                              
                               # Try to find matching library name from patterns
-                              key_normalized = key.lower().replace('_', '-').replace('.', '-')
-                              key_alt = key.lower().replace('_', '.').replace('.', '.')
-                              
-                              # Check if this matches any library pattern
                               matched_lib = None
-                              for lib_name in library_patterns.keys():
-                                  lib_normalized = lib_name.lower()
-                                  # Normalize both to same format for comparison
-                                  key_for_compare = key_normalized.replace('.', '-')
-                                  lib_for_compare = lib_normalized.replace('.', '-')
-                                  if key_for_compare == lib_for_compare or key_alt == lib_normalized or key.lower() == lib_normalized.replace('-', '_').replace('.', '_'):
-                                      matched_lib = lib_name
-                                      break
                               
-                              # If no exact match, try fuzzy matching
+                              # Method 1: Direct mapping
+                              if key_lower in lib_name_map:
+                                  matched_lib = lib_name_map[key_lower]
+                              
+                              # Method 2: Check if key matches library name exactly (with normalization)
                               if not matched_lib:
                                   for lib_name in library_patterns.keys():
-                                      if key_normalized in lib_name.lower() or lib_name.lower() in key_normalized:
+                                      # Compare normalized forms
+                                      lib_normalized = lib_name.lower().replace('-', '_').replace('.', '_')
+                                      key_normalized = key_lower.replace('-', '_').replace('.', '_')
+                                      
+                                      if key_normalized == lib_normalized:
                                           matched_lib = lib_name
                                           break
                               
-                              # If still no match, construct library name from key
+                              # Method 3: Try converting key to library format
                               if not matched_lib:
-                                  # Try common mappings
-                                  lib_name_map = {
-                                      'animate_css': 'animate.css',
-                                      'chart_js': 'chart.js',
-                                      'font_awesome': 'font-awesome',
-                                      'highlight_js': 'highlight.js',
-                                      'popper_js': 'popper',
-                                  }
-                                  matched_lib = lib_name_map.get(key, key.replace('_', '-'))
+                                  # Convert underscore to dash/dot based on common patterns
+                                  test_name = key_lower.replace('_', '-')
+                                  if test_name in library_patterns:
+                                      matched_lib = test_name
+                                  else:
+                                      test_name = key_lower.replace('_', '.')
+                                      if test_name in library_patterns:
+                                          matched_lib = test_name
                               
-                              # Add to libraries if it's in our supported list
-                              if matched_lib in library_patterns:
+                              # Method 4: Fuzzy matching - check if key contains library name or vice versa
+                              if not matched_lib:
+                                  for lib_name in library_patterns.keys():
+                                      lib_key = lib_name.lower().replace('-', '').replace('.', '').replace('_', '')
+                                      key_clean = key_lower.replace('-', '').replace('.', '').replace('_', '')
+                                      
+                                      if lib_key in key_clean or key_clean in lib_key:
+                                          matched_lib = lib_name
+                                          break
+                              
+                              # If matched, add to libraries
+                              if matched_lib and matched_lib in library_patterns:
                                   if matched_lib not in libraries:
                                       libraries.append(matched_lib)
                                       libraries_from_versions.add(matched_lib)
+                                      print(f"📋 Found library in versions.json: {key} → {matched_lib} = {version}")
+                                  # Always update current_versions, even if library was already in list
                                   current_versions[matched_lib] = str(version)
-                                  print(f"📋 Found library in versions.json: {matched_lib} = {version}")
+                              else:
+                                  # Debug: show what wasn't matched (exclude already detected libraries)
+                                  detected_keys = [lib.lower().replace('-', '_').replace('.', '_') for lib in libraries]
+                                  if key_lower not in detected_keys and key_lower.replace('_', '-') not in [lib.lower() for lib in libraries]:
+                                      print(f"⚠️  Could not match versions.json key '{key}' (normalized: '{key_lower}') to any library pattern")
                           
                       # Try Python dict
                       elif vfile.suffix == '.py':
@@ -380,6 +413,33 @@ jobs:
                           if latest_version:
                               current = current_versions.get(lib, 'unknown')
                               if current != latest_version and latest_version != 'unknown' and current != 'unknown':
+                                  # Check if latest is actually newer (not a downgrade)
+                                  try:
+                                      current_ver = version.parse(str(current))
+                                      latest_ver = version.parse(str(latest_version))
+                                      if latest_ver < current_ver:
+                                          print(f"⚠️  {lib}: {current} → {latest_version} (downgrade detected, skipping)")
+                                          continue
+                                  except:
+                                      # If version parsing fails, try manual comparison
+                                      try:
+                                          current_parts = [int(x) for x in str(current).split('.')[:3]]
+                                          latest_parts = [int(x) for x in str(latest_version).split('.')[:3]]
+                                          # Compare parts in order: major, minor, patch
+                                          for i in range(3):
+                                              if latest_parts[i] < current_parts[i]:
+                                                  print(f"⚠️  {lib}: {current} → {latest_version} (downgrade detected, skipping)")
+                                                  break
+                                              elif latest_parts[i] > current_parts[i]:
+                                                  break
+                                          else:
+                                              # All parts equal or latest is smaller - it's a downgrade or same
+                                              if latest_parts < current_parts:
+                                                  print(f"⚠️  {lib}: {current} → {latest_version} (downgrade detected, skipping)")
+                                                  continue
+                                      except:
+                                          pass  # If comparison fails, continue to normal upgrade check
+                                  
                                   # Determine upgrade type
                                   upgrade_type = get_version_upgrade_type(current, latest_version)
                                   
@@ -901,6 +961,9 @@ jobs:
           ${{ needs.check-updates.outputs.updates_summary }}
 
           Auto-generated by upgrade-static-files workflow."
+          
+          # Push the branch so create-pull-request can find it
+          git push origin "$BRANCH_NAME" || echo "Branch push failed or already exists"
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
