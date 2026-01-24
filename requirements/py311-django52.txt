@@ -1034,9 +1034,9 @@ wcmatch==10.1 \
     --hash=sha256:5848ace7dbb0476e5e55ab63c6bbd529745089343427caa5537f230cc01beb8a \
     --hash=sha256:f11f94208c8c8484a16f4f48638a85d771d9513f4ab3f37595978801cb9465af
     # via bump-my-version
-wcwidth==0.3.1 \
-    --hash=sha256:5aedb626a9c0d941b990cfebda848d538d45c9493a3384d080aff809143bd3be \
-    --hash=sha256:b2d355df3ec5d51bfc973a22fb4ea9a03b12fdcbf00d0abd22a2c78b12ccc177
+wcwidth==0.3.2 \
+    --hash=sha256:817abc6a89e47242a349b5d100cbd244301690d6d8d2ec6335f26fe6640a6315 \
+    --hash=sha256:d469b3059dab6b1077def5923ed0a8bf5738bd4a1a87f686d5e2de455354c4ad
     # via prompt-toolkit
 zipp==3.23.0 \
     --hash=sha256:071652d6115ed432f5ce1d34c336c0adfd6a884660d1e9712a256d3d3bd4b14e \
