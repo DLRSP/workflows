@@ -49,9 +49,9 @@ build==1.4.0 \
     --hash=sha256:6a07c1b8eb6f2b311b96fcbdbce5dab5fe637ffda0fd83c9cac622e927501596 \
     --hash=sha256:f1b91b925aa322be454f8330c6fb48b465da993d1e7e7e6fa35027ec49f3c936
     # via poetry
-bump-my-version==1.2.6 \
-    --hash=sha256:1f2f0daa5d699904e9739be8efb51c4c945461bad83cd4da4c89d324d9a18343 \
-    --hash=sha256:a2f567c10574a374b81a9bd6d2bd3cb2ca74befe5c24c3021123773635431659
+bump-my-version==1.2.7 \
+    --hash=sha256:16f89360f979c0a8eb3249ebe3e13ae4f0cb5481d7bb58e12a9f66996922acfd \
+    --hash=sha256:d915a10b41e0c9db5a2fa39bde9f45f92e1e4194242d819c9ceb9eca8831cd21
     # via -r requirements/requirements.in
 cachecontrol[filecache]==0.14.4 \
     --hash=sha256:b7ac014ff72ee199b5f8af1de29d60239954f223e948196fa3d84adaffc71d2b \
@@ -367,9 +367,9 @@ fastjsonschema==2.21.2 \
     --hash=sha256:1c797122d0a86c5cace2e54bf4e819c36223b552017172f32c5c024a6b77e463 \
     --hash=sha256:b1eb43748041c880796cd077f1a07c3d94e93ae84bba5ed36800a33554ae05de
     # via poetry
-filelock==3.23.0 \
-    --hash=sha256:4203c3f43983c7c95e4bbb68786f184f6acb7300899bf99d686bb82d526bdf62 \
-    --hash=sha256:f64442f6f4707b9385049bb490be0bc48e3ab8e74ad27d4063435252917f4d4b
+filelock==3.24.0 \
+    --hash=sha256:aeeab479339ddf463a1cdd1f15a6e6894db976071e5883efc94d22ed5139044b \
+    --hash=sha256:eebebb403d78363ef7be8e236b63cc6760b0004c7464dceaba3fd0afbd637ced
     # via
     #   cachecontrol
     #   virtualenv
@@ -662,9 +662,9 @@ pkginfo==1.12.1.2 \
     --hash=sha256:5cd957824ac36f140260964eba3c6be6442a8359b8c48f4adf90210f33a04b7b \
     --hash=sha256:c783ac885519cab2c34927ccfa6bf64b5a704d7c69afaea583dd9b7afe969343
     # via poetry
-platformdirs==4.8.0 \
-    --hash=sha256:1c1328b4d2ea997bbcb904175a9bde14e824a3fa79f751ea3888d63d7d727557 \
-    --hash=sha256:c1d4a51ab04087041dd602707fbe7ee8b62b64e590f30e336e5c99c2d0c542d2
+platformdirs==4.9.1 \
+    --hash=sha256:61d8b967d34791c162d30d60737369cbbd77debad5b981c4bfda1842e71e0d66 \
+    --hash=sha256:f310f16e89c4e29117805d8328f7c10876eeff36c94eac879532812110f7d39f
     # via
     #   black
     #   findpython
