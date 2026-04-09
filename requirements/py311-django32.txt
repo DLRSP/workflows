@@ -695,17 +695,17 @@ pathspec==1.0.4 \
     # via
     #   black
     #   mypy
-pbs-installer[download,install]==2026.3.25 \
-    --hash=sha256:79913a8de3809bbb010cd2788d9d9b31e8eae77bc21846302dda8210d4d40c2a \
-    --hash=sha256:f22cdc8be34fcce056f416907397ba91a2611b34d6963097da8b138ed3ddcd5b
+pbs-installer[download,install]==2026.4.7 \
+    --hash=sha256:0c0a7d44f125bac96de094b8208c76b891ee859c71accce1c0e9ec4d83828de8 \
+    --hash=sha256:462ff5173665251d99013ceef9c9b3b6330f9000e4e05a3b45b3acb457a486f3
     # via poetry
 pkginfo==1.12.1.2 \
     --hash=sha256:5cd957824ac36f140260964eba3c6be6442a8359b8c48f4adf90210f33a04b7b \
     --hash=sha256:c783ac885519cab2c34927ccfa6bf64b5a704d7c69afaea583dd9b7afe969343
     # via poetry
-platformdirs==4.9.4 \
-    --hash=sha256:1ec356301b7dc906d83f371c8f487070e99d3ccf9e501686456394622a01a934 \
-    --hash=sha256:68a9a4619a666ea6439f2ff250c12a853cd1cbd5158d258bd824a7df6be2f868
+platformdirs==4.9.6 \
+    --hash=sha256:3bfa75b0ad0db84096ae777218481852c0ebc6c727b3168c1b9e0118e458cf0a \
+    --hash=sha256:e61adb1d5e5cb3441b4b7710bea7e4c12250ca49439228cc1021c00dcfac0917
     # via
     #   black
     #   findpython
