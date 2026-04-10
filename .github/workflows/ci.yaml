@@ -14,13 +14,28 @@ on:
 
 jobs:
   test:
-    name: Python ${{ matrix.python-version }}
+    name: Python ${{ matrix.python-version }}${{ matrix.legacy == true && ' · legacy (non-blocking)' || '' }}${{ matrix.experimental == true && ' · experimental (non-blocking)' || '' }}
     runs-on: ubuntu-latest
+    # 3.10–3.13: required. 3.8–3.9 (EOL) and 3.14 (preview): optional; failures do not fail the workflow.
+    continue-on-error: ${{ matrix.optional == true }}
     strategy:
       max-parallel: 5
+      fail-fast: false
       matrix:
-#        python-version: ["3.9", "3.10", "3.11", "3.12"]
-        python-version: ["3.9", "3.10"]
+        include:
+          - python-version: "3.10"
+          - python-version: "3.11"
+          - python-version: "3.12"
+          - python-version: "3.13"
+          - python-version: "3.8"
+            optional: true
+            legacy: true
+          - python-version: "3.9"
+            optional: true
+            legacy: true
+          - python-version: "3.14"
+            optional: true
+            experimental: true
     steps:
       - uses: actions/checkout@v6
 
