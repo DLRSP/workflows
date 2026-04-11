@@ -1,4 +1,9 @@
 ---
+# Python detection (hashFiles matches if any listed file exists):
+# - pyproject.toml only: standard PEP 621 / PEP 517 package (no setup.py needed).
+# - setup.py optional: keep it when you need custom setuptools hooks (e.g. compiling .po with gettext).
+# - test / CodeQL: setup.py OR pyproject.toml OR tox.ini (tox still needs a Python env).
+# - build / release / PyPI: setup.py OR pyproject.toml (not tox.ini alone — no sdist without package metadata).
 name: CI/CD
 on:
   workflow_call:
@@ -40,18 +45,18 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Set up Python ${{ matrix.python-version }}
-        if: ${{ always() && hashFiles('setup.py') }}
+        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml', 'tox.ini') }}
         uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install system dependencies
-        if: ${{ always() && hashFiles('setup.py') }}
+        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml', 'tox.ini') }}
         run: |
           sudo apt-get update && sudo apt-get install gettext
 
       - name: Get pip cache dir
-        if: ${{ always() && hashFiles('setup.py') }}
+        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml', 'tox.ini') }}
         id: pip-cache
         run: |
           echo "dir=$(pip cache dir)" >> "$GITHUB_OUTPUT"
@@ -63,7 +68,7 @@ jobs:
 
 #      - name: Cache Python dependencies ${{ matrix.python-version }} (dev)
 #        uses: actions/cache@v5.0.3
-#        if: ${{ always() && hashFiles('setup.py') }}
+#        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml', 'tox.ini') }}
 #        with:
 #          path: ~/.cache/pip
 #          key: ${{ runner.os }}-pip-${{ hashFiles('requirements/${{ env.PY_ENV }}-dev.txt') }}
@@ -71,7 +76,7 @@ jobs:
 #            ${{ runner.os }}-pip-${{ matrix.python-version }}
 
       - name: Install Python dependencies ${{ matrix.python-version }} (dev)
-        if: ${{ always() && hashFiles('setup.py') }}
+        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml', 'tox.ini') }}
         run: >-
           python -m pip install --upgrade --no-deps
           -r https://raw.githubusercontent.com/DLRSP/requirements/main/${{ env.PY_ENV }}-dev.txt
@@ -81,7 +86,7 @@ jobs:
         run: tox --py current
 
 #      - name: Install Python dependencies ${{ matrix.python-version }} (cov)
-#        if: ${{ always() && hashFiles('setup.py') }}
+#        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml', 'tox.ini') }}
 #        run: |
 #          python -m pip install --upgrade coverage codecov
 
@@ -146,17 +151,17 @@ jobs:
 #          prettier: true
 
     - name: Initialize CodeQL
-      if: ${{ always() && hashFiles('setup.py') }}
+      if: ${{ always() && hashFiles('setup.py', 'pyproject.toml', 'tox.ini') }}
       uses: github/codeql-action/init@v4
       with:
         languages: ${{ matrix.language }}
 
     - name: Autobuild
-      if: ${{ always() && hashFiles('setup.py') }}
+      if: ${{ always() && hashFiles('setup.py', 'pyproject.toml', 'tox.ini') }}
       uses: github/codeql-action/autobuild@v4
 
     - name: Perform CodeQL Analysis
-      if: ${{ always() && hashFiles('setup.py') }}
+      if: ${{ always() && hashFiles('setup.py', 'pyproject.toml', 'tox.ini') }}
       uses: github/codeql-action/analyze@v4
 
   bots:
@@ -218,27 +223,27 @@ jobs:
       - uses: actions/checkout@v6
 
       - uses: actions/setup-python@v6
-        if: ${{ always() && hashFiles('setup.py') }}
+        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') }}
         with:
           python-version: "3.x"
 
       - name: Install OS dependencies
-        if: ${{ always() && hashFiles('setup.py') }}
+        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') }}
         run: |
           sudo apt-get install -y gettext
 
       - name: Install Python dependencies
-        if: ${{ always() && hashFiles('setup.py') }}
+        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') }}
         run: |
           python -m pip install --upgrade pip build django
 
       - name: Build a binary wheel and source tarball with latest python version
-        if: ${{ always() && hashFiles('setup.py') }}
+        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') }}
         run: |
           python -m build --sdist --wheel
 
       - name: Store the distribution packages
-        if: ${{ always() && hashFiles('setup.py') }}
+        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') }}
         uses: actions/upload-artifact@v6
         with:
           name: python-package-distributions
@@ -256,47 +261,47 @@ jobs:
       - uses: actions/checkout@v6
 
       - uses: actions/setup-python@v6
-        if: ${{ always() && hashFiles('setup.py') }}
+        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') }}
         with:
           python-version: "3.x"
 
 #      - name: Install OS dependencies
-#        if: ${{ always() && hashFiles('setup.py') }}
+#        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') }}
 #        run: |
 #          sudo apt-get install -y gettext
 
       - name: Install OS dependencies Ubuntu
-        if: ${{ always() && hashFiles('setup.py') && matrix.os == 'ubuntu-latest' }}
+        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') && matrix.os == 'ubuntu-latest' }}
         run: |
           sudo apt-get install -y gettext
 
       - name: Install OS dependencies MacOS
-        if: ${{ always() && hashFiles('setup.py') && matrix.os == 'macos-*' }}
+        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') && matrix.os == 'macos-*' }}
         run: |
           sudo brew install gettext
 
       - name: Install Python dependencies
-        if: ${{ always() && hashFiles('setup.py') }}
+        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') }}
         run: |
-          python -m pip install --upgrade pip setuptools wheel django
+          python -m pip install --upgrade pip setuptools wheel build django
 
       - name: Build a binary wheel and source tarball with latest python version
-        if: ${{ always() && hashFiles('setup.py') }}
+        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') }}
         run: |
-          python setup.py sdist bdist_wheel
+          python -m build --sdist --wheel
 
       - name: Install cibuildwheel
-        if: ${{ always() && hashFiles('setup.py') }}
+        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') }}
         run: |
           python -m pip install cibuildwheel==2.17.0
 
       - name: Build wheels
-        if: ${{ always() && hashFiles('setup.py') }}
+        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') }}
         run: |
           python -m cibuildwheel --output-dir wheelhouse
 
       - uses: actions/upload-artifact@v6
-        if: ${{ always() && hashFiles('setup.py') }}
+        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') }}
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
@@ -316,7 +321,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
 
       - name: Download all the dists
-        if: ${{ always() && hashFiles('setup.py') }}
+        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') }}
         uses: actions/download-artifact@v7
         with:
           name: python-package-distributions
@@ -325,7 +330,7 @@ jobs:
       - name: Update Release
         id: update_release
         uses: softprops/action-gh-release@v2
-        if: ${{ always() && hashFiles('setup.py') }}
+        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') }}
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         with:
@@ -342,14 +347,14 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Download all the dists
-        if: ${{ always() && hashFiles('setup.py') }}
+        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') }}
         uses: actions/download-artifact@v7
         with:
           name: python-package-distributions
           path: dist/
 
       - name: Publish package
-        if: ${{ always() && hashFiles('setup.py') }}
+        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
