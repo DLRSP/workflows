@@ -1,9 +1,8 @@
 ---
-# Python detection (hashFiles matches if any listed file exists):
-# - pyproject.toml only: standard PEP 621 / PEP 517 package (no setup.py needed).
-# - setup.py optional: keep it when you need custom setuptools hooks (e.g. compiling .po with gettext).
-# - test / CodeQL: setup.py OR pyproject.toml OR tox.ini (tox still needs a Python env).
-# - build / release / PyPI: setup.py OR pyproject.toml (not tox.ini alone — no sdist without package metadata).
+# Python: hashFiles is true if any listed file exists.
+# - Test / CodeQL env: setup.py, pyproject.toml, or tox.ini (tox needs Python).
+# - Build / release / PyPI: setup.py or pyproject.toml (package without setup.py still builds).
+# - When setup.py exists, build uses it (custom hooks, e.g. .po); otherwise python -m build.
 name: CI/CD
 on:
   workflow_call:
@@ -31,13 +30,15 @@ jobs:
           - python-version: "3.10"
           - python-version: "3.11"
           - python-version: "3.12"
-          - python-version: "3.13"
           - python-version: "3.8"
             optional: true
             legacy: true
           - python-version: "3.9"
             optional: true
             legacy: true
+          - python-version: "3.13"
+            optional: true
+            experimental: true
           - python-version: "3.14"
             optional: true
             experimental: true
@@ -139,7 +140,7 @@ jobs:
         sudo apt-get install -y gettext
 
     - name: Install Python dependencies
-      run: pip install black flake8
+      run: pip install black flake8 flake8-pyproject
 
     - name: Run linters
       uses: wearerequired/lint-action@v2
@@ -235,10 +236,15 @@ jobs:
       - name: Install Python dependencies
         if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') }}
         run: |
-          python -m pip install --upgrade pip build django
+          python -m pip install --upgrade pip setuptools wheel build django
 
-      - name: Build a binary wheel and source tarball with latest python version
-        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') }}
+      - name: Build sdist and wheel (setup.py — custom hooks)
+        if: ${{ always() && hashFiles('setup.py') }}
+        run: |
+          python setup.py sdist bdist_wheel
+
+      - name: Build sdist and wheel (PEP 517, pyproject.toml only)
+        if: ${{ always() && hashFiles('pyproject.toml') && !hashFiles('setup.py') }}
         run: |
           python -m build --sdist --wheel
 
@@ -285,8 +291,13 @@ jobs:
         run: |
           python -m pip install --upgrade pip setuptools wheel build django
 
-      - name: Build a binary wheel and source tarball with latest python version
-        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') }}
+      - name: Build sdist and wheel (setup.py — custom hooks)
+        if: ${{ always() && hashFiles('setup.py') }}
+        run: |
+          python setup.py sdist bdist_wheel
+
+      - name: Build sdist and wheel (PEP 517, pyproject.toml only)
+        if: ${{ always() && hashFiles('pyproject.toml') && !hashFiles('setup.py') }}
         run: |
           python -m build --sdist --wheel
 
