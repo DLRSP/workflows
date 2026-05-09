@@ -822,9 +822,9 @@ pathspec==1.1.1 \
     # via
     #   black
     #   mypy
-pbs-installer[download,install]==2026.5.4 \
-    --hash=sha256:e32323dc299f8d6b485bb622ff2348e45a04691263fec5d6f617c8109fc290f7 \
-    --hash=sha256:f585ed8252e31a88807969c5113015db343bf49c38ff26eb7d0b1eedf7bb3b9a
+pbs-installer[download,install]==2026.5.8 \
+    --hash=sha256:6de3829cc4987a4dc132f11f49617b00e96ef6b46f21cdbe327c65e20109f312 \
+    --hash=sha256:a3b491b44ad2d25566de9347444bfc0d43522c80621922c3d876f1881a8e9c74
     # via poetry
 pkginfo==1.12.1.2 \
     --hash=sha256:5cd957824ac36f140260964eba3c6be6442a8359b8c48f4adf90210f33a04b7b \
@@ -983,9 +983,9 @@ pydantic-core==2.46.4 \
     --hash=sha256:fc3e9034a63de20e15e8ade85358bc6efc614008cab72898b4b4952bea0509ff \
     --hash=sha256:fd8b3d9fd264be37976686c7f65cd52a83f5e84f4bfd2adf9c1d469676bbb6ae
     # via pydantic
-pydantic-settings==2.14.0 \
-    --hash=sha256:24285fd4b0e0c06507dd9fdfd331ee23794305352aaec8fc4eb92d4047aeb67d \
-    --hash=sha256:fc8d5d692eb7092e43c8647c1c35a3ecd00e040fcf02ed86f4cb5458ca62182e
+pydantic-settings==2.14.1 \
+    --hash=sha256:6e3c7edfd8277687cdc598f56e5cff0e9bfff0910a3749deaa8d4401c3a2b9de \
+    --hash=sha256:e874d3bec7e787b0c9958277956ed9b4dd5de6a80e162188fdaff7c5e26fd5fa
     # via bump-my-version
 pygments==2.20.0 \
     --hash=sha256:6757cd03768053ff99f3039c1a36d6c0aa0b263438fcab17520b30a303a82b5f \
