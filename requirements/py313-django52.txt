@@ -45,10 +45,6 @@ ast-serialize==0.3.0 \
     --hash=sha256:f5e110cdce2a347e1dd987529c88ef54d26f67848dce3eba1b3b2cc2cf085c94 \
     --hash=sha256:f5ef88cc5842a5d7a6ac09dc0d5fc2c98f5d276c1f076f866d55047ce886785b
     # via mypy
-backports-tarfile==1.2.0 \
-    --hash=sha256:77e284d754527b01fb1e6fa8a1afe577858ebe4e9dad8919e34c862cb399bc34 \
-    --hash=sha256:d75e02c268746e1b8144c278978b6e98e85de6ad16f8e4b0844a154557eca991
-    # via jaraco-context
 backports-zstd==1.5.0 \
     --hash=sha256:0075195c79c0508bc7313a3402b187bd9d27d4f9a376e8e2caac0fc2baeacbdf \
     --hash=sha256:012d88a9ae08f331e1adc03dfbda4ff2ae7f76ea62455975827b215677a11aec \
@@ -549,17 +545,13 @@ httpx==0.28.1 \
     # via
     #   bump-my-version
     #   pbs-installer
-idna==3.14 \
-    --hash=sha256:466d810d7a2cc1022bea9b037c39728d51ae7dad40d480fc9b7d7ecf98ba8ee3 \
-    --hash=sha256:e677eaf072e290f7b725f9acf0b3a2bd55f9fd6f7c70abe5f0e34823d0accf69
+idna==3.15 \
+    --hash=sha256:048adeaf8c2d788c40fee287673ccaa74c24ffd8dcf09ffa555a2fbb59f10ac8 \
+    --hash=sha256:ca962446ea538f7092a95e057da437618e886f4d349216d2b1e294abfdb65fdc
     # via
     #   anyio
     #   httpx
     #   requests
-importlib-metadata==9.0.0 \
-    --hash=sha256:2d21d1cc5a017bd0559e36150c21c830ab1dc304dedd1b7ea85d20f45ef3edd7 \
-    --hash=sha256:a4f57ab599e6a2e3016d7595cfd72eb4661a5106e787a95bcc90c7105b831efc
-    # via keyring
 installer==1.0.1 \
     --hash=sha256:011d045df8b954ced7dde3a7e42ae4418da40ecda7990f2d11d5ed7c146fd98b \
     --hash=sha256:052c7fc3721d54c696e2dea019be67539d7b144e924f559f54beb3121831c364
@@ -997,9 +989,9 @@ pyproject-hooks==1.2.0 \
     # via
     #   build
     #   poetry
-python-discovery==1.3.0 \
-    --hash=sha256:441d9ced3dfce36e113beb35ca302c71c7ef06f3c0f9c227a0b9bb3bd49b9e9f \
-    --hash=sha256:d098f1e86be5d45fe4d14bf1029294aabbd332f4321179dec85e76cddce834b0
+python-discovery==1.3.1 \
+    --hash=sha256:62f6db28064c9613e7ca76cb3f00c38c839a07c31c00dfe7ed0986493d2150a6 \
+    --hash=sha256:ed188687ebb3b82c01a17cd5ac62fc94d9f6487a7f1a0f9dfe89753fec91039c
     # via virtualenv
 python-dotenv==1.2.2 \
     --hash=sha256:1d8214789a24de455a8b8bd8ae6fe3c6b69a5e3d64aa8a8e5d68e694bbcb285a \
@@ -1181,8 +1173,6 @@ typing-extensions==4.15.0 \
     --hash=sha256:0cea48d173cc12fa28ecabc3b837ea3cf6f38c6d1136f85cbaaf598984861466 \
     --hash=sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548
     # via
-    #   anyio
-    #   dulwich
     #   mypy
     #   pydantic
     #   pydantic-core
@@ -1199,9 +1189,9 @@ urllib3==2.7.0 \
     # via
     #   dulwich
     #   requests
-virtualenv==21.3.1 \
-    --hash=sha256:c2305bc1fddeec40699b8370d13f8d431b0701f00ce895061ce493aeded4426b \
-    --hash=sha256:d1a71cf58f2f9228fff23a1f6ec15d39785c6b32e03658d104974247145edd35
+virtualenv==21.3.2 \
+    --hash=sha256:3ecda97894a6fc1c53106356f488690e5c86278c1f693f3fc0805ac85a513686 \
+    --hash=sha256:c58ea748fa50bb2a4367da5ba3d30b02458ed40b4ea888faad94021f3309f764
     # via poetry
 wcmatch==10.1 \
     --hash=sha256:5848ace7dbb0476e5e55ab63c6bbd529745089343427caa5537f230cc01beb8a \
@@ -1211,7 +1201,3 @@ wcwidth==0.7.0 \
     --hash=sha256:5d69154c429a82910e241c738cd0e2976fac8a2dd47a1a805f4afed1c0f136f2 \
     --hash=sha256:90e3a7ea092341c44b99562e75d09e4d5160fe7a3974c6fb842a101a95e7eed0
     # via prompt-toolkit
-zipp==3.23.1 \
-    --hash=sha256:0b3596c50a5c700c9cb40ba8d86d9f2cc4807e9bedb06bcdf7fac85633e444dc \
-    --hash=sha256:32120e378d32cd9714ad503c1d024619063ec28aad2248dc6672ad13edfa5110
-    # via importlib-metadata
