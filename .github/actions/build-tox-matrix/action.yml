@@ -1,0 +1,43 @@
+name: Build tox matrix
+description: >-
+  Build a GitHub Actions strategy matrix from tox envlist definitions.
+  Fallback matrix and Python optional policies live in config/default-matrix.json.
+inputs:
+  mode:
+    description: auto (one job per tox env) or python-only (fallback matrix from JSON config)
+    required: false
+    default: auto
+  config-file:
+    description: Optional path to a matrix config JSON, relative to this action root
+    required: false
+    default: config/default-matrix.json
+  workspace:
+    description: Repository root that contains tox.ini
+    required: false
+    default: .
+outputs:
+  matrix:
+    description: JSON object suitable for strategy.matrix (fromJSON)
+    value: ${{ steps.build.outputs.matrix }}
+  mode:
+    description: tox-env when one job runs per tox environment, python-only otherwise
+    value: ${{ steps.build.outputs.mode }}
+  count:
+    description: Number of matrix combinations
+    value: ${{ steps.build.outputs.count }}
+runs:
+  using: composite
+  steps:
+    - name: Install tox
+      shell: bash
+      run: python -m pip install --upgrade pip 'tox>=4,<5'
+
+    - name: Build matrix from tox.ini
+      id: build
+      shell: bash
+      working-directory: ${{ inputs.workspace }}
+      run: |
+        python "${{ github.action_path }}/build_matrix.py" \
+          --workspace "${{ inputs.workspace }}" \
+          --config "${{ github.action_path }}/${{ inputs.config-file }}" \
+          --mode "${{ inputs.mode }}"

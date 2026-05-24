@@ -1,0 +1,68 @@
+{
+  "fallback": {
+    "description": "Matrix used when tox.ini is absent or tox-matrix-mode is python-only.",
+    "include": [
+      {"python-version": "3.10", "matrix-mode": "python-only"},
+      {"python-version": "3.11", "matrix-mode": "python-only"},
+      {"python-version": "3.12", "matrix-mode": "python-only"},
+      {
+        "python-version": "3.8",
+        "matrix-mode": "python-only",
+        "optional": true,
+        "legacy": true
+      },
+      {
+        "python-version": "3.9",
+        "matrix-mode": "python-only",
+        "optional": true,
+        "legacy": true
+      },
+      {
+        "python-version": "3.13",
+        "matrix-mode": "python-only",
+        "optional": true,
+        "experimental": true
+      },
+      {
+        "python-version": "3.14",
+        "matrix-mode": "python-only",
+        "optional": true,
+        "experimental": true
+      }
+    ]
+  },
+  "python_policies": [
+    {
+      "name": "legacy",
+      "max_version": "3.9",
+      "flags": {"optional": true, "legacy": true}
+    },
+    {
+      "name": "experimental",
+      "min_version": "3.13",
+      "flags": {"optional": true, "experimental": true}
+    }
+  ],
+  "django_policies": [
+    {
+      "name": "legacy",
+      "versions": ["3.2"],
+      "flags": {"optional": true, "legacy": true}
+    },
+    {
+      "name": "experimental",
+      "versions": ["5.2"],
+      "flags": {"optional": true, "experimental": true}
+    }
+  ],
+  "compatibility_rules": [
+    {
+      "django_versions": ["5.2"],
+      "min_python": "3.10",
+      "comment": "Django 5.2 supports Python 3.10+ only."
+    }
+  ],
+  "defaults": {
+    "unknown_env_python_version": "3.11"
+  }
+}

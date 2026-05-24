@@ -1,12 +1,25 @@
 ---
-# Python: hashFiles is true if any listed file exists.
-# - Test / CodeQL env: setup.py, pyproject.toml, or tox.ini (tox needs Python).
-# - Build / release / PyPI: setup.py or pyproject.toml (package without setup.py still builds).
-# - When setup.py exists, build uses it (custom hooks, e.g. .po); otherwise python -m build.
+# - Test matrix: prepare-matrix reads tox.ini and runs one job per tox env (py*-django*).
+# - Fallback without tox.ini: legacy Python-only matrix with tox --py current.
+# - Override: workflow_call input tox-matrix-mode=python-only restores previous behaviour.
 name: CI/CD
 on:
   workflow_call:
+    inputs:
+      tox-matrix-mode:
+        description: >-
+          auto: one GitHub job per tox env when tox.ini defines py*-django* envs;
+          python-only: legacy matrix (one job per Python, tox --py current).
+        required: false
+        type: string
+        default: auto
   workflow_dispatch:
+    inputs:
+      tox-matrix-mode:
+        description: Matrix mode (auto or python-only)
+        required: false
+        type: string
+        default: auto
   push:
     tags:
       - 'v*'
@@ -17,31 +30,44 @@ on:
       - main
 
 jobs:
-  test:
-    name: Python ${{ matrix.python-version }}${{ matrix.legacy == true && ' · legacy (non-blocking)' || '' }}${{ matrix.experimental == true && ' · experimental (non-blocking)' || '' }}
+  prepare-matrix:
+    name: Prepare test matrix
     runs-on: ubuntu-latest
-    # 3.10–3.13: required. 3.8–3.9 (EOL) and 3.14 (preview): optional; failures do not fail the workflow.
+    outputs:
+      matrix: ${{ steps.build.outputs.matrix }}
+      mode: ${{ steps.build.outputs.mode }}
+      count: ${{ steps.build.outputs.count }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      - name: Build matrix from tox environments
+        id: build
+        uses: ./.github/actions/build-tox-matrix
+        with:
+          mode: ${{ inputs.tox-matrix-mode || 'auto' }}
+
+      - name: Log matrix summary
+        shell: bash
+        run: |
+          echo "Matrix mode: ${{ steps.build.outputs.mode }}"
+          echo "Combinations: ${{ steps.build.outputs.count }}"
+          echo '${{ steps.build.outputs.matrix }}' | python -m json.tool
+
+  test:
+    name: >-
+      ${{ matrix.django-version && format('Python {0} · Django {1}', matrix.python-version, matrix.django-version) || format('Python {0}', matrix.python-version) }}${{ matrix.legacy == true && ' · legacy (non-blocking)' || '' }}${{ matrix.experimental == true && ' · experimental (non-blocking)' || '' }}
+    runs-on: ubuntu-latest
+    needs: prepare-matrix
+    # Required: Python 3.10–3.12 + Django 4.2. Optional: legacy Python/Django 3.2, experimental Python 3.13+ / Django 5.2.
     continue-on-error: ${{ matrix.optional == true }}
     strategy:
-      max-parallel: 5
+      max-parallel: 10
       fail-fast: false
-      matrix:
-        include:
-          - python-version: "3.10"
-          - python-version: "3.11"
-          - python-version: "3.12"
-          - python-version: "3.8"
-            optional: true
-            legacy: true
-          - python-version: "3.9"
-            optional: true
-            legacy: true
-          - python-version: "3.13"
-            optional: true
-            experimental: true
-          - python-version: "3.14"
-            optional: true
-            experimental: true
+      matrix: ${{ fromJSON(needs.prepare-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v6
 
@@ -67,41 +93,26 @@ jobs:
           RAW_PY_ENV="py${{ matrix.python-version }}"
           echo "PY_ENV=${RAW_PY_ENV//./}" >> "$GITHUB_ENV"
 
-#      - name: Cache Python dependencies ${{ matrix.python-version }} (dev)
-#        uses: actions/cache@v5.0.3
-#        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml', 'tox.ini') }}
-#        with:
-#          path: ~/.cache/pip
-#          key: ${{ runner.os }}-pip-${{ hashFiles('requirements/${{ env.PY_ENV }}-dev.txt') }}
-#          restore-keys: |
-#            ${{ runner.os }}-pip-${{ matrix.python-version }}
-
       - name: Install Python dependencies ${{ matrix.python-version }} (dev)
         if: ${{ always() && hashFiles('setup.py', 'pyproject.toml', 'tox.ini') }}
         run: >-
           python -m pip install --upgrade --no-deps
           -r https://raw.githubusercontent.com/DLRSP/requirements/main/${{ env.PY_ENV }}-dev.txt
 
-      - name: Run tox targets for ${{ matrix.python-version }}
-        if: ${{ always() && hashFiles('tox.ini') }}
+      - name: Run tox environment ${{ matrix.tox-env }}
+        if: ${{ always() && hashFiles('tox.ini') && matrix.matrix-mode == 'tox-env' }}
+        run: tox -e "${{ matrix.tox-env }}"
+
+      - name: Run tox targets for Python ${{ matrix.python-version }}
+        if: ${{ always() && hashFiles('tox.ini') && matrix.matrix-mode == 'python-only' }}
         run: tox --py current
-
-#      - name: Install Python dependencies ${{ matrix.python-version }} (cov)
-#        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml', 'tox.ini') }}
-#        run: |
-#          python -m pip install --upgrade coverage codecov
-
-#      - name: Upload coverage
-#        if: ${{ always() && hashFiles('tox.ini') }}
-#        run: |
-#          coverage combine
-#          codecov
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5.5.2
         if: ${{ always() && hashFiles('tox.ini') }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          flags: ${{ matrix.tox-env || format('py{0}', matrix.python-version) }}
 
   analyze:
     name: Analyze
