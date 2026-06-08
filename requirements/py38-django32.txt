@@ -1001,9 +1001,9 @@ wcmatch==10.0 \
     --hash=sha256:0dd927072d03c0a6527a20d2e6ad5ba8d0380e60870c383bc533b71744df7b7a \
     --hash=sha256:e72f0de09bba6a04e0de70937b0cf06e55f36f37b3deb422dfaf854b867b840a
     # via bump-my-version
-wcwidth==0.8.0 \
-    --hash=sha256:68a882ff6d14e3d14e0cae590b96a0551be64ce4905408112a8254434a1bdf69 \
-    --hash=sha256:8c75e6099cefd197c4bcc67a486f70b5dbc68f997c05f34a811d853910450d64
+wcwidth==0.8.1 \
+    --hash=sha256:f453740b1e4a4f3291faa37944c555d71056c4da08d59809b307ef4feba695c8 \
+    --hash=sha256:faf5b4a5366a72dc49cad48cdf21f52bdf63bdda995178e483ba247ff79089b9
     # via prompt-toolkit
 zipp==3.20.2 \
     --hash=sha256:a817ac80d6cf4b23bf7f2828b7cabf326f15a001bea8b1f9b49631780ba28350 \
