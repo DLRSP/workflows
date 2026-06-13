@@ -223,7 +223,9 @@ def parse_envlist_from_tox_ini(path: Path) -> list[str]:
         return []
 
     raw = parser.get("tox", "envlist")
-    normalized = re.sub(r"\s+", "", raw)
+    # Newlines in tox.ini are env separators; without this, adjacent factors merge
+    # (e.g. py{310}-django{42} + py{312}-django{52} -> py310-django42py312-django52).
+    normalized = re.sub(r"\s+", "", raw.replace("\n", ",").replace("\r", ","))
     if not normalized:
         return []
 
