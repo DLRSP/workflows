@@ -6,12 +6,6 @@
       {"python-version": "3.11", "matrix-mode": "python-only"},
       {"python-version": "3.12", "matrix-mode": "python-only"},
       {
-        "python-version": "3.8",
-        "matrix-mode": "python-only",
-        "optional": true,
-        "legacy": true
-      },
-      {
         "python-version": "3.9",
         "matrix-mode": "python-only",
         "optional": true,
@@ -56,6 +50,18 @@
     }
   ],
   "compatibility_rules": [
+    {
+      "django_versions": ["3.2"],
+      "min_python": "3.10",
+      "max_python": "3.10",
+      "comment": "Django 3.2 LTS: CI keeps py310-django32 only."
+    },
+    {
+      "django_versions": ["4.2"],
+      "min_python": "3.9",
+      "max_python": "3.12",
+      "comment": "Django 4.2 LTS supports Python 3.9–3.12 in DLRSP CI."
+    },
     {
       "django_versions": ["5.2"],
       "min_python": "3.10",

@@ -30,8 +30,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - python-version: "3.8"
-            requirements-file: py38-dev.txt
           - python-version: "3.9"
             requirements-file: py39-dev.txt
           - python-version: "3.10"
@@ -96,12 +94,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - python-version: "3.8"
-            django-version: "3.2"
-          - python-version: "3.8"
-            django-version: "4.2"
-          - python-version: "3.9"
-            django-version: "3.2"
           - python-version: "3.9"
             django-version: "4.2"
           - python-version: "3.10"
@@ -111,11 +103,7 @@ jobs:
           - python-version: "3.10"
             django-version: "5.2"
           - python-version: "3.11"
-            django-version: "3.2"
-          - python-version: "3.11"
             django-version: "4.2"
-          - python-version: "3.12"
-            django-version: "3.2"
           - python-version: "3.12"
             django-version: "4.2"
           - python-version: "3.12"
