@@ -13,6 +13,21 @@ on:
         required: false
         type: string
         default: auto
+      requirements-ref:
+        description: DLRSP/requirements git ref (semver tag) for dev/test lock URLs
+        required: false
+        type: string
+        default: v1.0.9
+      install-test-deps:
+        description: Install org py*-test.txt from DLRSP/requirements (CI only)
+        required: false
+        type: boolean
+        default: false
+      assert-wheel-locks:
+        description: Assert runtime py*-django*.txt locks are embedded in the wheel (ADR-004)
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       tox-matrix-mode:
@@ -20,6 +35,21 @@ on:
         required: false
         type: string
         default: auto
+      requirements-ref:
+        description: DLRSP/requirements git ref for dev/test lock URLs
+        required: false
+        type: string
+        default: v1.0.9
+      install-test-deps:
+        description: Install org py*-test.txt from DLRSP/requirements
+        required: false
+        type: boolean
+        default: false
+      assert-wheel-locks:
+        description: Assert runtime locks embedded in wheel
+        required: false
+        type: boolean
+        default: false
   push:
     tags:
       - 'v*'
@@ -98,7 +128,18 @@ jobs:
         if: ${{ always() && hashFiles('setup.py', 'pyproject.toml', 'tox.ini') }}
         run: >-
           python -m pip install --upgrade --no-deps
-          -r https://raw.githubusercontent.com/DLRSP/requirements/main/${{ env.PY_ENV }}-dev.txt
+          -r https://raw.githubusercontent.com/DLRSP/requirements/${{ inputs.requirements-ref || 'v1.0.9' }}/${{ env.PY_ENV }}-dev.txt
+
+      - name: Install Python test dependencies ${{ matrix.python-version }} (CI)
+        if: >-
+          ${{
+            always()
+            && hashFiles('setup.py', 'pyproject.toml', 'tox.ini')
+            && inputs.install-test-deps == true
+          }}
+        run: >-
+          python -m pip install --upgrade --no-deps
+          -r https://raw.githubusercontent.com/DLRSP/requirements/${{ inputs.requirements-ref || 'v1.0.9' }}/${{ env.PY_ENV }}-test.txt
 
       - name: Run tox environment ${{ matrix.tox-env }}
         if: ${{ always() && hashFiles('tox.ini') && matrix.matrix-mode == 'tox-env' }}
@@ -259,6 +300,84 @@ jobs:
         if: ${{ always() && hashFiles('pyproject.toml') && !hashFiles('setup.py') }}
         run: |
           python -m build --sdist --wheel
+
+      - name: Assert runtime locks in wheel
+        if: >-
+          ${{
+            always()
+            && hashFiles('pyproject.toml')
+            && inputs.assert-wheel-locks == true
+          }}
+        run: |
+          python << 'PYEOF'
+          import glob
+          import sys
+          import tomllib
+          import zipfile
+          from pathlib import Path
+
+          dist = Path("dist")
+          wheels = sorted(dist.glob("*.whl"))
+          if not wheels:
+              print("❌ No wheel found in dist/")
+              sys.exit(1)
+          wheel_path = wheels[0]
+          print(f"Checking wheel: {wheel_path.name}")
+
+          with zipfile.ZipFile(wheel_path) as zf:
+              names = zf.namelist()
+
+          forbidden = []
+          for name in names:
+              base = name.rsplit("/", 1)[-1]
+              if base.endswith(".in"):
+                  forbidden.append(name)
+              elif "-dev.txt" in base or "-test.txt" in base:
+                  forbidden.append(name)
+          if forbidden:
+              print("❌ Forbidden paths in wheel (only runtime py*-django*.txt allowed):")
+              for item in forbidden:
+                  print(f"  - {item}")
+              sys.exit(1)
+
+          pyproject = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+          project_name = pyproject.get("project", {}).get("name", "")
+          data_files = pyproject.get("tool", {}).get("setuptools", {}).get("data-files", {})
+
+          expected_sources = []
+          for dest, sources in data_files.items():
+              if "requirements" not in dest:
+                  continue
+              for src in sources:
+                  expected_sources.append((src, dest, Path(src).name))
+
+          if not expected_sources:
+              expected_sources = [
+                  (str(p), f"share/{project_name}/requirements", p.name)
+                  for p in sorted(Path("requirements").glob("py*-django*.txt"))
+              ]
+
+          if not expected_sources:
+              print("ℹ️  No runtime lock files configured; skipping embed assert")
+              sys.exit(0)
+
+          missing = []
+          for src, dest, filename in expected_sources:
+              if not Path(src).is_file():
+                  print(f"❌ Source lock missing on disk: {src}")
+                  sys.exit(1)
+              dest_suffix = f"{dest.rstrip('/')}/{filename}".lstrip("./")
+              if not any(n.replace("\\", "/").endswith(dest_suffix) for n in names):
+                  missing.append(dest_suffix)
+
+          if missing:
+              print("❌ Runtime locks missing from wheel:")
+              for item in missing:
+                  print(f"  - {item}")
+              sys.exit(1)
+
+          print(f"✅ All {len(expected_sources)} runtime lock(s) present; no forbidden artifacts")
+          PYEOF
 
       - name: Store the distribution packages
         if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') }}

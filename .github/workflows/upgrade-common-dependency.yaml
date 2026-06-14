@@ -70,6 +70,17 @@ jobs:
           else
             echo "ℹ️  dev.in not found, skipping dev requirements"
           fi
+
+          if [[ -f "test.in" ]] ; then
+            echo "🔍 Found test.in, compiling CI test requirements..."
+            pip-compile --upgrade --generate-hashes --allow-unsafe \
+                      -o ${{ env.PY_ENV }}-test.txt \
+                      test.in
+            HAS_CHANGES=true
+            echo "✅ Generated ${{ env.PY_ENV }}-test.txt"
+          else
+            echo "ℹ️  test.in not found, skipping CI test requirements"
+          fi
           
           if [[ -f "requirements/docs.in" ]] && [[ "${{ matrix.python-version }}" == "3.10" || "${{ matrix.python-version }}" == "3.11" ]] ; then
             echo "🔍 Found requirements/docs.in, compiling docs requirements..."
@@ -97,6 +108,11 @@ jobs:
             pip install --dry-run --no-deps -r ${{ env.PY_ENV }}-dev.txt || pip install --no-deps -r ${{ env.PY_ENV }}-dev.txt
             echo "✓ ${{ env.PY_ENV }}-dev.txt verified successfully"
           fi
+          if [[ -f "${{ env.PY_ENV }}-test.txt" ]] ; then
+            echo "Verifying ${{ env.PY_ENV }}-test.txt..."
+            pip install --dry-run --no-deps -r ${{ env.PY_ENV }}-test.txt || pip install --no-deps -r ${{ env.PY_ENV }}-test.txt
+            echo "✓ ${{ env.PY_ENV }}-test.txt verified successfully"
+          fi
           if [[ -f "${{ env.PY_ENV }}-docs.txt" ]] ; then
             echo "Verifying ${{ env.PY_ENV }}-docs.txt..."
             pip install --dry-run --no-deps -r ${{ env.PY_ENV }}-docs.txt || pip install --no-deps -r ${{ env.PY_ENV }}-docs.txt
@@ -120,6 +136,24 @@ jobs:
           overwrite: true
           name: ${{ env.PY_ENV }}-dev.txt
           path: ${{ env.PY_ENV }}-dev.txt
+
+      - name: Check if test file exists for upload
+        id: check-test-file
+        if: steps.upgrade-deps.outputs.has_changes == 'true'
+        run: |
+          if [ -f "${{ env.PY_ENV }}-test.txt" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload Python dependencies ${{ matrix.python-version }} for CI test
+        if: steps.check-test-file.outputs.exists == 'true'
+        uses: actions/upload-artifact@v6
+        with:
+          overwrite: true
+          name: ${{ env.PY_ENV }}-test.txt
+          path: ${{ env.PY_ENV }}-test.txt
 
       - name: Check if docs file exists for upload
         id: check-docs-file
@@ -181,6 +215,15 @@ jobs:
           else
             echo "ℹ️  No dev requirements files found (py*-dev.txt)"
           fi
+
+          # Check for CI test requirements files
+          if ls py*-test.txt 2>/dev/null | head -1 > /dev/null; then
+            echo "✅ Found CI test requirements files:"
+            ls -la py*-test.txt 2>/dev/null
+            ARTIFACTS_FOUND=true
+          else
+            echo "ℹ️  No CI test requirements files found (py*-test.txt)"
+          fi
           
           # Check for docs requirements files
           if ls py*-docs.txt 2>/dev/null | head -1 > /dev/null; then
@@ -215,6 +258,22 @@ jobs:
               elif python -m pip install --no-deps -r "$file" 2>/dev/null; then
                 echo "✓ $file verified (installed successfully)"
                 # Clean up installed packages to avoid conflicts
+                pip uninstall -y $(pip freeze | cut -d'=' -f1 | grep -v '^pip' | grep -v '^setuptools' | grep -v '^wheel') 2>/dev/null || true
+              else
+                echo "✗ Failed to install $file"
+                failed=1
+              fi
+            fi
+          done
+
+          # Verify CI test requirements files
+          for file in py*-test.txt; do
+            if [ -f "$file" ]; then
+              echo "Verifying $file..."
+              if python -m pip install --dry-run --no-deps -r "$file" 2>/dev/null; then
+                echo "✓ $file verified (dry-run successful)"
+              elif python -m pip install --no-deps -r "$file" 2>/dev/null; then
+                echo "✓ $file verified (installed successfully)"
                 pip uninstall -y $(pip freeze | cut -d'=' -f1 | grep -v '^pip' | grep -v '^setuptools' | grep -v '^wheel') 2>/dev/null || true
               else
                 echo "✗ Failed to install $file"

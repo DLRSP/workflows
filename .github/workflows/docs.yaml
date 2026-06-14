@@ -9,9 +9,11 @@ on:
       - main
     paths:
       - 'docs/**'
+      - 'mkdocs.yml'
   pull_request:
     paths:
       - 'docs/**'
+      - 'mkdocs.yml'
 
 jobs:
   deploy:
@@ -28,6 +30,15 @@ jobs:
         with:
           python-version: '3.x'
 
+      - name: Get Python version for docs requirements
+        id: py-version
+        run: |
+          PY_VER=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+          PY_ENV="py${PY_VER//./}"
+          echo "PY_VER=$PY_VER" >> "$GITHUB_OUTPUT"
+          echo "PY_ENV=$PY_ENV" >> "$GITHUB_OUTPUT"
+          echo "Python version: $PY_VER, file prefix: $PY_ENV"
+
       - name: Upgrade pip
         run: |
           python -m pip install --upgrade pip
@@ -37,17 +48,37 @@ jobs:
         run: echo "dir=$(pip cache dir)" >> "$GITHUB_OUTPUT"
 
       - name: Cache dependencies
-        uses: actions/cache@v5.0.3
+        uses: actions/cache@v5.0.1
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements/py-docs.txt') }}
+          key: ${{ runner.os }}-pip-docs-${{ steps.py-version.outputs.PY_ENV }}-${{ hashFiles('requirements/docs.txt') }}
           restore-keys: |
+            ${{ runner.os }}-pip-docs-${{ steps.py-version.outputs.PY_ENV }}-
+            ${{ runner.os }}-pip-docs-
             ${{ runner.os }}-pip-
 
       - name: Install dependencies
-        run: >- 
-          python -m pip install --upgrade --no-deps
-          -r https://raw.githubusercontent.com/DLRSP/requirements/main/py-docs.txt
+        env:
+          PY_ENV: ${{ steps.py-version.outputs.PY_ENV }}
+        run: |
+          if [ "${{ github.repository }}" = "DLRSP/workflows" ]; then
+            # Try pyXX-docs.txt first (new pattern), then fallback to requirements/docs.txt (legacy)
+            if [ -f "${PY_ENV}-docs.txt" ]; then
+              python -m pip install --upgrade --no-deps -r ${PY_ENV}-docs.txt
+            elif [ -f "requirements/docs.txt" ]; then
+              python -m pip install --upgrade --no-deps -r requirements/docs.txt
+            else
+              echo "No local docs requirements found, using remote"
+              python -m pip install --upgrade --no-deps -r https://raw.githubusercontent.com/DLRSP/workflows/v1.15.8/${PY_ENV}-docs.txt || \
+              python -m pip install --upgrade --no-deps -r https://raw.githubusercontent.com/DLRSP/workflows/v1.15.8/requirements/docs.txt
+            fi
+          else
+            # Use remote URL for reusable workflows called from other repositories
+            # Version tag: v1.15.8 (updated automatically by Dependabot)
+            # Try pyXX-docs.txt first, then fallback to requirements/docs.txt
+            python -m pip install --upgrade --no-deps -r https://raw.githubusercontent.com/DLRSP/workflows/v1.15.8/${PY_ENV}-docs.txt 2>/dev/null || \
+            python -m pip install --upgrade --no-deps -r https://raw.githubusercontent.com/DLRSP/workflows/v1.15.8/requirements/docs.txt
+          fi
 
       - run: mkdocs build
 
