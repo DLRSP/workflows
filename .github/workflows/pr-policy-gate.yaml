@@ -110,7 +110,10 @@ jobs:
         if: >-
           steps.evaluate.outputs.decision == 'block'
           && contains(steps.evaluate.outputs.actions, 'label:needs-human-review')
-        run: gh pr edit "${{ github.event.pull_request.number }}" --add-label "needs-human-review"
+        run: >-
+          gh pr edit "${{ github.event.pull_request.number }}"
+          --repo "${{ github.repository }}"
+          --add-label "needs-human-review"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -119,7 +122,8 @@ jobs:
           steps.evaluate.outputs.decision == 'block'
           && contains(steps.evaluate.outputs.actions, 'comment:blocked-by-policy')
         run: |
-          gh pr comment "${{ github.event.pull_request.number }}" --body \
-            "Policy gate blocked this PR: ${{ steps.evaluate.outputs.reason }}"
+          gh pr comment "${{ github.event.pull_request.number }}" \
+            --repo "${{ github.repository }}" \
+            --body "Policy gate blocked this PR: ${{ steps.evaluate.outputs.reason }}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
