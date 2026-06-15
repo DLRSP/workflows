@@ -24,7 +24,7 @@
 3. Pin reusable workflows to `@v1.19.1` (or `@v1.19.0` for policy gate only; `@v1.19.1` removes `BOT_PAT` from all workflows).
 4. Keep org/repo `BOT_PAT` during 14-day shim window; revoke only after monitor passes.
 
-## [1.20.0 (unreleased)](https://github.com/DLRSP/workflows/compare/v1.6.11...v1.10.0)
+## [1.21.0 (unreleased)](https://github.com/DLRSP/workflows/compare/v1.6.11...v1.10.0)
 ```{important}
 This version is not released yet and is under active development.
 ```
