@@ -19,7 +19,10 @@ jobs:
           github-app-private-key: ${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}
           permission-metadata: read
 
-      - name: Verify token calls GitHub API
-        run: gh api user -q .login
+      - name: Setup GitHub CLI
+        uses: cli/setup-github-cli@v2
+
+      - name: Verify installation token on repository API
+        run: gh api "repos/${{ github.repository }}" -q .full_name
         env:
           GH_TOKEN: ${{ steps.dlrsp-token.outputs.token }}
