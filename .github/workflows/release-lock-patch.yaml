@@ -1,0 +1,388 @@
+---
+name: Release lock patch
+
+on:
+  workflow_call:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+    paths:
+      - 'requirements/py*-django*.txt'
+  push:
+    branches:
+      - main
+    paths:
+      - 'requirements/py*-django*.txt'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  detect-changes:
+    name: Detect runtime lock changes
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true && !contains(github.event.pull_request.title, 'patch-release')) ||
+      (github.event_name == 'push') ||
+      github.event_name == 'workflow_dispatch'
+    outputs:
+      has_changes: ${{ steps.check-changes.outputs.has_changes }}
+      changed_files: ${{ steps.check-changes.outputs.changed_files }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check for runtime lock changes
+        id: check-changes
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            COMMIT_MSG="${{ github.event.head_commit.message }}"
+            if echo "$COMMIT_MSG" | grep -qE "(runtime lock upgrade|patch-release-v)"; then
+              echo "has_changes=false" >> "$GITHUB_OUTPUT"
+              echo "changed_files=" >> "$GITHUB_OUTPUT"
+              echo "Patch release commit, skipping lock change detection"
+              exit 0
+            fi
+            BASE_SHA=$(git rev-parse HEAD~1 2>/dev/null || echo "")
+            HEAD_SHA="${{ github.sha }}"
+          else
+            BASE_SHA=$(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD 2>/dev/null || echo "")
+            HEAD_SHA="HEAD"
+          fi
+
+          if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "$HEAD_SHA" ]; then
+            changed_files=$(find requirements -maxdepth 1 -type f -name 'py*-django*.txt' 2>/dev/null | sort || true)
+          else
+            ALL_CHANGED=$(git diff --name-only --diff-filter=AM "$BASE_SHA" "$HEAD_SHA" 2>/dev/null || echo "")
+            changed_files=$(echo "$ALL_CHANGED" | grep -E '^requirements/py[0-9]+-django[0-9]+\.txt$' || true)
+          fi
+
+          changed_files=$(echo "$changed_files" | sed '/^$/d')
+          if [ -z "$changed_files" ]; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "changed_files=" >> "$GITHUB_OUTPUT"
+            echo "No runtime lock files changed"
+            exit 0
+          fi
+
+          echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          echo "changed_files<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$changed_files" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+          echo "Changed runtime locks:"
+          echo "$changed_files"
+
+  analyze-dependencies:
+    name: Analyze lock file changes
+    needs: detect-changes
+    if: always() && needs.detect-changes.outputs.has_changes == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      release_notes: ${{ steps.generate-notes.outputs.release_notes }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Extract dependency changes
+        id: generate-notes
+        run: |
+          python3 << 'EOF'
+          import os
+          import re
+          import subprocess
+          from collections import defaultdict
+          from pathlib import Path
+
+          changed_files = """${{ needs.detect-changes.outputs.changed_files }}""".strip().split("\n")
+          changed_files = [f.strip() for f in changed_files if f.strip()]
+
+          def extract_packages(content):
+              packages = {}
+              for line in content.split("\n"):
+                  line = line.strip()
+                  if not line or line.startswith("#"):
+                      continue
+                  match = re.match(r"^([a-zA-Z0-9_-]+[a-zA-Z0-9_.-]*)==([0-9.]+[a-zA-Z0-9_.-]*)", line)
+                  if match:
+                      packages[match.group(1).lower()] = match.group(2)
+              return packages
+
+          last_tag = subprocess.run(
+              ["git", "describe", "--tags", "--abbrev=0"],
+              capture_output=True,
+              text=True,
+              check=False,
+          ).stdout.strip()
+
+          updated = defaultdict(lambda: {"old": set(), "new": set(), "files": set()})
+          for file_path in changed_files:
+              path = Path(file_path)
+              if not path.is_file():
+                  continue
+              current = extract_packages(path.read_text(encoding="utf-8"))
+              old = {}
+              if last_tag:
+                  show = subprocess.run(
+                      ["git", "show", f"{last_tag}:{file_path}"],
+                      capture_output=True,
+                      text=True,
+                      check=False,
+                  )
+                  if show.returncode == 0:
+                      old = extract_packages(show.stdout)
+              for pkg in set(current) | set(old):
+                  old_ver = old.get(pkg)
+                  new_ver = current.get(pkg)
+                  if old_ver != new_ver:
+                      if old_ver:
+                          updated[pkg]["old"].add(old_ver)
+                      if new_ver:
+                          updated[pkg]["new"].add(new_ver)
+                      updated[pkg]["files"].add(path.name)
+
+          if not updated:
+              notes = "### Runtime lock updates\n\nDependency pins refreshed in runtime lock files."
+          else:
+              notes = "### Runtime lock updates\n\n"
+              for pkg in sorted(updated):
+                  info = updated[pkg]
+                  old_vers = ", ".join(sorted(info["old"])) if info["old"] else "new"
+                  new_vers = ", ".join(sorted(info["new"]))
+                  files = ", ".join(sorted(info["files"]))
+                  if old_vers == "new":
+                      notes += f"- **{pkg}**: added `{new_vers}` ({files})\n"
+                  else:
+                      notes += f"- **{pkg}**: `{old_vers}` → `{new_vers}` ({files})\n"
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
+              out.write(f"release_notes<<EOF\n{notes}\nEOF\n")
+          print(notes)
+          EOF
+
+  create-patch-release:
+    name: Create patch release PR
+    needs: [detect-changes, analyze-dependencies]
+    if: always() && needs.detect-changes.outputs.has_changes == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.bump-version.outputs.new_version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.BOT_PAT || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install release tooling
+        run: |
+          python -m pip install --upgrade pip bump-my-version towncrier
+
+      - name: Get current version
+        id: current-version
+        run: |
+          CURRENT_VERSION=$(bump-my-version show current_version)
+          echo "current_version=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Bump patch version
+        id: bump-version
+        run: |
+          bump-my-version bump patch --verbose
+          NEW_VERSION=$(bump-my-version show current_version)
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Sync towncrier version
+        if: hashFiles('news/**') != ''
+        run: |
+          python << 'EOF'
+          import os
+          import re
+          from pathlib import Path
+
+          new_version = os.environ["NEW_VERSION"]
+          path = Path("pyproject.toml")
+          text = path.read_text(encoding="utf-8")
+          if "[tool.towncrier]" not in text:
+              raise SystemExit(0)
+          text, count = re.subn(
+              r'(\[tool\.towncrier\][\s\S]*?^version = ")[^"]*(")',
+              rf"\g<1>{new_version}\2",
+              text,
+              count=1,
+              flags=re.MULTILINE,
+          )
+          if count != 1:
+              raise SystemExit("Could not sync [tool.towncrier] version")
+          path.write_text(text, encoding="utf-8")
+          EOF
+        env:
+          NEW_VERSION: ${{ steps.bump-version.outputs.new_version }}
+
+      - name: Add towncrier fragment for lock upgrade
+        if: hashFiles('news/**') != ''
+        run: |
+          FRAGMENT="news/process/$(date +%Y%m%d)-lock-upgrade.rst"
+          mkdir -p news/process
+          printf '%s\n' "Automated runtime lock file upgrades ($(date +%Y-%m-%d))." > "$FRAGMENT"
+
+      - name: Build changelog with towncrier
+        if: hashFiles('news/**') != ''
+        run: towncrier build --yes
+
+      - name: Setup Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create release branch and commit
+        run: |
+          NEW_VERSION="${{ steps.bump-version.outputs.new_version }}"
+          BRANCH_NAME="patch-release-v${NEW_VERSION}"
+          git checkout -b "$BRANCH_NAME"
+
+          git add requirements/py*-django*.txt pyproject.toml 2>/dev/null || true
+          git add src/**/__init__.py 2>/dev/null || true
+          git add CHANGELOG.rst news/process/ 2>/dev/null || true
+
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            git push origin "$BRANCH_NAME" || true
+            exit 0
+          fi
+
+          git commit -m "Bump patch v${NEW_VERSION} for runtime lock upgrades"
+          git push origin "$BRANCH_NAME"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.BOT_PAT || secrets.GITHUB_TOKEN }}
+          branch: patch-release-v${{ steps.bump-version.outputs.new_version }}
+          base: main
+          delete-branch: true
+          title: "patch-release-v${{ steps.bump-version.outputs.new_version }} — runtime lock upgrades"
+          body: |
+            ## Runtime lock patch release
+
+            Patch bump to `v${{ steps.bump-version.outputs.new_version }}` after automated dependency lock updates.
+
+            ${{ needs.analyze-dependencies.outputs.release_notes }}
+
+            Merge triggers tag `v${{ steps.bump-version.outputs.new_version }}` and PyPI deploy via CI.
+          labels: |
+            📦 dependencies
+            patch-release
+          assignees: ${{ github.actor }}
+          draft: false
+
+  create-release-after-merge:
+    name: Create tag and GitHub Release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install bump-my-version
+        run: python -m pip install --upgrade bump-my-version
+
+      - name: Check if this is a patch release merge
+        id: is-patch-release
+        run: |
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          if echo "$COMMIT_MSG" | grep -qE "(runtime lock upgrade|patch-release-v|Bump patch v)"; then
+            echo "is_patch=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if git log --oneline -5 | grep -qE "(runtime lock upgrade|patch-release-v|Bump patch v)"; then
+            echo "is_patch=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "is_patch=false" >> "$GITHUB_OUTPUT"
+
+      - name: Extract version
+        id: extract-version
+        if: steps.is-patch-release.outputs.is_patch == 'true'
+        run: |
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          VERSION=$(echo "$COMMIT_MSG" | grep -oP '(?:patch-release-v|Bump patch v)\K[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+          if [ -z "$VERSION" ]; then
+            VERSION=$(bump-my-version show current_version)
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check if tag already exists
+        id: check-tag
+        if: steps.is-patch-release.outputs.is_patch == 'true' && steps.extract-version.outputs.version != ''
+        run: |
+          VERSION="${{ steps.extract-version.outputs.version }}"
+          if git rev-parse "v${VERSION}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Extract release notes from CHANGELOG
+        id: extract-notes
+        if: steps.is-patch-release.outputs.is_patch == 'true' && steps.check-tag.outputs.exists == 'false'
+        run: |
+          python << 'EOF'
+          import os
+          import re
+          from pathlib import Path
+
+          version = os.environ["VERSION"]
+          changelog = Path("CHANGELOG.rst")
+          notes = f"Release v{version} — runtime lock upgrades."
+          if changelog.is_file():
+              content = changelog.read_text(encoding="utf-8")
+              match = re.search(rf"{re.escape(version)}[^\n]*\n=+\n(.*?)(?:\n\S|\Z)", content, re.DOTALL)
+              if match:
+                  notes = match.group(1).strip()
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
+              out.write(f"release_notes<<EOF\n{notes}\nEOF\n")
+          EOF
+        env:
+          VERSION: ${{ steps.extract-version.outputs.version }}
+
+      - name: Create Git tag
+        if: steps.is-patch-release.outputs.is_patch == 'true' && steps.check-tag.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.extract-version.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v${VERSION}" -m "Release v${VERSION} — runtime lock upgrades"
+          git push origin "v${VERSION}"
+
+      - name: Create GitHub Release
+        if: steps.is-patch-release.outputs.is_patch == 'true' && steps.check-tag.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.extract-version.outputs.version }}
+          name: Release v${{ steps.extract-version.outputs.version }}
+          body: ${{ steps.extract-notes.outputs.release_notes }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
