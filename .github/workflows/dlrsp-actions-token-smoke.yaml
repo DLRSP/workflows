@@ -18,11 +18,11 @@ jobs:
           github-app-id: ${{ secrets.DLRSP_ACTIONS_APP_ID }}
           github-app-private-key: ${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}
           permission-metadata: read
-
-      - name: Setup GitHub CLI
-        uses: cli/setup-github-cli@v2
+          permission-contents: read
 
       - name: Verify installation token on repository API
-        run: gh api "repos/${{ github.repository }}" -q .full_name
+        run: |
+          gh --version
+          gh api "repos/${{ github.repository }}" -q .full_name
         env:
           GH_TOKEN: ${{ steps.dlrsp-token.outputs.token }}

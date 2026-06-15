@@ -55,10 +55,7 @@ jobs:
             .github/actions/evaluate-bot-policy
           sparse-checkout-cone-mode: false
 
-      - name: Setup GitHub CLI
-        uses: cli/setup-github-cli@v2
-
-      - name: Dependabot metadata
+      - name: Evaluate bot policy
         if: contains(fromJSON('["dependabot[bot]"]'), github.actor)
         id: dependabot-metadata
         uses: dependabot/fetch-metadata@v2
