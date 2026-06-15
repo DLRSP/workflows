@@ -1,0 +1,53 @@
+name: Evaluate bot policy
+description: >-
+  Evaluate policies/bot-policy.yaml for a pull request (bash + yq + gh + jq).
+  First-match-wins; parse/API errors fail-closed to block.
+inputs:
+  policy-file:
+    description: Path to bot-policy.yaml
+    required: true
+  actor:
+    description: PR author or triggering actor login
+    required: true
+  pr-number:
+    description: Pull request number
+    required: true
+  draft:
+    description: Whether the pull request is a draft
+    required: false
+    default: "false"
+  dependabot-update-type:
+    description: Optional dependabot/fetch-metadata update-type output
+    required: false
+    default: ""
+outputs:
+  decision:
+    description: approve | block | skip
+    value: ${{ steps.evaluate.outputs.decision }}
+  actions:
+    description: JSON array of then-actions
+    value: ${{ steps.evaluate.outputs.actions }}
+  reason:
+    description: Human-readable evaluation reason
+    value: ${{ steps.evaluate.outputs.reason }}
+  matched-policy:
+    description: Matched policy name (if any)
+    value: ${{ steps.evaluate.outputs.matched-policy }}
+runs:
+  using: composite
+  steps:
+    - name: Install yq
+      uses: mikefarah/yq@v4.44.6
+
+    - name: Evaluate policy
+      id: evaluate
+      shell: bash
+      run: |
+        set -euo pipefail
+        chmod +x "${{ github.action_path }}/evaluate.sh"
+        "${{ github.action_path }}/evaluate.sh" \
+          "${{ inputs.policy-file }}" \
+          "${{ inputs.actor }}" \
+          "${{ inputs.pr-number }}" \
+          "${{ inputs.draft }}" \
+          "${{ inputs.dependabot-update-type }}"

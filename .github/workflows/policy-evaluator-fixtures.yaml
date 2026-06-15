@@ -1,0 +1,33 @@
+---
+name: Policy evaluator fixtures
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/actions/evaluate-bot-policy/**
+      - policies/**
+  pull_request:
+    paths:
+      - .github/actions/evaluate-bot-policy/**
+      - policies/**
+
+jobs:
+  policy-evaluator-fixtures:
+    name: Policy evaluator fixtures
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: mikefarah/yq@v4.44.6
+
+      - name: Validate bot-policy schema
+        run: |
+          python -m pip install --quiet check-jsonschema
+          check-jsonschema \
+            --schemafile policies/schema/bot-policy-v1.schema.json \
+            policies/bot-policy.yaml
+
+      - name: Run offline fixtures
+        run: bash .github/actions/evaluate-bot-policy/tests/run-fixtures.sh

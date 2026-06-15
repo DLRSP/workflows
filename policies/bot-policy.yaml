@@ -1,0 +1,48 @@
+version: 1
+trusted_actors:
+  - dlrsp-actions[bot]
+shim_actors:
+  - dlrsp-bot
+policies:
+  - name: bot-auto-merge
+    when:
+      draft: false
+      actor_in: trusted_actors
+    gates:
+      - ci_status:
+          required:
+            - ci / Analyze
+            - ci / Python 3.12 · Django 4.2
+      - paths:
+          deny:
+            - .github/workflows/**
+            - CODEOWNERS
+      - semver:
+          block: major
+    then:
+      - approve
+      - enable_auto_merge
+  - name: shim-auto-merge
+    when:
+      draft: false
+      actor_in: shim_actors
+    gates:
+      - ci_status:
+          required:
+            - ci / Analyze
+            - ci / Python 3.12 · Django 4.2
+      - paths:
+          deny:
+            - .github/workflows/**
+            - CODEOWNERS
+      - semver:
+          block: major
+    then:
+      - approve
+      - enable_auto_merge
+  - name: default-fail
+    when:
+      actor_in: union(trusted_actors, shim_actors)
+    then:
+      - label:needs-human-review
+      - comment:blocked-by-policy

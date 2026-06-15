@@ -218,55 +218,18 @@ jobs:
       if: ${{ always() && hashFiles('setup.py', 'pyproject.toml', 'tox.ini') }}
       uses: github/codeql-action/analyze@v4
 
-  bots:
-    name: BOTs (Dependabot/Pre-Commit-CI) Pull Request Approve and Merge
-    runs-on: ubuntu-latest
+  policy-gate:
+    name: Policy gate (bot PR approve/merge)
     needs: [test, analyze]
-    permissions:
-      contents: write
-      pull-requests: write
-    # Checking the actor will prevent your Action run failing on non-Dependabot or non-Pre-Commit-CI
-    # PRs but also ensures that it only does work for Dependabot PRs and Pre-Commit-CI
-    if: (github.actor == 'dependabot[bot]' || github.actor == 'pre-commit-ci[bot]' || github.actor == 'dlrsp-bot') 
-        && github.event_name == 'pull_request'
-        && github.event.pull_request.draft == false
-    steps:
-#      - uses: actions/checkout@v6
-#        with:
-#          token: ${{ secrets.PERSONAL_TOKEN }}
-#          fetch-depth: 0
-#      - name: Rebase this branch if behind the main
-#        run: |
-#          if [[ "$(git rev-list --left-only --count \
-#                   origin/main...origin/${{ github.event.pull_request.head.sha }} \
-#                  )" != 0 ]] ; then
-#            echo "This branch is not up to date with main: rebase it!";
-#            git pull --rebase
-#          fi
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
-
-      # Fail if there's no metadata and so the approval will not occur.
-#      - name: Dependabot metadata
-#        if: github.actor == 'dependabot[bot]'
-#        id: dependabot-metadata
-#        uses: dependabot/fetch-metadata@v1.6.0
-#        with:
-#          github-token: "${{ secrets.GITHUB_TOKEN }}"
-
-      - name: Approve Bot PRs
-        run: gh pr review --approve "$PR_URL"
-        env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
-
-      # Sets the PR to allow auto-merging for patch, minor and major updates if all checks pass
-      - name: Enable auto-merge for Bot PRs
-        # if: ${{ steps.dependabot-metadata.outputs.update-type != 'version-update:semver-major' }}
-        run: gh pr merge --auto --rebase "$PR_URL"
-        env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          GH_TOKEN: ${{ secrets.BOT_PAT }}
+    if: >-
+      github.event_name == 'pull_request'
+      && !github.event.pull_request.draft
+      && (
+        contains(fromJSON('["dlrsp-actions[bot]","dlrsp-bot"]'), github.actor)
+        || contains(fromJSON('["dlrsp-actions[bot]","dlrsp-bot"]'), github.event.pull_request.user.login)
+      )
+    uses: DLRSP/workflows/.github/workflows/pr-policy-gate.yaml@main
+    secrets: inherit
 
   build:
     name: Build wheels

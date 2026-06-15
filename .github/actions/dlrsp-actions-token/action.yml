@@ -1,0 +1,57 @@
+name: DLRSP Actions App token
+description: >-
+  Create a GitHub App installation token for dlrsp-actions (fail-closed if
+  org secrets or installation are missing).
+inputs:
+  github-app-id:
+    description: GitHub App ID (org secret DLRSP_ACTIONS_APP_ID)
+    required: true
+  github-app-private-key:
+    description: GitHub App private key PEM (org secret DLRSP_ACTIONS_PRIVATE_KEY)
+    required: true
+  permission-contents:
+    description: contents permission for the installation token
+    required: false
+    default: read
+  permission-pull-requests:
+    description: pull-requests permission for the installation token
+    required: false
+    default: read
+  permission-actions:
+    description: actions permission for the installation token
+    required: false
+    default: read
+  permission-metadata:
+    description: metadata permission for the installation token
+    required: false
+    default: read
+outputs:
+  token:
+    description: Installation access token (masked in logs)
+    value: ${{ steps.app-token.outputs.token }}
+runs:
+  using: composite
+  steps:
+    - name: Preflight org secrets
+      shell: bash
+      run: |
+        set -euo pipefail
+        if [[ -z "${{ inputs.github-app-id }}" ]]; then
+          echo "::error::DLRSP_ACTIONS_APP_ID is empty — install dlrsp-actions on this repository."
+          exit 1
+        fi
+        if [[ -z "${{ inputs.github-app-private-key }}" ]]; then
+          echo "::error::DLRSP_ACTIONS_PRIVATE_KEY is empty — regenerate App key and update org secret."
+          exit 1
+        fi
+
+    - name: Create installation token
+      id: app-token
+      uses: actions/create-github-app-token@v1
+      with:
+        app-id: ${{ inputs.github-app-id }}
+        private-key: ${{ inputs.github-app-private-key }}
+        permission-contents: ${{ inputs.permission-contents }}
+        permission-pull-requests: ${{ inputs.permission-pull-requests }}
+        permission-actions: ${{ inputs.permission-actions }}
+        permission-metadata: ${{ inputs.permission-metadata }}

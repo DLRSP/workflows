@@ -1,0 +1,128 @@
+---
+name: PR policy gate
+
+on:
+  workflow_call:
+    inputs:
+      workflows-ref:
+        description: Ref of DLRSP/workflows for policy and composites
+        required: false
+        type: string
+        default: main
+      policy-path:
+        description: Path to bot-policy.yaml inside workflows repo
+        required: false
+        type: string
+        default: policies/bot-policy.yaml
+      enable-auto-merge:
+        description: Enable auto-merge when policy approves
+        required: false
+        type: boolean
+        default: true
+      dependabot-update-type:
+        description: Optional dependabot semver update type
+        required: false
+        type: string
+        default: ""
+    outputs:
+      decision:
+        description: approve | block | skip
+        value: ${{ jobs.policy.outputs.decision }}
+      reason:
+        description: Evaluation reason
+        value: ${{ jobs.policy.outputs.reason }}
+
+jobs:
+  policy:
+    name: Policy gate (bot PR approve/merge)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    outputs:
+      decision: ${{ steps.evaluate.outputs.decision }}
+      reason: ${{ steps.evaluate.outputs.reason }}
+    steps:
+      - name: Checkout workflows policy bundle
+        uses: actions/checkout@v6
+        with:
+          repository: DLRSP/workflows
+          ref: ${{ inputs.workflows-ref }}
+          path: dlrsp-workflows
+          sparse-checkout: |
+            policies
+            .github/actions/dlrsp-actions-token
+            .github/actions/evaluate-bot-policy
+          sparse-checkout-cone-mode: false
+
+      - name: Setup GitHub CLI
+        uses: cli/setup-github-cli@v2
+
+      - name: Dependabot metadata
+        if: contains(fromJSON('["dependabot[bot]"]'), github.actor)
+        id: dependabot-metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Evaluate bot policy
+        id: evaluate
+        uses: ./dlrsp-workflows/.github/actions/evaluate-bot-policy
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          policy-file: dlrsp-workflows/${{ inputs.policy-path }}
+          actor: ${{ github.event.pull_request.user.login }}
+          pr-number: ${{ github.event.pull_request.number }}
+          draft: ${{ github.event.pull_request.draft }}
+          dependabot-update-type: >-
+            ${{ inputs.dependabot-update-type != '' && inputs.dependabot-update-type
+            || steps.dependabot-metadata.outputs.update-type }}
+
+      - name: Approve pull request
+        if: steps.evaluate.outputs.decision == 'approve' && contains(steps.evaluate.outputs.actions, 'approve')
+        run: gh pr review --approve "${{ github.event.pull_request.html_url }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create App installation token
+        if: >-
+          steps.evaluate.outputs.decision == 'approve'
+          && contains(steps.evaluate.outputs.actions, 'enable_auto_merge')
+          && inputs.enable-auto-merge
+        id: dlrsp-token
+        uses: ./dlrsp-workflows/.github/actions/dlrsp-actions-token
+        with:
+          github-app-id: ${{ secrets.DLRSP_ACTIONS_APP_ID }}
+          github-app-private-key: ${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+          permission-actions: read
+          permission-metadata: read
+
+      - name: Enable auto-merge
+        if: >-
+          steps.evaluate.outputs.decision == 'approve'
+          && contains(steps.evaluate.outputs.actions, 'enable_auto_merge')
+          && inputs.enable-auto-merge
+        run: gh pr merge --auto --rebase "${{ github.event.pull_request.html_url }}"
+        env:
+          GH_TOKEN: ${{ steps.dlrsp-token.outputs.token }}
+
+      - name: Apply block label
+        if: >-
+          steps.evaluate.outputs.decision == 'block'
+          && contains(steps.evaluate.outputs.actions, 'label:needs-human-review')
+        run: gh pr edit "${{ github.event.pull_request.number }}" --add-label "needs-human-review"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment on blocked PR
+        if: >-
+          steps.evaluate.outputs.decision == 'block'
+          && contains(steps.evaluate.outputs.actions, 'comment:blocked-by-policy')
+        run: |
+          gh pr comment "${{ github.event.pull_request.number }}" --body \
+            "Policy gate blocked this PR: ${{ steps.evaluate.outputs.reason }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
