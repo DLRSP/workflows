@@ -3,7 +3,6 @@ name: Update Used In Section
 
 on:
   workflow_call:
-    secrets: inherit
 
   schedule:
     - cron: '0 2 * * 1'
