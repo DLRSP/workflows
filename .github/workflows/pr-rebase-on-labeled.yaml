@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Create App installation token
         id: dlrsp-token
-        uses: ./.github/actions/dlrsp-actions-token
+        uses: DLRSP/workflows/.github/actions/dlrsp-actions-token@main
         with:
           github-app-id: ${{ secrets.DLRSP_ACTIONS_APP_ID }}
           github-app-private-key: ${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}
