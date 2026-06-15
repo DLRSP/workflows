@@ -19,10 +19,22 @@ jobs:
     steps:
       - name: Label merge conflicts
         id: label
-        uses: pradyunsg/auto-label-merge-conflicts@v3
-        with:
-          CONFLICT_LABEL_NAME: "🔀 needs rebase or merge"
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          label="🔀 needs rebase or merge"
+          mapfile -t prs < <(
+            gh pr list --repo "${{ github.repository }}" --state open \
+              --json number,mergeable -q '.[] | select(.mergeable == "CONFLICTING") | .number'
+          )
+          if ((${#prs[@]} == 0)); then
+            echo "No conflicting open PRs"
+            exit 0
+          fi
+          for n in "${prs[@]}"; do
+            gh pr edit "$n" --repo "${{ github.repository }}" --add-label "$label" || true
+          done
         continue-on-error: true
       
       - name: Handle label error
