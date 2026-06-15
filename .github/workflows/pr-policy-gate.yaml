@@ -110,13 +110,17 @@ jobs:
           GH_TOKEN: ${{ steps.dlrsp-token.outputs.token }}
 
       - name: Apply block label
-        if: steps.evaluate.outputs.decision == 'block' && contains(steps.evaluate.outputs.actions, 'label:needs-human-review')
+        if: >-
+          steps.evaluate.outputs.decision == 'block'
+          && contains(steps.evaluate.outputs.actions, 'label:needs-human-review')
         run: gh pr edit "${{ github.event.pull_request.number }}" --add-label "needs-human-review"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Comment on blocked PR
-        if: steps.evaluate.outputs.decision == 'block' && contains(steps.evaluate.outputs.actions, 'comment:blocked-by-policy')
+        if: >-
+          steps.evaluate.outputs.decision == 'block'
+          && contains(steps.evaluate.outputs.actions, 'comment:blocked-by-policy')
         run: |
           gh pr comment "${{ github.event.pull_request.number }}" --body \
             "Policy gate blocked this PR: ${{ steps.evaluate.outputs.reason }}"
