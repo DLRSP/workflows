@@ -25,7 +25,7 @@ run_case() {
   export STUB_GH_PR_FILES="${case_dir}/pr-files.json"
 
   cp "${STUB_GH}" "${ROOT}/tests/bin/gh"
-  chmod +x "${ROOT}/tests/bin/gh"
+  chmod +x "${ROOT}/tests/bin/gh" "${EVALUATE}"
 
   : >"${GITHUB_OUTPUT}"
   "${EVALUATE}" "${POLICY}" "${ACTOR}" "${PR_NUMBER}" "${DRAFT:-false}" "${DEP_UPDATE_TYPE:-}"
