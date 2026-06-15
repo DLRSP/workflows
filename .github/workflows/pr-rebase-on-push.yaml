@@ -8,7 +8,16 @@ jobs:
   rebase-on-push:
     runs-on: ubuntu-latest
     steps:
+      - name: Create App installation token
+        id: dlrsp-token
+        uses: ./.github/actions/dlrsp-actions-token
+        with:
+          github-app-id: ${{ secrets.DLRSP_ACTIONS_APP_ID }}
+          github-app-private-key: ${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
       - uses: peter-evans/rebase@v4.0.0
         with:
           base: main
-          token: ${{ secrets.BOT_PAT }}
+          token: ${{ steps.dlrsp-token.outputs.token }}

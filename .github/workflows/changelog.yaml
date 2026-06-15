@@ -98,7 +98,18 @@ jobs:
     # keep the release date in sync.
     runs-on: ubuntu-22.04
     steps:
+      - name: Create App installation token
+        id: dlrsp-token
+        uses: ./.github/actions/dlrsp-actions-token
+        with:
+          github-app-id: ${{ secrets.DLRSP_ACTIONS_APP_ID }}
+          github-app-private-key: ${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
       - uses: actions/checkout@v6
+        with:
+          token: ${{ steps.dlrsp-token.outputs.token }}
       - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
@@ -245,7 +256,7 @@ jobs:
           # WORKFLOW_UPDATE_GITHUB_PAT is a custom token created from my user's profile via the
           # "Developer Settings > Personal Access Tokens" UI to allow this job to update its own workflows. This is
           # only used on the original kdeldycke/workflows repository, hence the fallback to default GitHub token.
-          token: ${{ secrets.BOT_PAT || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.dlrsp-token.outputs.token }}
           assignees: ${{ github.actor }}
           title: >
             Release `v${{ steps.get_version.outputs.current_version }}`

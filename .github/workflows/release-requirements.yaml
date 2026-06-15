@@ -265,10 +265,19 @@ jobs:
     outputs:
       new_version: ${{ steps.bump-version.outputs.new_version }}
     steps:
+      - name: Create App installation token
+        id: dlrsp-token
+        uses: ./.github/actions/dlrsp-actions-token
+        with:
+          github-app-id: ${{ secrets.DLRSP_ACTIONS_APP_ID }}
+          github-app-private-key: ${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          token: ${{ secrets.BOT_PAT || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.dlrsp-token.outputs.token }}
 
       - uses: actions/setup-python@v6
         with:
@@ -438,7 +447,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
         with:
-          token: ${{ secrets.BOT_PAT || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.dlrsp-token.outputs.token }}
           branch: patch-release-v${{ steps.bump-version.outputs.new_version }}
           base: main
           delete-branch: true
@@ -650,5 +659,5 @@ jobs:
           prerelease: false
           generate_release_notes: false
         env:
-          GITHUB_TOKEN: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

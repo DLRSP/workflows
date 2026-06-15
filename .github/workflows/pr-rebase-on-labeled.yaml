@@ -12,16 +12,25 @@ jobs:
     name: Rebase
     runs-on: ubuntu-latest
     steps:
+      - name: Create App installation token
+        id: dlrsp-token
+        uses: ./.github/actions/dlrsp-actions-token
+        with:
+          github-app-id: ${{ secrets.DLRSP_ACTIONS_APP_ID }}
+          github-app-private-key: ${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
       - name: git checkout
         uses: actions/checkout@v6
         with:
-          token: ${{ secrets.BOT_PAT }}
+          token: ${{ steps.dlrsp-token.outputs.token }}
           fetch-depth: 0
 
       - name: automatic rebase
         uses: cirrus-actions/rebase@1.8
         env:
-          GITHUB_TOKEN: ${{ secrets.BOT_PAT }}
+          GITHUB_TOKEN: ${{ steps.dlrsp-token.outputs.token }}
 
       - name: remove label
         if: always()

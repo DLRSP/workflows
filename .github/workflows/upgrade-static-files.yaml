@@ -552,10 +552,19 @@ jobs:
     outputs:
       files_updated: ${{ steps.download.outputs.files_updated }}
     steps:
+      - name: Create App installation token
+        id: dlrsp-token
+        uses: ./.github/actions/dlrsp-actions-token
+        with:
+          github-app-id: ${{ secrets.DLRSP_ACTIONS_APP_ID }}
+          github-app-private-key: ${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          token: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.dlrsp-token.outputs.token }}
 
       - uses: actions/setup-python@v6
         with:
@@ -1088,10 +1097,19 @@ jobs:
       contents: write
       pull-requests: write
     steps:
+      - name: Create App installation token
+        id: dlrsp-token
+        uses: ./.github/actions/dlrsp-actions-token
+        with:
+          github-app-id: ${{ secrets.DLRSP_ACTIONS_APP_ID }}
+          github-app-private-key: ${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          token: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.dlrsp-token.outputs.token }}
 
       - name: Download updated files
         uses: actions/download-artifact@v7
@@ -1188,7 +1206,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
         with:
-          token: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.dlrsp-token.outputs.token }}
           branch: ${{ env.BRANCH_NAME }}
           base: main
           delete-branch: true

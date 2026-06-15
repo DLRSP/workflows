@@ -22,7 +22,7 @@ jobs:
         uses: pradyunsg/auto-label-merge-conflicts@v3
         with:
           CONFLICT_LABEL_NAME: "🔀 needs rebase or merge"
-          GITHUB_TOKEN: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
       
       - name: Handle label error

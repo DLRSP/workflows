@@ -25,10 +25,19 @@ jobs:
       contents: write
       pull-requests: write
     steps:
+      - name: Create App installation token
+        id: dlrsp-token
+        uses: ./.github/actions/dlrsp-actions-token
+        with:
+          github-app-id: ${{ secrets.DLRSP_ACTIONS_APP_ID }}
+          github-app-private-key: ${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.dlrsp-token.outputs.token }}
 
       - uses: actions/setup-python@v5
         with:
@@ -39,13 +48,13 @@ jobs:
 
       - name: Update README (workflows consumers)
         env:
-          GITHUB_TOKEN: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.dlrsp-token.outputs.token }}
         run: python .github/scripts/update_used_in.py central --root .
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.dlrsp-token.outputs.token }}
           commit-message: 'docs: update Used in section (workflows consumers)'
           title: 'docs: update Used in section'
           body: |
@@ -66,10 +75,19 @@ jobs:
       contents: write
       pull-requests: write
     steps:
+      - name: Create App installation token
+        id: dlrsp-token
+        uses: ./.github/actions/dlrsp-actions-token
+        with:
+          github-app-id: ${{ secrets.DLRSP_ACTIONS_APP_ID }}
+          github-app-private-key: ${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.dlrsp-token.outputs.token }}
 
       - name: Detect .github/used-in.yaml
         id: used_in
@@ -89,7 +107,7 @@ jobs:
           sparse-checkout: |
             .github/scripts
           sparse-checkout-cone-mode: false
-          token: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.dlrsp-token.outputs.token }}
 
       - uses: actions/setup-python@v5
         if: steps.used_in.outputs.enabled == 'true'
@@ -103,14 +121,14 @@ jobs:
       - name: Sync marker sections from code search
         if: steps.used_in.outputs.enabled == 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.dlrsp-token.outputs.token }}
         run: python _workflow_tools/.github/scripts/update_used_in.py consumer --root .
 
       - name: Create Pull Request
         if: steps.used_in.outputs.enabled == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ secrets.BOT_PAT || secrets.PERSONAL_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.dlrsp-token.outputs.token }}
           commit-message: 'docs: sync Used in marker sections'
           title: 'docs: sync Used in marker sections'
           body: |
