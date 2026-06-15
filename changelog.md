@@ -1,9 +1,13 @@
 # Changelog
 
-## [1.19.0 (unreleased)](https://github.com/DLRSP/workflows/compare/v1.18.3...v1.19.0)
-```{important}
-This version is not released yet and is under active development.
-```
+## [1.19.1 (unreleased)](https://github.com/DLRSP/workflows/compare/v1.19.0...v1.19.1)
+
+### Changed
+
+- Migrate remaining workflows from `BOT_PAT` to `dlrsp-actions` App installation token
+  (`changelog`, `pr-rebase-*`, `release-*`, `update-used-in`, `upgrade-*`).
+
+## [1.19.0 (2026-06-15)](https://github.com/DLRSP/workflows/compare/v1.18.3...v1.19.0)
 
 ### Breaking changes
 
@@ -17,8 +21,8 @@ This version is not released yet and is under active development.
 
 1. Install `dlrsp-actions` GitHub App on each consumer repository.
 2. Ensure org secrets are visible to repositories (`secrets: inherit`).
-3. Pin reusable workflows to `@v1.19.0` after release (or stay on `@main`).
-4. Keep `BOT_PAT` during 14-day shim window; revoke only after pilot smoke passes.
+3. Pin reusable workflows to `@v1.19.1` (or `@v1.19.0` for policy gate only; `@v1.19.1` removes `BOT_PAT` from all workflows).
+4. Keep org/repo `BOT_PAT` during 14-day shim window; revoke only after monitor passes.
 
 ## [1.18.3 (unreleased)](https://github.com/DLRSP/workflows/compare/v1.6.11...v1.10.0)
 ```{important}
