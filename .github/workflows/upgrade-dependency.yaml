@@ -115,6 +115,7 @@ jobs:
           token: ${{ steps.dlrsp-token.outputs.token }}
           commit-message: "Automated dependency upgrades"
           committer: GitHub <noreply@github.com>
+          author: dlrsp-actions[bot] <293736084+dlrsp-actions[bot]@users.noreply.github.com>
           signoff: false
           branch: ${{ env.BRANCH_NAME }}
           delete-branch: true

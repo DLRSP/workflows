@@ -1,0 +1,52 @@
+---
+name: DLRSP Actions pilot PR smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      target-repository:
+        description: Repository to open a pilot PR in (owner/name)
+        required: true
+        default: DLRSP/django-errors
+        type: string
+
+jobs:
+  pilot-pr:
+    name: TS-05 pilot PR (dlrsp-actions[bot])
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create App installation token
+        id: dlrsp-token
+        uses: ./.github/actions/dlrsp-actions-token
+        with:
+          github-app-id: ${{ secrets.DLRSP_ACTIONS_APP_ID }}
+          github-app-private-key: ${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Checkout target repository
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ inputs.target-repository }}
+          token: ${{ steps.dlrsp-token.outputs.token }}
+
+      - name: Write pilot marker
+        run: |
+          mkdir -p .github
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > .github/dlrsp-actions-pilot.marker
+
+      - name: Open pilot pull request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ steps.dlrsp-token.outputs.token }}
+          commit-message: "chore: dlrsp-actions pilot marker"
+          committer: GitHub <noreply@github.com>
+          author: dlrsp-actions[bot] <293736084+dlrsp-actions[bot]@users.noreply.github.com>
+          branch: dlrsp-actions-pilot-smoke
+          delete-branch: true
+          title: "chore: dlrsp-actions pilot smoke"
+          body: >-
+            Pilot PR for policy-gate verification (TS-05/07).
+            Safe to close after auto-merge test.
+          labels: infrastructure
+          draft: false
