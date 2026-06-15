@@ -12,14 +12,22 @@ REPO="${GITHUB_REPOSITORY:?GITHUB_REPOSITORY required}"
 emit() {
   local key="$1"
   local value="$2"
-  echo "${key}=${value}" >> "${GITHUB_OUTPUT}"
+  {
+    echo "${key}<<EOF"
+    echo "${value}"
+    echo "EOF"
+  } >> "${GITHUB_OUTPUT}"
+}
+
+compact_json() {
+  echo "${1}" | jq -c .
 }
 
 fail_closed() {
   local reason="$1"
   emit decision block
   emit reason "${reason}"
-  emit actions "$(printf '%s\n' 'label:needs-human-review' 'comment:blocked-by-policy' | jq -R . | jq -s -c .)"
+  emit actions "$(compact_json "$(printf '%s\n' 'label:needs-human-review' 'comment:blocked-by-policy' | jq -R . | jq -s -c .)")"
   emit matched-policy "error"
   exit 0
 }
@@ -220,7 +228,7 @@ for ((idx = 0; idx < policy_count; idx++)); do
   fi
 
   policy_name="$(yq -r ".policies[${idx}].name" "${POLICY_FILE}")"
-  then_json="$(yq -o=json ".policies[${idx}].then" "${POLICY_FILE}")"
+  then_json="$(yq -o=json ".policies[${idx}].then" "${POLICY_FILE}" | jq -c .)"
   has_gates="$(yq ".policies[${idx}] | has(\"gates\")" "${POLICY_FILE}")"
 
   if [[ "${has_gates}" == "true" ]]; then

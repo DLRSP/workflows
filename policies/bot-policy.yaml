@@ -11,7 +11,7 @@ policies:
     gates:
       - ci_status:
           required:
-            - ci / Analyze
+            - ci / Analyze (python)
             - ci / Python 3.12 · Django 4.2
       - paths:
           deny:
@@ -29,7 +29,7 @@ policies:
     gates:
       - ci_status:
           required:
-            - ci / Analyze
+            - ci / Analyze (python)
             - ci / Python 3.12 · Django 4.2
       - paths:
           deny:
