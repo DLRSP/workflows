@@ -25,9 +25,10 @@ permissions:
 jobs:
 
   version-increments:
+    # Towncrier modules use CHANGELOG.rst + release-lock-patch.yaml — not changelog.md (see P-009).
     # This job is not time-sensitive: do not let it to be triggered by schedule event.
     # Also skip release commits (during which bump-my-version cannot find "unreleased" string in changelog.md).
-    if: github.event_name != 'schedule' && !startsWith(github.event.head_commit.message, '[changelog] Release v')
+    if: hashFiles('changelog.md') != '' && github.event_name != 'schedule' && !startsWith(github.event.head_commit.message, '[changelog] Release v')
     runs-on: ubuntu-22.04
     strategy:
       matrix:
@@ -98,6 +99,8 @@ jobs:
           draft: true
 
   prepare-release:
+    # Towncrier modules (CHANGELOG.rst) must not run kdeldycke-style prepare-release — see P-009.
+    if: hashFiles('changelog.md') != ''
     # TODO: add complex time-based trigger condition to only update the changelog once a day on main branch activity to
     # keep the release date in sync.
     runs-on: ubuntu-22.04
@@ -123,7 +126,7 @@ jobs:
       - name: Install bump-my-version
         run: >
             python -m pip install --upgrade --no-deps
-            -r https://raw.githubusercontent.com/DLRSP/workflows/v1.15.8/requirements/py311-django42.txt
+            -r https://raw.githubusercontent.com/DLRSP/workflows/main/requirements/py311-django42.txt
       - name: Extract version
         id: get_version
         run: |
