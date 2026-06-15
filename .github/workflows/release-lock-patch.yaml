@@ -242,7 +242,10 @@ jobs:
       - name: Bump patch version
         id: bump-version
         run: |
-          bump-my-version bump patch --verbose
+          # Modules may set commit=true/tag=true in pyproject.toml; workflow owns commit via CPR (P-010).
+          git config user.name "dlrsp-actions[bot]"
+          git config user.email "293736084+dlrsp-actions[bot]@users.noreply.github.com"
+          bump-my-version bump patch --no-commit --no-tag --verbose
           NEW_VERSION=$(bump-my-version show current_version)
           echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
 
