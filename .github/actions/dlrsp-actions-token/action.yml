@@ -25,6 +25,14 @@ inputs:
     description: metadata permission for the installation token
     required: false
     default: read
+  owner:
+    description: Optional org owner for cross-repository installation token
+    required: false
+    default: ""
+  repositories:
+    description: Optional comma-separated repositories for installation token scope
+    required: false
+    default: ""
 outputs:
   token:
     description: Installation access token (masked in logs)
@@ -51,6 +59,8 @@ runs:
       with:
         app-id: ${{ inputs.github-app-id }}
         private-key: ${{ inputs.github-app-private-key }}
+        owner: ${{ inputs.owner }}
+        repositories: ${{ inputs.repositories }}
         permission-contents: ${{ inputs.permission-contents }}
         permission-pull-requests: ${{ inputs.permission-pull-requests }}
         permission-actions: ${{ inputs.permission-actions }}

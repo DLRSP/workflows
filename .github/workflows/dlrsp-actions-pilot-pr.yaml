@@ -5,9 +5,9 @@ on:
   workflow_dispatch:
     inputs:
       target-repository:
-        description: Repository to open a pilot PR in (owner/name)
+        description: Target repository name (under DLRSP org)
         required: true
-        default: DLRSP/django-errors
+        default: django-errors
         type: string
 
 jobs:
@@ -23,13 +23,15 @@ jobs:
         with:
           github-app-id: ${{ secrets.DLRSP_ACTIONS_APP_ID }}
           github-app-private-key: ${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}
+          owner: DLRSP
+          repositories: ${{ inputs.target-repository }}
           permission-contents: write
           permission-pull-requests: write
 
       - name: Checkout target repository
         uses: actions/checkout@v6
         with:
-          repository: ${{ inputs.target-repository }}
+          repository: DLRSP/${{ inputs.target-repository }}
           token: ${{ steps.dlrsp-token.outputs.token }}
 
       - name: Write pilot marker
