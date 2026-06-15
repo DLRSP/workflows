@@ -174,8 +174,11 @@ jobs:
   create-patch-release:
     name: Create patch release PR
     needs: [detect-changes, analyze-dependencies]
-    if: always() && needs.detect-changes.outputs.has_changes == 'true'
+    if: always() && needs.detect-changes.outputs.has_changes == 'true' && (needs.analyze-dependencies.result == 'success' || needs.analyze-dependencies.result == 'skipped')
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     outputs:
       new_version: ${{ steps.bump-version.outputs.new_version }}
     steps:
@@ -192,6 +195,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip bump-my-version towncrier
 
+      - name: Detect towncrier configuration
+        id: towncrier
+        run: |
+          if grep -q '^\[tool\.towncrier\]' pyproject.toml 2>/dev/null; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Get current version
         id: current-version
         run: |
@@ -206,7 +218,7 @@ jobs:
           echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Sync towncrier version
-        if: hashFiles('news/**') != ''
+        if: steps.towncrier.outputs.enabled == 'true'
         run: |
           python << 'EOF'
           import os
@@ -233,44 +245,22 @@ jobs:
           NEW_VERSION: ${{ steps.bump-version.outputs.new_version }}
 
       - name: Add towncrier fragment for lock upgrade
-        if: hashFiles('news/**') != ''
+        if: steps.towncrier.outputs.enabled == 'true'
         run: |
           FRAGMENT="news/process/$(date +%Y%m%d)-lock-upgrade.rst"
           mkdir -p news/process
           printf '%s\n' "Automated runtime lock file upgrades ($(date +%Y-%m-%d))." > "$FRAGMENT"
 
       - name: Build changelog with towncrier
-        if: hashFiles('news/**') != ''
+        if: steps.towncrier.outputs.enabled == 'true'
         run: towncrier build --yes
 
-      - name: Setup Git
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Create release branch and commit
-        run: |
-          NEW_VERSION="${{ steps.bump-version.outputs.new_version }}"
-          BRANCH_NAME="patch-release-v${NEW_VERSION}"
-          git checkout -b "$BRANCH_NAME"
-
-          git add requirements/py*-django*.txt pyproject.toml 2>/dev/null || true
-          git add src/**/__init__.py 2>/dev/null || true
-          git add CHANGELOG.rst news/process/ 2>/dev/null || true
-
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-            git push origin "$BRANCH_NAME" || true
-            exit 0
-          fi
-
-          git commit -m "Bump patch v${NEW_VERSION} for runtime lock upgrades"
-          git push origin "$BRANCH_NAME"
-
       - name: Create Pull Request
+        id: cpr
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.BOT_PAT || secrets.GITHUB_TOKEN }}
+          commit-message: "Bump patch v${{ steps.bump-version.outputs.new_version }} for runtime lock upgrades"
           branch: patch-release-v${{ steps.bump-version.outputs.new_version }}
           base: main
           delete-branch: true
@@ -288,6 +278,15 @@ jobs:
             patch-release
           assignees: ${{ github.actor }}
           draft: false
+
+      - name: Verify patch release PR was created
+        run: |
+          if [ -z "${{ steps.cpr.outputs.pull-request-number }}" ]; then
+            echo "::error::create-pull-request did not open a PR (no diff vs main, or insufficient token permissions)."
+            git diff --stat origin/main || true
+            exit 1
+          fi
+          echo "Opened PR #${{ steps.cpr.outputs.pull-request-number }}: ${{ steps.cpr.outputs.pull-request-url }}"
 
   create-release-after-merge:
     name: Create tag and GitHub Release
