@@ -1,0 +1,16 @@
+name: Compile locale catalogs
+description: >-
+  Compile src/**/locale/**/*.po to .mo via GNU msgfmt before wheel build or tests.
+  No Django required. Skips when no locale trees exist.
+inputs:
+  workspace:
+    description: Repository root containing src/**/locale
+    required: false
+    default: .
+runs:
+  using: composite
+  steps:
+    - name: Compile locale catalogs
+      shell: bash
+      working-directory: ${{ inputs.workspace }}
+      run: python "${{ github.action_path }}/compile_locale_catalogs.py"

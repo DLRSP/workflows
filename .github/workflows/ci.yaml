@@ -284,12 +284,16 @@ jobs:
       - name: Install OS dependencies
         if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') }}
         run: |
-          sudo apt-get install -y gettext
+          sudo apt-get update && sudo apt-get install -y gettext
 
       - name: Install Python dependencies
         if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') }}
         run: |
           python -m pip install --upgrade pip setuptools wheel build django
+
+      - name: Compile locale catalogs
+        if: ${{ always() && hashFiles('src/**/locale/**') != '' }}
+        uses: DLRSP/workflows/.github/actions/compile-locale-catalogs@main
 
       - name: Build sdist and wheel (setup.py — custom hooks)
         if: ${{ always() && hashFiles('setup.py') }}
@@ -410,17 +414,31 @@ jobs:
       - name: Install OS dependencies Ubuntu
         if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') && matrix.os == 'ubuntu-latest' }}
         run: |
-          sudo apt-get install -y gettext
+          sudo apt-get update && sudo apt-get install -y gettext
 
       - name: Install OS dependencies MacOS
-        if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') && matrix.os == 'macos-*' }}
+        if: >-
+          ${{
+            always()
+            && hashFiles('setup.py', 'pyproject.toml')
+            && startsWith(matrix.os, 'macos')
+          }}
         run: |
-          sudo brew install gettext
+          brew install gettext
 
       - name: Install Python dependencies
         if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') }}
         run: |
           python -m pip install --upgrade pip setuptools wheel build django
+
+      - name: Compile locale catalogs
+        if: >-
+          ${{
+            always()
+            && hashFiles('src/**/locale/**') != ''
+            && matrix.os != 'windows-latest'
+          }}
+        uses: DLRSP/workflows/.github/actions/compile-locale-catalogs@main
 
       - name: Build sdist and wheel (setup.py — custom hooks)
         if: ${{ always() && hashFiles('setup.py') }}
