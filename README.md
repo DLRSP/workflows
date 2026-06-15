@@ -1,10 +1,10 @@
 # Workflows
 
-Inspired by the more complete repo [workflows](https://github.com/kdeldycke/workflows) owned by [Kevin Deldycke](https://github.com/kdeldycke)
+Inspired by the more complete repo [repomatic](https://github.com/kdeldycke/repomatic) (formerly [workflows](https://github.com/kdeldycke/repomatic)) owned by [Kevin Deldycke](https://github.com/kdeldycke)
 
 Maintaining project takes time. This repository contains workflows to automate most of the boring tasks.
 
-These workflows are mostly used for ~~Poetry-based~~ Python CLI and their documentation, but not only. They're all [reuseable GitHub actions workflows](https://docs.github.com/en/actions/learn-github-actions/reusing-workflows).
+These workflows are mostly used for ~~Poetry-based~~ Python CLI and their documentation, but not only. They're all [reuseable GitHub actions workflows](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows).
 
 Reasons for a centralized workflow repository:
 
@@ -19,7 +19,7 @@ It turns out [Release Engineering is a full-time job, and full of edge-cases](ht
 
 Rust has [`cargo-dist`](https://github.com/axodotdev/cargo-dist). Go has... ? But there is no equivalent for Python.
 
-So I made up a [`release.yaml` workflow](https://github.com/kdeldycke/workflows/blob/main/.github/workflows/release.yaml), which:
+So I made up a [`release.yaml` workflow](https://github.com/kdeldycke/repomatic/blob/main/.github/workflows/release.yaml), which:
 
 1. Extracts project metadata from `pyproject.toml`
 1. Generates a build matrix of all commits / os / arch / CLI entry points
@@ -59,9 +59,9 @@ Feel free to send a PR to add your project in this list if you are relying on th
 **TODO**: To-Be-Review-And-Updated
 
 All steps of the release process and version management are automated in the
-[`changelog.yaml`](https://github.com/kdeldycke/workflows/blob/main/.github/workflows/changelog.yaml)
+[`changelog.yaml`](https://github.com/kdeldycke/repomatic/blob/main/.github/workflows/changelog.yaml)
 and
-[`release.yaml`](https://github.com/kdeldycke/workflows/blob/main/.github/workflows/release.yaml)
+[`release.yaml`](https://github.com/kdeldycke/repomatic/blob/main/.github/workflows/release.yaml)
 workflows.
 
 All there's left to do is to:
