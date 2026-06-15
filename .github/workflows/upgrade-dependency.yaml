@@ -15,6 +15,10 @@ on:
     # Runs every Monday at 8:00 UTC
     - cron: '0 8 * * *'
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   upgrade:
     name: Upgrade & Open Pull Request

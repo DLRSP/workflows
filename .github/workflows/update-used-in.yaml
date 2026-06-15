@@ -16,6 +16,10 @@ on:
       - '.github/scripts/update_used_in.py'
       - README.md
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   update-used-in-central:
     if: github.repository == 'DLRSP/workflows' && github.event_name != 'workflow_call'

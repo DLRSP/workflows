@@ -40,6 +40,10 @@ on:
     # Runs every Monday at 6:00 UTC
     - cron: '0 6 * * 1'
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   check-updates:
     name: Check for Static File Updates
