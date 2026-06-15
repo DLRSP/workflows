@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.19.0 (unreleased)](https://github.com/DLRSP/workflows/compare/v1.18.3...v1.19.0)
+```{important}
+This version is not released yet and is under active development.
+```
+
+### Breaking changes
+
+- Replace blind bot approve in `ci.yaml` with policy-gated `pr-policy-gate` workflow.
+- Add GitHub App `dlrsp-actions` composites (`dlrsp-actions-token`, `evaluate-bot-policy`).
+- `upgrade-dependency.yaml` opens PRs with App installation token (author `dlrsp-actions[bot]`).
+- Org secrets required: `DLRSP_ACTIONS_APP_ID`, `DLRSP_ACTIONS_PRIVATE_KEY`.
+- `pr-approve-bots.yaml` is now a thin wrapper around `pr-policy-gate`.
+
+### Migration
+
+1. Install `dlrsp-actions` GitHub App on each consumer repository.
+2. Ensure org secrets are visible to repositories (`secrets: inherit`).
+3. Pin reusable workflows to `@v1.19.0` after release (or stay on `@main`).
+4. Keep `BOT_PAT` during 14-day shim window; revoke only after pilot smoke passes.
+
 ## [1.18.3 (unreleased)](https://github.com/DLRSP/workflows/compare/v1.6.11...v1.10.0)
 ```{important}
 This version is not released yet and is under active development.

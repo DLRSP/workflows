@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dlrsp.dev/schemas/bot-policy-v1.schema.json",
+  "title": "DLRSP bot policy v1",
+  "type": "object",
+  "required": ["version", "trusted_actors", "policies"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "trusted_actors": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1
+    },
+    "shim_actors": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "policies": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "when", "then"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "when": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "draft": { "type": "boolean" },
+              "actor_in": { "type": "string", "minLength": 1 },
+              "always": { "type": "boolean" }
+            }
+          },
+          "gates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "minProperties": 1,
+              "maxProperties": 1,
+              "additionalProperties": false,
+              "properties": {
+                "ci_status": {
+                  "type": "object",
+                  "required": ["required"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "required": {
+                      "type": "array",
+                      "items": { "type": "string", "minLength": 1 },
+                      "minItems": 1
+                    }
+                  }
+                },
+                "paths": {
+                  "type": "object",
+                  "required": ["deny"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "deny": {
+                      "type": "array",
+                      "items": { "type": "string", "minLength": 1 },
+                      "minItems": 1
+                    }
+                  }
+                },
+                "semver": {
+                  "type": "object",
+                  "required": ["block"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "block": {
+                      "type": "string",
+                      "enum": ["major"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(approve|enable_auto_merge|label:.+|comment:.+)$"
+            },
+            "minItems": 1
+          }
+        }
+      }
+    }
+  }
+}

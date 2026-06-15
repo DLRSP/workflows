@@ -99,14 +99,22 @@ jobs:
           pattern: py*
           merge-multiple: true
 
+      - name: Create App installation token
+        id: dlrsp-token
+        uses: DLRSP/workflows/.github/actions/dlrsp-actions-token@main
+        with:
+          github-app-id: ${{ secrets.DLRSP_ACTIONS_APP_ID }}
+          github-app-private-key: ${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
       - name: Create Pull Request
         id: cpr
         uses: peter-evans/create-pull-request@v8
         with:
-          token: ${{ secrets.BOT_PAT }}
+          token: ${{ steps.dlrsp-token.outputs.token }}
           commit-message: "Automated dependency upgrades"
           committer: GitHub <noreply@github.com>
-          author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
           signoff: false
           branch: ${{ env.BRANCH_NAME }}
           delete-branch: true
@@ -115,5 +123,4 @@ jobs:
           labels: |
             📦 dependencies
             python
-          assignees: ${{ github.actor }}
           draft: false

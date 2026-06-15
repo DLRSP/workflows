@@ -1,0 +1,25 @@
+---
+name: DLRSP Actions token smoke
+
+on:
+  workflow_dispatch:
+
+jobs:
+  token-smoke:
+    name: TS-01 App installation token
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Create App installation token
+        id: dlrsp-token
+        uses: ./.github/actions/dlrsp-actions-token
+        with:
+          github-app-id: ${{ secrets.DLRSP_ACTIONS_APP_ID }}
+          github-app-private-key: ${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}
+          permission-metadata: read
+
+      - name: Verify token calls GitHub API
+        run: gh api user -q .login
+        env:
+          GH_TOKEN: ${{ steps.dlrsp-token.outputs.token }}

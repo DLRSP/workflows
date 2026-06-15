@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cmd="${1:-}"
+shift || true
+
+case "${cmd}" in
+  pr)
+    sub="${1:-}"
+    shift || true
+    if [[ "${sub}" == "view" ]]; then
+      while [[ $# -gt 0 ]]; do
+        case "$1" in
+          --json)
+            field="$2"
+            if [[ "${field}" == "statusCheckRollup" ]]; then
+              cat "${STUB_GH_STATUS_ROLLUP:-/dev/null}"
+            fi
+            shift 2
+            ;;
+          --repo|-q) shift 2 ;;
+          *) shift ;;
+        esac
+      done
+    fi
+    ;;
+  api)
+    path="${1:-}"
+    if [[ "${path}" == *"/pulls/"*"/files" ]]; then
+      jq -r '.[].filename' "${STUB_GH_PR_FILES:-/dev/null}"
+    fi
+    ;;
+esac
