@@ -58,9 +58,29 @@ jobs:
       - name: Fetch dependabot metadata
         if: github.event.pull_request.user.login == 'dependabot[bot]'
         id: dependabot-metadata
+        continue-on-error: true
         uses: dependabot/fetch-metadata@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          skip-commit-verification: true
+
+      - name: Resolve dependabot update type
+        if: github.event.pull_request.user.login == 'dependabot[bot]'
+        id: dependabot-update-type
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          update_type="${{ steps.dependabot-metadata.outputs.update-type }}"
+          if [[ -z "${update_type}" ]]; then
+            update_type="$(gh pr view "${{ github.event.pull_request.number }}" \
+              --repo "${{ github.repository }}" \
+              --json body -q .body \
+              | grep -oE 'update-type: version-update:semver-(major|minor|patch)' \
+              | head -1 \
+              | cut -d' ' -f2 || true)"
+          fi
+          echo "value=${update_type}" >> "$GITHUB_OUTPUT"
 
       - name: Evaluate bot policy
         id: evaluate
@@ -74,7 +94,7 @@ jobs:
           draft: ${{ github.event.pull_request.draft }}
           dependabot-update-type: >-
             ${{ inputs.dependabot-update-type != '' && inputs.dependabot-update-type
-            || steps.dependabot-metadata.outputs.update-type }}
+            || steps.dependabot-update-type.outputs.value }}
 
       - name: Create App installation token
         if: >-

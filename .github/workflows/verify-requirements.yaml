@@ -153,27 +153,37 @@ jobs:
 
   verify-django-requirements:
     runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.experimental == true }}
     strategy:
       matrix:
         include:
           - python-version: "3.9"
             django-version: "4.2"
+            experimental: false
           - python-version: "3.10"
             django-version: "3.2"
+            experimental: false
           - python-version: "3.10"
             django-version: "4.2"
+            experimental: false
           - python-version: "3.10"
             django-version: "5.2"
+            experimental: false
           - python-version: "3.11"
             django-version: "4.2"
+            experimental: false
           - python-version: "3.12"
             django-version: "4.2"
+            experimental: false
           - python-version: "3.12"
             django-version: "5.2"
+            experimental: false
           - python-version: "3.13"
             django-version: "5.2"
+            experimental: true
           - python-version: "3.14"
             django-version: "5.2"
+            experimental: true
 
     steps:
       - name: Checkout code

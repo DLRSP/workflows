@@ -11,6 +11,8 @@
 - Approve and auto-merge via `dlrsp-actions` App token (not `github-actions[bot]`).
 - Fix requirements policy CI check names (`Verify Requirements / …`).
 - Add `@dlrsp-actions[bot]` to `CODEOWNERS` so App approval satisfies branch protection.
+- Tolerate rebased dependabot commits in policy gate (`skip-commit-verification` + body fallback).
+- Mark Python 3.13/3.14 django requirement verification as experimental.
 
 ## [1.19.0 (2026-06-15)](https://github.com/DLRSP/workflows/compare/v1.18.3...v1.19.0)
 
