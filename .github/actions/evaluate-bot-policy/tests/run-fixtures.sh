@@ -9,6 +9,16 @@ STUB_GH="${ROOT}/tests/bin/stub-gh"
 
 failures=0
 
+read_output() {
+  local key="$1"
+  local file="$2"
+  if grep -q "^${key}<<EOF" "${file}"; then
+    awk -v k="${key}" '$0 == k "<<EOF" { getline; print; exit }' "${file}"
+  else
+    grep "^${key}=" "${file}" | tail -1 | cut -d= -f2-
+  fi
+}
+
 run_case() {
   local case_dir="$1"
   local name
@@ -30,7 +40,7 @@ run_case() {
   : >"${GITHUB_OUTPUT}"
   "${EVALUATE}" "${POLICY}" "${ACTOR}" "${PR_NUMBER}" "${DRAFT:-false}" "${DEP_UPDATE_TYPE:-}"
 
-  actual_decision="$(grep '^decision=' "${GITHUB_OUTPUT}" | tail -1 | cut -d= -f2-)"
+  actual_decision="$(read_output decision "${GITHUB_OUTPUT}")"
   if [[ "${actual_decision}" != "${EXPECTED_DECISION}" ]]; then
     echo "FAIL ${name}: expected decision=${EXPECTED_DECISION} got ${actual_decision}"
     failures=$((failures + 1))
