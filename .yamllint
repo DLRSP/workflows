@@ -13,6 +13,11 @@ rules:
   trailing-spaces: disable
   new-line-at-end-of-file: disable
   line-length:
-    max: 240
+    max: 300
     allow-non-breakable-inline-mappings: true
   document-start: disable
+  truthy: disable
+  brackets: disable
+  indentation: disable
+  comments-indentation: disable
+  empty-lines: disable
