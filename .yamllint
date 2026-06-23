@@ -10,6 +10,8 @@ ignore: |
 rules:
   new-lines:
     type: platform
+  trailing-spaces: disable
+  new-line-at-end-of-file: disable
   line-length:
     max: 240
     allow-non-breakable-inline-mappings: true
