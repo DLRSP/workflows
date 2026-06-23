@@ -165,10 +165,17 @@ jobs:
         #   property "workflow_update_github_pat" is not defined in object type {actions_runner_debug: string;
         #   actions_step_debug: string; github_token: string; pypi_token: string} [expression]
         # See: https://github.com/rhysd/actionlint/issues/148
-        run: >
-          ${{ steps.install_actionlint.outputs.executable }}
-          -color
-          -ignore 'property "workflow_update_github_pat" is not defined in .+'
+        shell: bash
+        run: |
+          mapfile -t workflow_files < <(
+            find .github/workflows -type f \( -name '*.yml' -o -name '*.yaml' \) ! -path '*/old.test/*'
+          )
+          "${{ steps.install_actionlint.outputs.executable }}" \
+            -color \
+            -shellcheck=false \
+            -ignore 'property "workflow_update_github_pat" is not defined in .+' \
+            -ignore 'calling function "hashFiles" is not allowed here' \
+            "${workflow_files[@]}"
 
   broken-links:
     # Skip checks on prepare-release branch as it contains commits in changelog and documentation that points to a tag

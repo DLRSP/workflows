@@ -8,7 +8,6 @@ import json
 import os
 import re
 import subprocess
-import sys
 from configparser import ConfigParser
 from dataclasses import dataclass
 from enum import Enum

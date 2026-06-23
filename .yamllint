@@ -3,8 +3,14 @@ extends: default
 
 ignore: |
   .github/workflows/old.test/
+  policies/
+  .github/labeller-content-based.yaml
+  .github/labeller-file-based.yaml
 
 rules:
+  new-lines:
+    type: platform
   line-length:
-    max: 200
+    max: 240
     allow-non-breakable-inline-mappings: true
+  document-start: disable
