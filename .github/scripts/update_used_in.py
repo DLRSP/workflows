@@ -4,8 +4,9 @@ Update auto-generated 'Used in' sections:
 
   central — DLRSP/workflows README (repos that reference reusable workflows).
 
-  consumer — Caller repo must contain ``.github/used-in.yaml`` with ``code_search_queries``.
-  Only files that include the HTML marker pairs are rewritten (README bullets + optional docs tables).
+  consumer — Caller repo must contain ``.github/used-in.yaml`` with
+  ``code_search_queries``. Only files that include the HTML marker pairs are
+  rewritten (README bullets + optional docs tables).
 """
 
 from __future__ import annotations
@@ -40,7 +41,9 @@ def _repo_meta(repo: Any) -> dict[str, Any]:
     }
 
 
-def find_workflows_consumers(g: Github, org_name: str, workflows_repo: str) -> list[dict[str, Any]]:
+def find_workflows_consumers(
+    g: Github, org_name: str, workflows_repo: str
+) -> list[dict[str, Any]]:
     org = g.get_organization(org_name)
     repos_found: dict[str, dict[str, Any]] = {}
     for repo in org.get_repos(type="all"):
@@ -111,7 +114,8 @@ def _workflows_used_in_block(repos: list[dict[str, Any]]) -> str:
     lines.extend(
         [
             "",
-            "Feel free to send a PR to add your project in this list if you are relying on these scripts.",
+            "Feel free to send a PR to add your project in this list if you "
+            "are relying on these scripts.",
         ]
     )
     return "\n".join(lines)
@@ -123,7 +127,8 @@ def update_workflows_readme(readme_path: str, repos: list[dict[str, Any]]) -> bo
         content = f.read()
     pattern = (
         r"(## Used in\n.*?"
-        r"\nFeel free to send a PR to add your project in this list if you are relying on these scripts\.)"
+        r"\nFeel free to send a PR to add your project in this list if you "
+        r"are relying on these scripts\.)"
     )
     if re.search(pattern, content, re.DOTALL):
         new_content = re.sub(pattern, block, content, count=1, flags=re.DOTALL)
@@ -181,9 +186,7 @@ def _markdown_table(
         rows.append(f"| — | {empty_cell} |")
     for repo in repos:
         desc = repo["description"] or default_role
-        rows.append(
-            f"| [{repo['name']}]({repo['url']}) | {_safe_table_cell(desc)} |"
-        )
+        rows.append(f"| [{repo['name']}]({repo['url']}) | {_safe_table_cell(desc)} |")
     return "\n".join(rows)
 
 
@@ -221,7 +224,9 @@ def run_consumer(root: str, g: Github) -> int:
         )
         return 1
 
-    exclude = (cfg.get("exclude_repository") or os.environ.get("GITHUB_REPOSITORY") or "").strip()
+    exclude = (
+        cfg.get("exclude_repository") or os.environ.get("GITHUB_REPOSITORY") or ""
+    ).strip()
     if not exclude:
         print(
             "Set exclude_repository in config or GITHUB_REPOSITORY in the environment",
@@ -231,8 +236,16 @@ def run_consumer(root: str, g: Github) -> int:
 
     repos = find_consumers_by_queries(g, [str(q) for q in queries], exclude)
 
-    empty_readme = str(cfg.get("empty_readme_message", "_No public repositories matched the latest scan._"))
-    empty_table = str(cfg.get("empty_table_message", "_No public repositories matched the latest scan._"))
+    empty_readme = str(
+        cfg.get(
+            "empty_readme_message", "_No public repositories matched the latest scan._"
+        )
+    )
+    empty_table = str(
+        cfg.get(
+            "empty_table_message", "_No public repositories matched the latest scan._"
+        )
+    )
     default_role = str(
         cfg.get(
             "default_table_role",
@@ -257,7 +270,9 @@ def run_consumer(root: str, g: Github) -> int:
         if os.path.isfile(readme_path):
             with open(readme_path, encoding="utf-8") as f:
                 body = f.read()
-            new_body = _replace_markers(body, MARKER_README_START, MARKER_README_END, bullets)
+            new_body = _replace_markers(
+                body, MARKER_README_START, MARKER_README_END, bullets
+            )
             if new_body is not None and new_body != body:
                 with open(readme_path, "w", encoding="utf-8") as f:
                     f.write(new_body)
@@ -283,10 +298,14 @@ def run_consumer(root: str, g: Github) -> int:
                 changed.append(rel_s)
 
     if changed:
-        print(f"Updated marker sections in: {', '.join(changed)} ({len(repos)} repos in index)")
+        print(
+            f"Updated marker sections in: {', '.join(changed)} "
+            f"({len(repos)} repos in index)"
+        )
     else:
         print(
-            "No marker updates (missing <!-- used-in:auto-* --> markers, or content unchanged)"
+            "No marker updates (missing <!-- used-in:auto-* --> markers, "
+            "or content unchanged)"
         )
     return 0
 
@@ -319,7 +338,9 @@ def main() -> int:
             return 0
         readme = os.path.join(args.root, "README.md")
         if not update_workflows_readme(readme, repos):
-            print("Could not update workflows README (missing sections?)", file=sys.stderr)
+            print(
+                "Could not update workflows README (missing sections?)", file=sys.stderr
+            )
             return 1
         print(f"Updated workflows README with {len(repos)} repositories")
         return 0

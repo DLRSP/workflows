@@ -25,9 +25,13 @@ jobs:
       - name: Validate bot-policy schema
         run: |
           python -m pip install --quiet check-jsonschema
-          check-jsonschema \
-            --schemafile policies/schema/bot-policy-v1.schema.json \
-            policies/bot-policy.yaml
+          for policy in policies/bot-policy.yaml policies/bot-policy-workflows.yaml policies/bot-policy-requirements.yaml; do
+            check-jsonschema \
+              --schemafile policies/schema/bot-policy-v1.schema.json \
+              "${policy}"
+          done
 
       - name: Run offline fixtures
+        env:
+          POLICY_CI_PENDING_WAIT_SEC: "0"
         run: bash .github/actions/evaluate-bot-policy/tests/run-fixtures.sh

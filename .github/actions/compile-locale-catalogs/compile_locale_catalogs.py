@@ -4,6 +4,7 @@
 No Django or settings module required. Safe to run when a module has no locale
 trees (no-op). Used by DLRSP/workflows CI release builds and tox commands_pre.
 """
+
 from __future__ import annotations
 
 import argparse

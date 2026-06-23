@@ -30,7 +30,7 @@ This version is not released yet and is under active development.
 ```
 ## [1.15.10 (2026-01-9)](https://github.com/DLRSP/workflows/compare/v1.15.9...v1.15.10)
 
-## [1.8.1 (2023-09-24)](https://github.com/DLRSP/workflows/releases/tag/v1.8.1)
+## [1.8.1 (2023-09-24)]
 
 ## [1.6.11 (2023-07-31)](https://github.com/DLRSP/workflows/releases/tag/v1.6.11)
 

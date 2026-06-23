@@ -201,13 +201,9 @@ jobs:
       run: pip install black flake8 flake8-pyproject
 
     - name: Run linters
-      uses: wearerequired/lint-action@v2
-      with:
-          black: true
-          flake8: true
-#          stylelint: true
-#          eslint: true
-#          prettier: true
+      run: |
+        black --check .github
+        flake8 --max-line-length=88 --extend-ignore=E203,W503 .github
 
     - name: Initialize CodeQL
       if: ${{ always() && hashFiles('setup.py', 'pyproject.toml', 'tox.ini') }}
@@ -370,7 +366,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-13, macos-14 ]
+        os: [ ubuntu-latest, windows-latest, macos-14, macos-15 ]
     steps:
       - uses: actions/checkout@v6
 
