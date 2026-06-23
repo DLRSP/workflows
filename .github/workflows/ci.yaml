@@ -225,10 +225,6 @@ jobs:
     if: >-
       github.event_name == 'pull_request'
       && !github.event.pull_request.draft
-      && (
-        contains(fromJSON('["dlrsp-actions[bot]","dlrsp-bot"]'), github.actor)
-        || contains(fromJSON('["dlrsp-actions[bot]","dlrsp-bot"]'), github.event.pull_request.user.login)
-      )
     uses: DLRSP/workflows/.github/workflows/pr-policy-gate.yaml@main
     secrets: inherit
     with:

@@ -6,6 +6,11 @@
 
 - Migrate remaining workflows from `BOT_PAT` to `dlrsp-actions` App installation token
   (`changelog`, `pr-rebase-*`, `release-*`, `update-used-in`, `upgrade-*`).
+- Extend bot policies to `dependabot[bot]` and `pre-commit-ci[bot]` (TS-03/04).
+- Run policy gate on all non-draft PRs; evaluate uses PR author, not workflow actor.
+- Approve and auto-merge via `dlrsp-actions` App token (not `github-actions[bot]`).
+- Fix requirements policy CI check names (`Verify Requirements / …`).
+- Add `@dlrsp-actions[bot]` to `CODEOWNERS` so App approval satisfies branch protection.
 
 ## [1.19.0 (2026-06-15)](https://github.com/DLRSP/workflows/compare/v1.18.3...v1.19.0)
 
