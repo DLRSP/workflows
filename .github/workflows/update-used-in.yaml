@@ -47,7 +47,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install --upgrade pip PyGithub
+        run: pip install --upgrade pip PyGithub PyYAML
 
       - name: Update README (workflows consumers)
         env:

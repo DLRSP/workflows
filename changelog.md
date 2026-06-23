@@ -14,6 +14,12 @@
 - Tolerate rebased dependabot commits in policy gate (`skip-commit-verification` + body fallback).
 - Mark Python 3.9 and py3.13/3.14 django verify matrix legs as optional.
 - Route all policy-gate PR writes (approve, block label, block comment) through `dlrsp-actions` App token.
+- Fix `labels.yaml` canonical URL (`main`, not `vmain`); sync labels via App token.
+- Fix `update-used-in` central job missing `PyYAML`.
+- Drop spurious `issues: write` from `pr-label-merge-conflicts` (fixes requirements `startup_failure`).
+- Migrate merge-conflict labels and broken-link issues to `dlrsp-actions` App token.
+- Trust `app/dlrsp-actions` PR author; skip self-approve; admin-merge self-authored bot PRs.
+- Release tag pushes use `dlrsp-actions[bot]` git identity and App token.
 
 ## [1.19.0 (2026-06-15)](https://github.com/DLRSP/workflows/compare/v1.18.3...v1.19.0)
 
