@@ -99,10 +99,7 @@ jobs:
       - name: Create App installation token
         if: >-
           steps.evaluate.outputs.decision == 'approve'
-          && (
-            contains(steps.evaluate.outputs.actions, 'approve')
-            || contains(steps.evaluate.outputs.actions, 'enable_auto_merge')
-          )
+          || steps.evaluate.outputs.decision == 'block'
         id: dlrsp-token
         uses: ./dlrsp-workflows/.github/actions/dlrsp-actions-token
         with:
@@ -139,7 +136,7 @@ jobs:
             --description "Policy gate blocked; human review required" \
             2>/dev/null || true
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.dlrsp-token.outputs.token }}
 
       - name: Apply block label
         if: >-
@@ -150,7 +147,7 @@ jobs:
           --repo "${{ github.repository }}"
           --add-label "needs-human-review"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.dlrsp-token.outputs.token }}
 
       - name: Comment on blocked PR
         if: >-
@@ -161,4 +158,4 @@ jobs:
             --repo "${{ github.repository }}" \
             --body "Policy gate blocked this PR: ${{ steps.evaluate.outputs.reason }}"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.dlrsp-token.outputs.token }}
