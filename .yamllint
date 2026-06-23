@@ -1,0 +1,10 @@
+---
+extends: default
+
+ignore: |
+  .github/workflows/old.test/
+
+rules:
+  line-length:
+    max: 200
+    allow-non-breakable-inline-mappings: true

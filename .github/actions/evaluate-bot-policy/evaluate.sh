@@ -91,46 +91,57 @@ when_matches() {
 
 check_ci_status() {
   local required_json="$1"
-  local rollup
-  rollup="$(gh pr view "${PR_NUMBER}" --repo "${REPO}" --json statusCheckRollup -q '.statusCheckRollup' 2>/dev/null)" || {
-    fail_closed "ci_status: unable to fetch statusCheckRollup"
-  }
+  local max_wait="${POLICY_CI_PENDING_WAIT_SEC:-120}"
+  local interval="${POLICY_CI_PENDING_POLL_SEC:-15}"
+  local elapsed=0
 
-  local missing=()
-  local failing=()
-  local pending=()
+  while true; do
+    local rollup
+    rollup="$(gh pr view "${PR_NUMBER}" --repo "${REPO}" --json statusCheckRollup -q '.statusCheckRollup' 2>/dev/null)" || {
+      fail_closed "ci_status: unable to fetch statusCheckRollup"
+    }
 
-  while IFS= read -r check_name; do
-    [[ -z "${check_name}" ]] && continue
-    local entry
-    entry="$(echo "${rollup}" | jq -c --arg n "${check_name}" '[.[] | select(.name == $n)][0]')"
-    if [[ "${entry}" == "null" ]]; then
-      missing+=("${check_name}")
+    local missing=()
+    local failing=()
+    local pending=()
+
+    while IFS= read -r check_name; do
+      [[ -z "${check_name}" ]] && continue
+      local entry
+      entry="$(echo "${rollup}" | jq -c --arg n "${check_name}" '[.[] | select(.name == $n)][0]')"
+      if [[ "${entry}" == "null" ]]; then
+        missing+=("${check_name}")
+        continue
+      fi
+      local status conclusion
+      status="$(echo "${entry}" | jq -r '.status // empty')"
+      conclusion="$(echo "${entry}" | jq -r '.conclusion // empty')"
+      if [[ "${status}" == "QUEUED" || "${status}" == "IN_PROGRESS" || "${status}" == "PENDING" || "${conclusion}" == "" ]]; then
+        pending+=("${check_name}")
+      elif [[ "${conclusion}" != "SUCCESS" && "${conclusion}" != "NEUTRAL" && "${conclusion}" != "SKIPPED" ]]; then
+        failing+=("${check_name}")
+      fi
+    done < <(echo "${required_json}" | jq -r '.[]')
+
+    if ((${#missing[@]} > 0)); then
+      echo "ci_status missing: ${missing[*]}"
+      return 1
+    fi
+    if ((${#failing[@]} > 0)); then
+      echo "ci_status failing: ${failing[*]}"
+      return 1
+    fi
+    if ((${#pending[@]} > 0)); then
+      if ((elapsed >= max_wait)); then
+        echo "ci_status pending: ${pending[*]}"
+        return 1
+      fi
+      sleep "${interval}"
+      elapsed=$((elapsed + interval))
       continue
     fi
-    local status conclusion
-    status="$(echo "${entry}" | jq -r '.status // empty')"
-    conclusion="$(echo "${entry}" | jq -r '.conclusion // empty')"
-    if [[ "${status}" == "QUEUED" || "${status}" == "IN_PROGRESS" || "${status}" == "PENDING" || "${conclusion}" == "" ]]; then
-      pending+=("${check_name}")
-    elif [[ "${conclusion}" != "SUCCESS" && "${conclusion}" != "NEUTRAL" && "${conclusion}" != "SKIPPED" ]]; then
-      failing+=("${check_name}")
-    fi
-  done < <(echo "${required_json}" | jq -r '.[]')
-
-  if ((${#missing[@]} > 0)); then
-    echo "ci_status missing: ${missing[*]}"
-    return 1
-  fi
-  if ((${#pending[@]} > 0)); then
-    echo "ci_status pending: ${pending[*]}"
-    return 1
-  fi
-  if ((${#failing[@]} > 0)); then
-    echo "ci_status failing: ${failing[*]}"
-    return 1
-  fi
-  return 0
+    return 0
+  done
 }
 
 path_matches_glob() {

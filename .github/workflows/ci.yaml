@@ -28,6 +28,11 @@ on:
         required: false
         type: boolean
         default: false
+      policy-path:
+        description: Bot policy file path inside DLRSP/workflows (policy gate)
+        required: false
+        type: string
+        default: ""
   workflow_dispatch:
     inputs:
       tox-matrix-mode:
@@ -230,6 +235,11 @@ jobs:
       )
     uses: DLRSP/workflows/.github/workflows/pr-policy-gate.yaml@main
     secrets: inherit
+    with:
+      policy-path: >-
+        ${{ inputs.policy-path != '' && inputs.policy-path
+        || (github.repository == 'DLRSP/workflows' && 'policies/bot-policy-workflows.yaml'
+        || 'policies/bot-policy.yaml') }}
 
   build:
     name: Build wheels

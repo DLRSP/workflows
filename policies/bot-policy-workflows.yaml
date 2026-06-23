@@ -11,9 +11,8 @@ policies:
     gates:
       - ci_status:
           required:
-            - verify-requirements / verify-dev-requirements (3.12, py312-dev.txt)
-            - verify-requirements / verify-test-requirements (3.12, py312-test.txt)
-            - verify-requirements / verify-django-requirements (3.12, 4.2)
+            - Analyze (python)
+            - Python 3.12
       - paths:
           deny:
             - .github/workflows/**
@@ -30,9 +29,8 @@ policies:
     gates:
       - ci_status:
           required:
-            - verify-requirements / verify-dev-requirements (3.12, py312-dev.txt)
-            - verify-requirements / verify-test-requirements (3.12, py312-test.txt)
-            - verify-requirements / verify-django-requirements (3.12, 4.2)
+            - Analyze (python)
+            - Python 3.12
       - paths:
           deny:
             - .github/workflows/**

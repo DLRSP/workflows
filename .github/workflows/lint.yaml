@@ -125,7 +125,7 @@ jobs:
           -r https://raw.githubusercontent.com/DLRSP/workflows/main/requirements/py311-django42.txt
       - name: Run yamllint
         run: |
-          yamllint --strict --config-data "{rules: {line-length: {max: 120}}}" --format github .
+          yamllint --strict --format github .
 
   lint-zsh:
     runs-on: ubuntu-22.04
@@ -194,6 +194,7 @@ jobs:
           args: >
             --exclude twitter.com
             --exclude ycombinator.com
+            --exclude blog.axo.dev
             --verbose
             --no-progress
             './**/*.md' './**/*.html' './**/*.rst'

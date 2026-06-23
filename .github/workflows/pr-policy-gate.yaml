@@ -106,6 +106,19 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.dlrsp-token.outputs.token }}
 
+      - name: Ensure needs-human-review label exists
+        if: >-
+          steps.evaluate.outputs.decision == 'block'
+          && contains(steps.evaluate.outputs.actions, 'label:needs-human-review')
+        run: |
+          gh label create "needs-human-review" \
+            --repo "${{ github.repository }}" \
+            --color "B60205" \
+            --description "Policy gate blocked; human review required" \
+            2>/dev/null || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Apply block label
         if: >-
           steps.evaluate.outputs.decision == 'block'
