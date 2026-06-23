@@ -23,15 +23,24 @@ jobs:
     name: Sync labels
     runs-on: ubuntu-22.04
     steps:
+      - name: Create App installation token
+        id: dlrsp-token
+        uses: DLRSP/workflows/.github/actions/dlrsp-actions-token@main
+        with:
+          github-app-id: ${{ secrets.DLRSP_ACTIONS_APP_ID }}
+          github-app-private-key: ${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}
+          permission-pull-requests: write
+          permission-metadata: read
+
       - uses: actions/checkout@v6
       - name: Sync labels
         uses: julb/action-manage-label@1.0.1
         env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.dlrsp-token.outputs.token }}
         with:
           skip_delete: true
           from: |
-            https://raw.githubusercontent.com/DLRSP/workflows/vmain/.github/labels.yaml
+            https://raw.githubusercontent.com/DLRSP/workflows/main/.github/labels.yaml
             ${{ inputs.extra-label-files }}
             ${{ startsWith(github.event.repository.name, 'awesome-') &&
             'https://raw.githubusercontent.com/DLRSP/workflows/main/.github/labels-awesome.yaml' || '' }}

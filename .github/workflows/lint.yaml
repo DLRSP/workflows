@@ -184,14 +184,26 @@ jobs:
       && github.ref != 'refs/heads/prepare-release'
       && (! contains(github.event.commits.*.message, '[changelog] Post-release version bump'))
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      issues: write
     # XXX We need to manually manage the life-cycle of issues created in this job because the create-issue-from-file
     # action blindy creates issues ad-nauseum. See: https://github.com/peter-evans/create-issue-from-file/issues/298 .
     # This was also discussed at: https://github.com/lycheeverse/lychee-action/issues/74#issuecomment-1587089689
     steps:
+      - name: Create App installation token
+        id: dlrsp-token
+        uses: DLRSP/workflows/.github/actions/dlrsp-actions-token@main
+        with:
+          github-app-id: ${{ secrets.DLRSP_ACTIONS_APP_ID }}
+          github-app-private-key: ${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}
+          permission-issues: write
+          permission-metadata: read
+
       - uses: actions/checkout@v6
       - uses: lycheeverse/lychee-action@v2.7.0
         env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.dlrsp-token.outputs.token }}
         with:
           # XXX Skip twitter.com which is blackholing requests from GitHub, and HN because of rate-limiting.
           # See: https://github.com/lycheeverse/lychee/issues/989#issuecomment-1587208730
@@ -202,20 +214,16 @@ jobs:
             --verbose
             --no-progress
             './**/*.md' './**/*.html' './**/*.rst'
-      - name: Install hub
-        run: |
-          sudo apt install --yes hub
       - name: List open issues
         id: open_issues
         env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
-        run: >
-          echo "issues=$(
-          hub issue
-          --state open
-          --creator "github-actions[bot]"
-          --format $'%I %t\t'
-          --sort created )" >> "$GITHUB_OUTPUT"
+          GH_TOKEN: ${{ steps.dlrsp-token.outputs.token }}
+        run: |
+          issues="$(gh issue list --repo "${{ github.repository }}" --state open \
+            --json number,title,author \
+            --jq '.[] | select(.title=="Broken links") | "\(.number) \(.title)"' \
+            | tr '\n' '\t')"
+          echo "issues=${issues}" >> "$GITHUB_OUTPUT"
       - name: Print open issues
         run: |
           echo "Open issues: ${{ steps.open_issues.outputs.issues }}"
@@ -266,11 +274,11 @@ jobs:
       - name: Close old issues
         if: steps.issue_groups.outputs.close_issues
         env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+          GH_TOKEN: ${{ steps.dlrsp-token.outputs.token }}
         run: |
           NUMBER_LIST="${{ steps.issue_groups.outputs.close_issues }}"
           for number in $NUMBER_LIST; do
-              hub issue update "$number" --state closed;
+              gh issue close "$number" --repo "${{ github.repository }}";
           done
       - name: Get label
         if: fromJSON(steps.issue_groups.outputs.broken_links_found)
@@ -281,6 +289,8 @@ jobs:
       - name: Create or update issue
         if: fromJSON(steps.issue_groups.outputs.broken_links_found)
         uses: peter-evans/create-issue-from-file@v6.0.0
+        env:
+          GITHUB_TOKEN: ${{ steps.dlrsp-token.outputs.token }}
         with:
           title: "Broken links"
           issue-number: ${{ steps.issue_groups.outputs.update_issue }}

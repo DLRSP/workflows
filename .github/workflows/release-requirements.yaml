@@ -417,8 +417,8 @@ jobs:
 
       - name: Setup Git
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "dlrsp-actions[bot]"
+          git config --global user.email "293736084+dlrsp-actions[bot]@users.noreply.github.com"
 
       - name: Create release branch and commit
         run: |
@@ -494,9 +494,19 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Create App installation token
+        id: dlrsp-token
+        uses: DLRSP/workflows/.github/actions/dlrsp-actions-token@main
+        with:
+          github-app-id: ${{ secrets.DLRSP_ACTIONS_APP_ID }}
+          github-app-private-key: ${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}
+          permission-contents: write
+          permission-metadata: read
+
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          token: ${{ steps.dlrsp-token.outputs.token }}
 
       - uses: actions/setup-python@v6
         with:
@@ -647,10 +657,12 @@ jobs:
         if: steps.is-patch-release.outputs.is_patch == 'true' && steps.check-tag.outputs.exists == 'false' && steps.extract-version.outputs.version != ''
         run: |
           VERSION="${{ steps.extract-version.outputs.version }}"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "dlrsp-actions[bot]"
+          git config user.email "293736084+dlrsp-actions[bot]@users.noreply.github.com"
           git tag -a "v${VERSION}" -m "Release v${VERSION} - Requirements Updates"
           git push origin "v${VERSION}"
+        env:
+          GH_TOKEN: ${{ steps.dlrsp-token.outputs.token }}
 
       - name: Create GitHub Release
         if: steps.is-patch-release.outputs.is_patch == 'true' && steps.check-tag.outputs.exists == 'false' && steps.extract-version.outputs.version != ''
@@ -663,5 +675,5 @@ jobs:
           prerelease: false
           generate_release_notes: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.dlrsp-token.outputs.token }}
 
