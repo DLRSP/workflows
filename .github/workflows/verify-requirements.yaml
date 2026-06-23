@@ -153,13 +153,12 @@ jobs:
 
   verify-django-requirements:
     runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.experimental == true }}
     strategy:
       matrix:
         include:
           - python-version: "3.9"
             django-version: "4.2"
-            experimental: false
+            experimental: true
           - python-version: "3.10"
             django-version: "3.2"
             experimental: false
@@ -231,6 +230,7 @@ jobs:
           fi
 
       - name: Verify Django requirements file can be installed
+        continue-on-error: ${{ matrix.experimental }}
         run: |
           if [ -f "requirements/${{ env.DJANGO_ENV }}.txt" ]; then
             echo "Verifying requirements/${{ env.DJANGO_ENV }}.txt can be installed..."
