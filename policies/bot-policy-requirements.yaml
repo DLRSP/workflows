@@ -1,6 +1,8 @@
 version: 1
 trusted_actors:
   - dlrsp-actions[bot]
+  - dependabot[bot]
+  - pre-commit-ci[bot]
 shim_actors:
   - dlrsp-bot
 policies:
@@ -11,9 +13,9 @@ policies:
     gates:
       - ci_status:
           required:
-            - verify-requirements / verify-dev-requirements (3.12, py312-dev.txt)
-            - verify-requirements / verify-test-requirements (3.12, py312-test.txt)
-            - verify-requirements / verify-django-requirements (3.12, 4.2)
+            - Verify Requirements / verify-dev-requirements (3.12, py312-dev.txt)
+            - Verify Requirements / verify-test-requirements (3.12, py312-test.txt)
+            - Verify Requirements / verify-django-requirements (3.12, 4.2)
       - paths:
           deny:
             - .github/workflows/**
@@ -30,9 +32,9 @@ policies:
     gates:
       - ci_status:
           required:
-            - verify-requirements / verify-dev-requirements (3.12, py312-dev.txt)
-            - verify-requirements / verify-test-requirements (3.12, py312-test.txt)
-            - verify-requirements / verify-django-requirements (3.12, 4.2)
+            - Verify Requirements / verify-dev-requirements (3.12, py312-dev.txt)
+            - Verify Requirements / verify-test-requirements (3.12, py312-test.txt)
+            - Verify Requirements / verify-django-requirements (3.12, 4.2)
       - paths:
           deny:
             - .github/workflows/**

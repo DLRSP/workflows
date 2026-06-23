@@ -55,8 +55,8 @@ jobs:
             .github/actions/evaluate-bot-policy
           sparse-checkout-cone-mode: false
 
-      - name: Evaluate bot policy
-        if: contains(fromJSON('["dependabot[bot]"]'), github.actor)
+      - name: Fetch dependabot metadata
+        if: github.event.pull_request.user.login == 'dependabot[bot]'
         id: dependabot-metadata
         uses: dependabot/fetch-metadata@v2
         with:
@@ -76,17 +76,13 @@ jobs:
             ${{ inputs.dependabot-update-type != '' && inputs.dependabot-update-type
             || steps.dependabot-metadata.outputs.update-type }}
 
-      - name: Approve pull request
-        if: steps.evaluate.outputs.decision == 'approve' && contains(steps.evaluate.outputs.actions, 'approve')
-        run: gh pr review --approve "${{ github.event.pull_request.html_url }}"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Create App installation token
         if: >-
           steps.evaluate.outputs.decision == 'approve'
-          && contains(steps.evaluate.outputs.actions, 'enable_auto_merge')
-          && inputs.enable-auto-merge
+          && (
+            contains(steps.evaluate.outputs.actions, 'approve')
+            || contains(steps.evaluate.outputs.actions, 'enable_auto_merge')
+          )
         id: dlrsp-token
         uses: ./dlrsp-workflows/.github/actions/dlrsp-actions-token
         with:
@@ -96,6 +92,12 @@ jobs:
           permission-pull-requests: write
           permission-actions: read
           permission-metadata: read
+
+      - name: Approve pull request
+        if: steps.evaluate.outputs.decision == 'approve' && contains(steps.evaluate.outputs.actions, 'approve')
+        run: gh pr review --approve "${{ github.event.pull_request.html_url }}"
+        env:
+          GH_TOKEN: ${{ steps.dlrsp-token.outputs.token }}
 
       - name: Enable auto-merge
         if: >-

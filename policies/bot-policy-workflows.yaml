@@ -1,6 +1,8 @@
 version: 1
 trusted_actors:
   - dlrsp-actions[bot]
+  - dependabot[bot]
+  - pre-commit-ci[bot]
 shim_actors:
   - dlrsp-bot
 policies:

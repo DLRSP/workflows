@@ -2,7 +2,6 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-POLICY="${ROOT}/../../../policies/bot-policy.yaml"
 EVALUATE="${ROOT}/evaluate.sh"
 FIXTURES="${ROOT}/tests/fixtures"
 STUB_GH="${ROOT}/tests/bin/stub-gh"
@@ -25,6 +24,7 @@ run_case() {
   name="$(basename "${case_dir}")"
   # shellcheck disable=SC1090
   source "${case_dir}/env.sh"
+  local policy_file="${ROOT}/../../../${POLICY_PATH:-policies/bot-policy.yaml}"
 
   export GITHUB_REPOSITORY="${GITHUB_REPOSITORY:?}"
   export GITHUB_OUTPUT
@@ -38,7 +38,7 @@ run_case() {
   chmod +x "${ROOT}/tests/bin/gh" "${EVALUATE}"
 
   : >"${GITHUB_OUTPUT}"
-  "${EVALUATE}" "${POLICY}" "${ACTOR}" "${PR_NUMBER}" "${DRAFT:-false}" "${DEP_UPDATE_TYPE:-}"
+  "${EVALUATE}" "${policy_file}" "${ACTOR}" "${PR_NUMBER}" "${DRAFT:-false}" "${DEP_UPDATE_TYPE:-}"
 
   actual_decision="$(read_output decision "${GITHUB_OUTPUT}")"
   if [[ "${actual_decision}" != "${EXPECTED_DECISION}" ]]; then

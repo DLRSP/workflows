@@ -1,0 +1,5 @@
+[
+  {"name": "Verify Requirements / verify-dev-requirements (3.12, py312-dev.txt)", "status": "COMPLETED", "conclusion": "SUCCESS"},
+  {"name": "Verify Requirements / verify-test-requirements (3.12, py312-test.txt)", "status": "COMPLETED", "conclusion": "SUCCESS"},
+  {"name": "Verify Requirements / verify-django-requirements (3.12, 4.2)", "status": "COMPLETED", "conclusion": "SUCCESS"}
+]
