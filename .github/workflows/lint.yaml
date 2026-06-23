@@ -159,6 +159,9 @@ jobs:
       - name: Register problem matcher
         run: |
           echo "::add-matcher::.github/labeller-file-based.yaml"
+      - name: Install actionlint dependencies
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
       - name: Run actionlint
         # XXX actionlint triggers this error:
         #   Error: .github/workflows/release.yaml:198:27:
@@ -172,7 +175,6 @@ jobs:
           )
           "${{ steps.install_actionlint.outputs.executable }}" \
             -color \
-            -shellcheck=false \
             -ignore 'property "workflow_update_github_pat" is not defined in .+' \
             -ignore 'calling function "hashFiles" is not allowed here' \
             "${workflow_files[@]}"
@@ -231,7 +233,7 @@ jobs:
 
           exit_code = os.getenv("lychee_exit_code")
           print(f"Lychee exit code: {exit_code!r} (type: {type(exit_code)})")
-          broken_links_found = bool(int(exit_code))
+          broken_links_found = bool(int(exit_code or 0))
           if broken_links_found:
               print("Broken links found: create or update an issue.")
           else:

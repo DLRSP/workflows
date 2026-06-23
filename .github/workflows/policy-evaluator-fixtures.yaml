@@ -32,6 +32,4 @@ jobs:
           done
 
       - name: Run offline fixtures
-        env:
-          POLICY_CI_PENDING_WAIT_SEC: "0"
         run: bash .github/actions/evaluate-bot-policy/tests/run-fixtures.sh
