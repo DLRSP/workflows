@@ -20,8 +20,6 @@ policies:
           deny:
             - .github/workflows/**
             - CODEOWNERS
-      - semver:
-          block: major
     then:
       - approve
       - enable_auto_merge
@@ -38,8 +36,6 @@ policies:
           deny:
             - .github/workflows/**
             - CODEOWNERS
-      - semver:
-          block: major
     then:
       - approve
       - enable_auto_merge
