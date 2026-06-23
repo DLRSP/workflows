@@ -25,6 +25,10 @@ inputs:
     description: metadata permission for the installation token
     required: false
     default: read
+  permission-issues:
+    description: issues permission for the installation token
+    required: false
+    default: read
   owner:
     description: Optional org owner for cross-repository installation token
     required: false
@@ -65,3 +69,4 @@ runs:
         permission-pull-requests: ${{ inputs.permission-pull-requests }}
         permission-actions: ${{ inputs.permission-actions }}
         permission-metadata: ${{ inputs.permission-metadata }}
+        permission-issues: ${{ inputs.permission-issues }}
