@@ -20,6 +20,9 @@
 - Migrate merge-conflict labels and broken-link issues to `dlrsp-actions` App token.
 - Trust `app/dlrsp-actions` PR author; skip self-approve; admin-merge self-authored bot PRs.
 - Release tag pushes use `dlrsp-actions[bot]` git identity and App token.
+- Workflows bot policy: no semver-major block (full CI matrix validates dev dep majors).
+- Policy gate clears stale `needs-human-review` on approve; changelog version-increments non-blocking.
+- CodeQL steps tolerate repos without GitHub Advanced Security enabled.
 
 ## [1.19.0 (2026-06-15)](https://github.com/DLRSP/workflows/compare/v1.18.3...v1.19.0)
 

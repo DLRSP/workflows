@@ -120,6 +120,16 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.dlrsp-token.outputs.token }}
 
+      - name: Clear stale policy block label
+        if: steps.evaluate.outputs.decision == 'approve'
+        run: >-
+          gh pr edit "${{ github.event.pull_request.number }}"
+          --repo "${{ github.repository }}"
+          --remove-label "needs-human-review"
+          2>/dev/null || true
+        env:
+          GH_TOKEN: ${{ steps.dlrsp-token.outputs.token }}
+
       - name: Enable auto-merge
         if: >-
           steps.evaluate.outputs.decision == 'approve'

@@ -207,16 +207,19 @@ jobs:
 
     - name: Initialize CodeQL
       if: ${{ always() && hashFiles('setup.py', 'pyproject.toml', 'tox.ini') }}
+      continue-on-error: true
       uses: github/codeql-action/init@v4
       with:
         languages: ${{ matrix.language }}
 
     - name: Autobuild
       if: ${{ always() && hashFiles('setup.py', 'pyproject.toml', 'tox.ini') }}
+      continue-on-error: true
       uses: github/codeql-action/autobuild@v4
 
     - name: Perform CodeQL Analysis
       if: ${{ always() && hashFiles('setup.py', 'pyproject.toml', 'tox.ini') }}
+      continue-on-error: true
       uses: github/codeql-action/analyze@v4
 
   policy-gate:

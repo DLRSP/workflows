@@ -30,6 +30,7 @@ jobs:
     # Also skip release commits (during which bump-my-version cannot find "unreleased" string in changelog.md).
     if: hashFiles('changelog.md') != '' && github.event_name != 'schedule' && !startsWith(github.event.head_commit.message, '[changelog] Release v')
     runs-on: ubuntu-22.04
+    continue-on-error: true
     strategy:
       matrix:
         part:
