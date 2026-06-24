@@ -23,6 +23,7 @@
 - Workflows bot policy: no semver-major block (full CI matrix validates dev dep majors).
 - Policy gate clears stale `needs-human-review` on approve; changelog version-increments non-blocking.
 - CodeQL steps tolerate repos without GitHub Advanced Security enabled.
+- broken-links: App token when org secrets available; GITHUB_TOKEN fallback on dependabot PRs; add permission-issues to dlrsp-actions-token.
 
 ## [1.19.0 (2026-06-15)](https://github.com/DLRSP/workflows/compare/v1.18.3...v1.19.0)
 
