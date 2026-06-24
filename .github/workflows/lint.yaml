@@ -193,7 +193,7 @@ jobs:
     steps:
       - name: Create App installation token
         id: dlrsp-token
-        if: ${{ secrets.DLRSP_ACTIONS_APP_ID != '' && secrets.DLRSP_ACTIONS_PRIVATE_KEY != '' }}
+        continue-on-error: true
         uses: DLRSP/workflows/.github/actions/dlrsp-actions-token@main
         with:
           github-app-id: ${{ secrets.DLRSP_ACTIONS_APP_ID }}
@@ -201,10 +201,24 @@ jobs:
           permission-issues: write
           permission-metadata: read
 
+      - name: Resolve GitHub token
+        id: gh-token
+        shell: bash
+        env:
+          APP_TOKEN: ${{ steps.dlrsp-token.outputs.token }}
+          FALLBACK_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${APP_TOKEN}" ]]; then
+            echo "token=${APP_TOKEN}" >> "$GITHUB_OUTPUT"
+          else
+            echo "token=${FALLBACK_TOKEN}" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/checkout@v6
       - uses: lycheeverse/lychee-action@v2.7.0
         env:
-          GITHUB_TOKEN: ${{ steps.dlrsp-token.outputs.token || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.gh-token.outputs.token }}
         with:
           # XXX Skip twitter.com which is blackholing requests from GitHub, and HN because of rate-limiting.
           # See: https://github.com/lycheeverse/lychee/issues/989#issuecomment-1587208730
@@ -218,7 +232,7 @@ jobs:
       - name: List open issues
         id: open_issues
         env:
-          GH_TOKEN: ${{ steps.dlrsp-token.outputs.token || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.gh-token.outputs.token }}
         run: |
           issues="$(gh issue list --repo "${{ github.repository }}" --state open \
             --json number,title,author \
@@ -275,7 +289,7 @@ jobs:
       - name: Close old issues
         if: steps.issue_groups.outputs.close_issues
         env:
-          GH_TOKEN: ${{ steps.dlrsp-token.outputs.token || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.gh-token.outputs.token }}
         run: |
           NUMBER_LIST="${{ steps.issue_groups.outputs.close_issues }}"
           for number in $NUMBER_LIST; do
@@ -291,7 +305,7 @@ jobs:
         if: fromJSON(steps.issue_groups.outputs.broken_links_found)
         uses: peter-evans/create-issue-from-file@v6.0.0
         env:
-          GITHUB_TOKEN: ${{ steps.dlrsp-token.outputs.token || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.gh-token.outputs.token }}
         with:
           title: "Broken links"
           issue-number: ${{ steps.issue_groups.outputs.update_issue }}
