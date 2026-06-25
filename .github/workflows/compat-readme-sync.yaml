@@ -44,12 +44,20 @@ jobs:
           permission-contents: write
           permission-metadata: read
 
-      - name: Checkout hub
-        uses: actions/checkout@v6
-        with:
-          repository: ${{ github.repository_owner }}/compatibility
-          token: ${{ steps.hub-token.outputs.token }}
-          path: hub
+      # Clone the hub, or initialise it when the repository is still empty
+      # (no main branch yet). actions/checkout cannot handle an empty repo.
+      - name: Prepare hub working copy
+        env:
+          HUB_URL: https://x-access-token:${{ steps.hub-token.outputs.token }}@github.com/${{ github.repository_owner }}/compatibility
+        run: |
+          if git clone --depth 1 "$HUB_URL" hub 2>/dev/null; then
+            echo "cloned existing hub"
+          else
+            echo "empty hub; initialising main"
+            mkdir -p hub
+            git -C hub init -b main
+            git -C hub remote add origin "$HUB_URL"
+          fi
 
       - name: Render compatibility README
         uses: DLRSP/workflows/.github/actions/compat-readme@main
@@ -60,15 +68,15 @@ jobs:
       - name: Commit README to hub
         working-directory: hub
         run: |
-          if git diff --quiet -- README.md; then
+          git add README.md
+          if git diff --cached --quiet; then
             echo "README already up to date"
             exit 0
           fi
           git config user.name "dlrsp-actions[bot]"
           git config user.email "dlrsp-actions[bot]@users.noreply.github.com"
-          git add README.md
           git commit -m "docs: refresh compatibility timeline"
-          git push
+          git push origin HEAD:main
 
   verify-timeline:
     name: Verify timeline vs endoflife.date
