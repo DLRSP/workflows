@@ -29,6 +29,13 @@ inputs:
     description: issues permission for the installation token
     required: false
     default: read
+  permission-organization-projects:
+    description: >-
+      organization Projects (v2) permission for the installation token; requires
+      the App to be granted org Projects access and an org-scoped token (set
+      owner). Leave empty to not request it.
+    required: false
+    default: ""
   owner:
     description: Optional org owner for cross-repository installation token
     required: false
@@ -70,3 +77,4 @@ runs:
         permission-actions: ${{ inputs.permission-actions }}
         permission-metadata: ${{ inputs.permission-metadata }}
         permission-issues: ${{ inputs.permission-issues }}
+        permission-organization-projects: ${{ inputs.permission-organization-projects }}

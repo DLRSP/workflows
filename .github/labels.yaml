@@ -62,3 +62,15 @@
 - name: 🚫 wont do/fix
   color: "#cfd3d7"
   description: This will not be worked on
+
+- name: 🐍 compat:python
+  color: "#306998"
+  description: Python version compatibility work (link to the compat milestone)
+
+- name: 🟩 compat:django
+  color: "#0C4B33"
+  description: Django version compatibility work (link to the compat milestone)
+
+- name: 🧹 deprecation-cleanup
+  color: "#5319E7"
+  description: Remove code deprecated in the version targeted by the compat milestone
