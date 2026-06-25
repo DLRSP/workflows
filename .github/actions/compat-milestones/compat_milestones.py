@@ -27,7 +27,8 @@ import yaml
 
 API = "https://api.github.com"
 DEFAULT_TIMELINE = (
-    "https://raw.githubusercontent.com/DLRSP/workflows/{ref}/.github/compat-timeline.yaml"
+    "https://raw.githubusercontent.com/DLRSP/workflows/"
+    "{ref}/.github/compat-timeline.yaml"
 )
 
 
