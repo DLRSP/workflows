@@ -1,0 +1,33 @@
+name: Compat README render
+description: >-
+  Render the compatibility hub README from compat-timeline.yaml: a Mermaid
+  gantt plus Python and Django (LTS) tables, inside generated markers. Writes
+  the file in place; the caller commits it to the hub repository.
+inputs:
+  timeline-file:
+    description: Path to compat-timeline.yaml in the checkout
+    required: true
+  out:
+    description: README path to write
+    required: false
+    default: README.md
+  warn-days:
+    description: EOL-soon threshold in days
+    required: false
+    default: "180"
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v6
+      with:
+        python-version: "3.x"
+
+    - name: Render compatibility README
+      shell: bash
+      env:
+        TIMELINE_FILE: ${{ inputs.timeline-file }}
+        OUT: ${{ inputs.out }}
+        WARN_DAYS: ${{ inputs.warn-days }}
+      run: |
+        python -m pip install --quiet pyyaml
+        python "${{ github.action_path }}/compat_readme.py"

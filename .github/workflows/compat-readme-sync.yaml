@@ -1,0 +1,111 @@
+---
+name: Compat README & timeline sync
+
+# Keeps the compatibility hub current from the single source of truth
+# (.github/compat-timeline.yaml):
+#   - render the hub README (Mermaid gantt + Python/Django LTS tables) and push
+#     it to DLRSP/compatibility;
+#   - verify the timeline against endoflife.date and open a pull request here
+#     when an upstream Python/Django date drifts.
+# Runs only on DLRSP/workflows (dispatch + weekly), never via workflow_call.
+"on":
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/compat-timeline.yaml
+  schedule:
+    # Monday 05:37 UTC, after the board (05:07) and rollup (05:27) syncs.
+    - cron: '37 5 * * 1'
+
+concurrency:
+  group: compat-readme-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  readme:
+    name: Render hub README
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout workflows (timeline source)
+        uses: actions/checkout@v6
+
+      - name: Create hub App token
+        id: hub-token
+        uses: DLRSP/workflows/.github/actions/dlrsp-actions-token@main
+        with:
+          github-app-id: ${{ secrets.DLRSP_ACTIONS_APP_ID }}
+          github-app-private-key: ${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: compatibility
+          permission-contents: write
+          permission-metadata: read
+
+      - name: Checkout hub
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ github.repository_owner }}/compatibility
+          token: ${{ steps.hub-token.outputs.token }}
+          path: hub
+
+      - name: Render compatibility README
+        uses: DLRSP/workflows/.github/actions/compat-readme@main
+        with:
+          timeline-file: .github/compat-timeline.yaml
+          out: hub/README.md
+
+      - name: Commit README to hub
+        working-directory: hub
+        run: |
+          if git diff --quiet -- README.md; then
+            echo "README already up to date"
+            exit 0
+          fi
+          git config user.name "dlrsp-actions[bot]"
+          git config user.email "dlrsp-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "docs: refresh compatibility timeline"
+          git push
+
+  verify-timeline:
+    name: Verify timeline vs endoflife.date
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout workflows
+        uses: actions/checkout@v6
+
+      - name: Create App token (timeline PR)
+        id: pr-token
+        uses: DLRSP/workflows/.github/actions/dlrsp-actions-token@main
+        with:
+          github-app-id: ${{ secrets.DLRSP_ACTIONS_APP_ID }}
+          github-app-private-key: ${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: workflows
+          permission-contents: write
+          permission-pull-requests: write
+          permission-metadata: read
+
+      - name: Verify timeline against endoflife.date
+        id: sync
+        uses: DLRSP/workflows/.github/actions/compat-eol-sync@main
+        with:
+          timeline-file: .github/compat-timeline.yaml
+          summary-file: ${{ runner.temp }}/compat-drift.md
+
+      - name: Open timeline sync PR
+        if: steps.sync.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ steps.pr-token.outputs.token }}
+          add-paths: .github/compat-timeline.yaml
+          branch: compat/timeline-sync
+          base: main
+          delete-branch: true
+          commit-message: "chore(compat): sync timeline with endoflife.date"
+          title: "chore(compat): sync timeline with endoflife.date"
+          body-path: ${{ runner.temp }}/compat-drift.md
+          labels: compat
