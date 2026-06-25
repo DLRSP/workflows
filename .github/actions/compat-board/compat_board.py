@@ -93,17 +93,31 @@ def _org_id(org, token):
     return data["organization"]["id"]
 
 
-def _find_project(org, title, token):
+def _list_org_projects(org, token):
     data = _graphql(
         "query($login:String!){organization(login:$login){"
         "projectsV2(first:100){nodes{id title number}}}}",
         token,
         {"login": org},
     )
-    for node in data["organization"]["projectsV2"]["nodes"]:
+    return data["organization"]["projectsV2"]["nodes"]
+
+
+def _find_project(org, title, token):
+    for node in _list_org_projects(org, token):
         if node["title"] == title:
             return node
     return None
+
+
+def _get_project_by_number(org, number, token):
+    data = _graphql(
+        "query($login:String!,$n:Int!){organization(login:$login){"
+        "projectV2(number:$n){id title number}}}",
+        token,
+        {"login": org, "n": number},
+    )
+    return data["organization"]["projectV2"]
 
 
 def _create_project(owner_id, title, token):
@@ -275,12 +289,21 @@ def main():
     token = os.environ["GH_TOKEN"]
     org = os.environ["ORG"]
     project_title = os.environ.get("PROJECT_TITLE", "Compatibility Roadmap")
+    project_number = os.environ.get("PROJECT_NUMBER", "").strip()
     dry_run = os.environ.get("DRY_RUN") == "1"
 
     desired = _discover(org, token)
     print(f"discovered {len(desired)} compat milestone(s) across the fleet")
 
-    project = _find_project(org, project_title, token)
+    project = None
+    if project_number:
+        project = _get_project_by_number(org, int(project_number), token)
+        if project:
+            print(
+                f"resolved project #{project['number']} '{project['title']}' by number"
+            )
+    if project is None:
+        project = _find_project(org, project_title, token)
 
     if dry_run:
         if project is None:
@@ -297,15 +320,19 @@ def main():
         return
 
     if project is None:
+        visible = _list_org_projects(org, token)
+        listing = ", ".join(f"#{p['number']} '{p['title']}'" for p in visible) or "none"
+        print(f"::warning::App sees these org projects: {listing}")
         try:
             project = _create_project(_org_id(org, token), project_title, token)
         except RuntimeError as exc:
             if "FORBIDDEN" in str(exc) or "create projects" in str(exc):
                 print(
                     f"::error::Project '{project_title}' not found and the App "
-                    "cannot create org projects. Create it once in the org "
-                    "(Projects > New project), set its title to exactly "
-                    f"'{project_title}', then re-run this workflow."
+                    "cannot create org projects. Ensure the project is org-owned "
+                    "(orgs/<org>/projects), titled exactly "
+                    f"'{project_title}' or addressed via PROJECT_NUMBER, then "
+                    "re-run this workflow."
                 )
                 sys.exit(1)
             raise
