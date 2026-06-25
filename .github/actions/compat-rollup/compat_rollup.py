@@ -38,6 +38,8 @@ TIMELINE_URL = (
     "{ref}/.github/compat-timeline.yaml"
 )
 LABEL = "compat-rollup"
+EOL_SOON = "eol-soon"
+EOL_WARN_DAYS = 180
 TEMPLATE_REPO = "django-pkg"
 
 
@@ -99,6 +101,7 @@ def _active_versions(ref):
                     "version": str(entry["version"]),
                     "release": entry.get("release", ""),
                     "eol": entry["eol"],
+                    "days_to_eol": (eol - today).days,
                 }
             )
     return rows
@@ -143,7 +146,7 @@ def _discover_packages(org, token, override):
     return packages
 
 
-def _ensure_label(repo, token, dry_run):
+def _ensure_label(repo, token, name, color, description, dry_run):
     if dry_run:
         return
     try:
@@ -151,15 +154,25 @@ def _ensure_label(repo, token, dry_run):
             "POST",
             f"{API}/repos/{repo}/labels",
             token,
-            {
-                "name": LABEL,
-                "color": "1d76db",
-                "description": "Org compatibility rollup (parent/sub-issues)",
-            },
+            {"name": name, "color": color, "description": description},
         )
     except urllib.error.HTTPError as exc:
         if exc.code != 422:  # already exists
             raise
+
+
+def _add_labels(repo, token, number, labels, dry_run):
+    if not labels:
+        return
+    if dry_run:
+        print(f"[dry-run] add labels {labels} to #{number}")
+        return
+    _request(
+        "POST",
+        f"{API}/repos/{repo}/issues/{number}/labels",
+        token,
+        {"labels": labels},
+    )
 
 
 def _existing_issues(repo, token):
@@ -171,7 +184,8 @@ def _existing_issues(repo, token):
     return issues
 
 
-def _ensure_issue(repo, token, title, body, want_state, existing, dry_run):
+def _ensure_issue(repo, token, title, body, want_state, existing, dry_run, labels=None):
+    labels = labels or [LABEL]
     issue = existing.get(title)
     if issue is None:
         if dry_run:
@@ -181,7 +195,7 @@ def _ensure_issue(repo, token, title, body, want_state, existing, dry_run):
             "POST",
             f"{API}/repos/{repo}/issues",
             token,
-            {"title": title, "body": body, "labels": [LABEL]},
+            {"title": title, "body": body, "labels": labels},
         )
     if issue.get("state") != want_state:
         if dry_run:
@@ -222,6 +236,25 @@ def _link_sub_issue(repo, token, parent_number, child_id, linked, dry_run):
             raise
 
 
+def _close_stale(repo, token, existing, active_titles, dry_run):
+    """Close rollup issues no longer in the active set (version past EOL)."""
+    closed = 0
+    for title, issue in existing.items():
+        if title in active_titles or issue.get("state") == "closed":
+            continue
+        if dry_run:
+            print(f"[dry-run] close stale '{title}'")
+        else:
+            _request(
+                "PATCH",
+                f"{API}/repos/{repo}/issues/{issue['number']}",
+                token,
+                {"state": "closed", "state_reason": "completed"},
+            )
+        closed += 1
+    return closed
+
+
 def main():
     token = os.environ["GH_TOKEN"]
     org = os.environ["ORG"]
@@ -238,21 +271,52 @@ def main():
         f"on {hub}"
     )
 
-    _ensure_label(hub, token, dry_run)
+    _ensure_label(
+        hub,
+        token,
+        LABEL,
+        "1d76db",
+        "Org compatibility rollup (parent/sub-issues)",
+        dry_run,
+    )
+    _ensure_label(
+        hub,
+        token,
+        EOL_SOON,
+        "d93f0b",
+        f"End of life within {EOL_WARN_DAYS} days",
+        dry_run,
+    )
     existing = {} if dry_run else _existing_issues(hub, token)
 
-    parents = subs = supported = 0
+    active_titles = set()
+    parents = subs = supported = soon = 0
     for ver in versions:
         eco, num = ver["ecosystem"], ver["version"]
+        near = ver["days_to_eol"] <= EOL_WARN_DAYS
         ptitle = f"compat: {eco} {num}"
+        active_titles.add(ptitle)
+        countdown = (
+            f"EOL in {ver['days_to_eol']} days." if near else f"EOL {ver['eol']}."
+        )
         pbody = (
             f"Tracks {eco} {num} compatibility across published DLRSP packages.\n\n"
-            f"Released {ver['release'] or 'n/a'}; end of life {ver['eol']}.\n\n"
+            f"Released {ver['release'] or 'n/a'}; {countdown}\n\n"
             "Each sub-issue is one package: closed = already declares support, "
             "open = still needs adaptation."
         )
-        parent = _ensure_issue(hub, token, ptitle, pbody, "open", existing, dry_run)
+        plabels = [LABEL, EOL_SOON] if near else [LABEL]
+        parent = _ensure_issue(
+            hub, token, ptitle, pbody, "open", existing, dry_run, plabels
+        )
         parents += 1
+        if near:
+            soon += 1
+            current = existing.get(ptitle)
+            if current is not None:
+                have = {lbl["name"] for lbl in current.get("labels", [])}
+                if EOL_SOON not in have:
+                    _add_labels(hub, token, current["number"], [EOL_SOON], dry_run)
         linked = (
             set()
             if dry_run or parent is None
@@ -270,6 +334,7 @@ def main():
                 f"Repo https://github.com/{pkg['full']} - "
                 f"milestones https://github.com/{pkg['full']}/milestones"
             )
+            active_titles.add(stitle)
             want = "closed" if ok else "open"
             child = _ensure_issue(hub, token, stitle, sbody, want, existing, dry_run)
             subs += 1
@@ -278,9 +343,10 @@ def main():
                     hub, token, parent["number"], child["id"], linked, dry_run
                 )
 
+    closed = _close_stale(hub, token, existing, active_titles, dry_run)
     print(
         f"compat rollup on {hub}: parents={parents} sub-issues={subs} "
-        f"declared-supported={supported}"
+        f"declared-supported={supported} eol-soon={soon} retired={closed}"
     )
 
 
