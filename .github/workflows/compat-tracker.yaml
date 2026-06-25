@@ -1,0 +1,49 @@
+---
+name: Compat Tracker
+
+# Reusable workflow: keep per-repo Python/Django compatibility milestones in sync
+# with the shared timeline. Milestone writes use the dlrsp-actions App token
+# (AR-026); GITHUB_TOKEN stays read-only (avoids P-012 over-declaration).
+"on":
+  workflow_call:
+    inputs:
+      timeline-ref:
+        description: Ref of DLRSP/workflows to read the timeline from
+        required: false
+        type: string
+        default: main
+      dry-run:
+        description: When "1", report actions without writing
+        required: false
+        type: string
+        default: ""
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  milestones:
+    name: Sync compatibility milestones
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: Create App installation token
+        id: dlrsp-token
+        uses: DLRSP/workflows/.github/actions/dlrsp-actions-token@main
+        with:
+          github-app-id: ${{ secrets.DLRSP_ACTIONS_APP_ID }}
+          github-app-private-key: ${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}
+          permission-issues: write
+          permission-pull-requests: write
+          permission-metadata: read
+
+      - name: Sync milestones from timeline
+        uses: DLRSP/workflows/.github/actions/compat-milestones@main
+        with:
+          repository: ${{ github.repository }}
+          github-token: ${{ steps.dlrsp-token.outputs.token }}
+          timeline-ref: ${{ inputs.timeline-ref }}
+          dry-run: ${{ inputs.dry-run }}

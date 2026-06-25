@@ -1,0 +1,60 @@
+# Single source of truth for Python and Django release / end-of-life dates.
+# Consumed by:
+#   - .github/workflows/compat-tracker.yaml  (CI: per-repo milestones)
+#   - ~/.cursor/context/dlrsp/scripts/compat_board_sync.py  (agent/local: verify + board)
+# Dates verified 2026-06-25 (python.org devguide, djangoproject.com). Future
+# rows are scheduled and may shift; keep this file as the only place to update.
+updated: "2026-06-25"
+
+python:
+  - version: "3.9"
+    release: "2020-10-05"
+    eol: "2025-10-31"
+  - version: "3.10"
+    release: "2021-10-04"
+    eol: "2026-10-31"
+  - version: "3.11"
+    release: "2022-10-24"
+    eol: "2027-10-31"
+  - version: "3.12"
+    release: "2023-10-02"
+    eol: "2028-10-31"
+  - version: "3.13"
+    release: "2024-10-07"
+    eol: "2029-10-31"
+  - version: "3.14"
+    release: "2025-10-07"
+    eol: "2030-10-31"
+  - version: "3.15"
+    release: "2026-10-01"
+    eol: "2031-10-31"
+
+django:
+  - version: "3.2"
+    lts: true
+    release: "2021-04-06"
+    eol: "2024-04-01"
+  - version: "4.2"
+    lts: true
+    release: "2023-04-03"
+    eol: "2026-04-07"
+  - version: "5.1"
+    lts: false
+    release: "2024-08-07"
+    eol: "2025-12-03"
+  - version: "5.2"
+    lts: true
+    release: "2025-04-02"
+    eol: "2028-04-30"
+  - version: "6.0"
+    lts: false
+    release: "2025-12-03"
+    eol: "2027-04-30"
+  - version: "6.1"
+    lts: false
+    release: "2026-08-05"
+    eol: "2027-12-31"
+  - version: "6.2"
+    lts: true
+    release: "2027-04-01"
+    eol: "2030-04-30"
