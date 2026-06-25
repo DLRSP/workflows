@@ -2,8 +2,8 @@
 name: Compat Tracker
 
 # Reusable workflow: keep per-repo Python/Django compatibility milestones in sync
-# with the shared timeline. Milestone writes use the dlrsp-actions App token
-# (AR-026); GITHUB_TOKEN stays read-only (avoids P-012 over-declaration).
+# with the shared timeline. Milestone writes use the dlrsp-actions App token so
+# the default GITHUB_TOKEN can stay read-only (least privilege).
 "on":
   workflow_call:
     inputs:
