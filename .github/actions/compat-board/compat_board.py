@@ -297,7 +297,18 @@ def main():
         return
 
     if project is None:
-        project = _create_project(_org_id(org, token), project_title, token)
+        try:
+            project = _create_project(_org_id(org, token), project_title, token)
+        except RuntimeError as exc:
+            if "FORBIDDEN" in str(exc) or "create projects" in str(exc):
+                print(
+                    f"::error::Project '{project_title}' not found and the App "
+                    "cannot create org projects. Create it once in the org "
+                    "(Projects > New project), set its title to exactly "
+                    f"'{project_title}', then re-run this workflow."
+                )
+                sys.exit(1)
+            raise
         print(f"created org Project v2 #{project['number']} '{project_title}'")
     project_id = project["id"]
     fields = _ensure_fields(project_id, token)
