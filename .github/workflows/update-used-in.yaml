@@ -37,12 +37,12 @@ jobs:
           permission-contents: write
           permission-pull-requests: write
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           token: ${{ steps.dlrsp-token.outputs.token }}
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
@@ -55,7 +55,7 @@ jobs:
         run: python .github/scripts/update_used_in.py central --root .
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ steps.dlrsp-token.outputs.token }}
           commit-message: 'docs: update Used in section (workflows consumers)'
@@ -87,7 +87,7 @@ jobs:
           permission-contents: write
           permission-pull-requests: write
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           token: ${{ steps.dlrsp-token.outputs.token }}
@@ -101,7 +101,7 @@ jobs:
             echo "enabled=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         if: steps.used_in.outputs.enabled == 'true'
         with:
           repository: ${{ github.action_repository || 'DLRSP/workflows' }}
@@ -112,7 +112,7 @@ jobs:
           sparse-checkout-cone-mode: false
           token: ${{ steps.dlrsp-token.outputs.token }}
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         if: steps.used_in.outputs.enabled == 'true'
         with:
           python-version: '3.11'
@@ -129,7 +129,7 @@ jobs:
 
       - name: Create Pull Request
         if: steps.used_in.outputs.enabled == 'true'
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ steps.dlrsp-token.outputs.token }}
           commit-message: 'docs: sync Used in marker sections'
