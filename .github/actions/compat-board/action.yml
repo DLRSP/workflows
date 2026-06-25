@@ -18,6 +18,10 @@ inputs:
     description: Org Project v2 number to target directly (preferred over title)
     required: false
     default: "1"
+  timeline-ref:
+    description: Ref of DLRSP/workflows to read compat-timeline.yaml from
+    required: false
+    default: main
   dry-run:
     description: When "1", report actions without writing
     required: false
@@ -36,6 +40,8 @@ runs:
         ORG: ${{ inputs.org }}
         PROJECT_TITLE: ${{ inputs.project-title }}
         PROJECT_NUMBER: ${{ inputs.project-number }}
+        TIMELINE_REF: ${{ inputs.timeline-ref }}
         DRY_RUN: ${{ inputs.dry-run }}
       run: |
+        python -m pip install --quiet pyyaml
         python "${{ github.action_path }}/compat_board.py"

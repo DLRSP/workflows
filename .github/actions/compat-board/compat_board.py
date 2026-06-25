@@ -29,6 +29,8 @@ import sys
 import urllib.error
 import urllib.request
 
+import yaml
+
 API = "https://api.github.com"
 GRAPHQL = f"{API}/graphql"
 
@@ -36,9 +38,14 @@ FIELDS = {
     "Module": "TEXT",
     "Ecosystem": "SINGLE_SELECT",
     "Version": "TEXT",
+    "Released": "DATE",
     "EOL": "DATE",
     "Compat state": "SINGLE_SELECT",
 }
+TIMELINE_URL = (
+    "https://raw.githubusercontent.com/DLRSP/workflows/"
+    "{ref}/.github/compat-timeline.yaml"
+)
 ECOSYSTEM_OPTIONS = [
     {"name": "Python", "color": "BLUE", "description": "CPython runtime"},
     {"name": "Django", "color": "GREEN", "description": "Django framework"},
@@ -258,8 +265,31 @@ def _option_id(field, option_name):
     return None
 
 
-def _discover(org, token):
+def _release_map(ref):
+    """Map (ecosystem label, version) -> release date from the shared timeline.
+
+    Milestones only carry the EOL date (their due_on); the release date gives the
+    roadmap bars a start, so a roadmap view can show each version's full support
+    window (released -> EOL).
+    """
+    try:
+        with urllib.request.urlopen(TIMELINE_URL.format(ref=ref)) as resp:
+            timeline = yaml.safe_load(resp.read().decode())
+    except (urllib.error.URLError, yaml.YAMLError) as exc:
+        print(f"::warning::could not read timeline ({exc}); roadmap start omitted")
+        return {}
+    out = {}
+    for key, label in (("python", "Python"), ("django", "Django")):
+        for entry in timeline.get(key, []):
+            release = entry.get("release", "")
+            if release:
+                out[(label, str(entry["version"]))] = release
+    return out
+
+
+def _discover(org, token, release_map=None):
     """Yield desired board items from every repo carrying compat: milestones."""
+    release_map = release_map or {}
     rows = []
     repos = _rest_paginated(f"/orgs/{org}/repos?per_page=100&type=all", token)
     for repo in repos:
@@ -283,6 +313,7 @@ def _discover(org, token):
                     "full": full,
                     "ecosystem": ecosystem,
                     "version": version,
+                    "start": release_map.get((ecosystem, version), ""),
                     "eol": due,
                     "state": (
                         "EOL passed" if milestone.get("state") == "closed" else "Active"
@@ -298,9 +329,10 @@ def main():
     org = os.environ["ORG"]
     project_title = os.environ.get("PROJECT_TITLE", "Compatibility Roadmap")
     project_number = os.environ.get("PROJECT_NUMBER", "").strip()
+    timeline_ref = os.environ.get("TIMELINE_REF", "main")
     dry_run = os.environ.get("DRY_RUN") == "1"
 
-    desired = _discover(org, token)
+    desired = _discover(org, token, _release_map(timeline_ref))
     print(f"discovered {len(desired)} compat milestone(s) across the fleet")
 
     project = None
@@ -322,7 +354,8 @@ def main():
         for row in desired:
             print(
                 f"[dry-run] upsert '{row['title']}' "
-                f"(EOL {row['eol'] or 'n/a'}, {row['state']})"
+                f"(released {row['start'] or 'n/a'} -> EOL {row['eol'] or 'n/a'}, "
+                f"{row['state']})"
             )
         print(f"compat board: desired={len(desired)} (dry-run, no writes)")
         return
@@ -376,6 +409,10 @@ def main():
         state_opt = _option_id(state, row["state"]) if state else None
         if state_opt:
             _set_select(project_id, item_id, state["id"], state_opt, token)
+        if row["start"] and "Released" in fields:
+            _set_date(
+                project_id, item_id, fields["Released"]["id"], row["start"], token
+            )
         if row["eol"] and "EOL" in fields:
             _set_date(project_id, item_id, fields["EOL"]["id"], row["eol"], token)
 
