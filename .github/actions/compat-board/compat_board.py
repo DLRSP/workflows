@@ -174,8 +174,16 @@ def _create_field(project_id, name, dtype, token):
 def _ensure_fields(project_id, token):
     fields = _project_fields(project_id, token)
     for name, dtype in FIELDS.items():
-        if name not in fields:
+        if name in fields:
+            continue
+        print(f"creating field '{name}' ({dtype})")
+        try:
             _create_field(project_id, name, dtype, token)
+        except RuntimeError as exc:
+            if "reserved" in str(exc).lower():
+                print(f"::warning::field '{name}' is reserved by GitHub; skipping")
+                continue
+            raise
     return _project_fields(project_id, token)
 
 
@@ -354,17 +362,21 @@ def main():
             created += 1
         else:
             updated += 1
-        _set_text(project_id, item_id, fields["Repo"]["id"], row["repo"], token)
-        _set_text(project_id, item_id, fields["Version"]["id"], row["version"], token)
-        eco_opt = _option_id(fields["Ecosystem"], row["ecosystem"])
-        if eco_opt:
-            _set_select(project_id, item_id, fields["Ecosystem"]["id"], eco_opt, token)
-        state_opt = _option_id(fields["Compat state"], row["state"])
-        if state_opt:
-            _set_select(
-                project_id, item_id, fields["Compat state"]["id"], state_opt, token
+        if "Repo" in fields:
+            _set_text(project_id, item_id, fields["Repo"]["id"], row["repo"], token)
+        if "Version" in fields:
+            _set_text(
+                project_id, item_id, fields["Version"]["id"], row["version"], token
             )
-        if row["eol"]:
+        eco = fields.get("Ecosystem")
+        eco_opt = _option_id(eco, row["ecosystem"]) if eco else None
+        if eco_opt:
+            _set_select(project_id, item_id, eco["id"], eco_opt, token)
+        state = fields.get("Compat state")
+        state_opt = _option_id(state, row["state"]) if state else None
+        if state_opt:
+            _set_select(project_id, item_id, state["id"], state_opt, token)
+        if row["eol"] and "EOL" in fields:
             _set_date(project_id, item_id, fields["EOL"]["id"], row["eol"], token)
 
     print(
