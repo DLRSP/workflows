@@ -1,0 +1,49 @@
+---
+name: Compat Rollup Sync
+
+# Org-level hierarchy: one parent issue per active Python/Django version, with one
+# sub-issue per published package (closed when the package declares support). The
+# parent's native sub-issue progress reads as "compatible packages / total". A
+# single runner owns the hub repo issues. Writes use an org-scoped dlrsp-actions
+# App token (issues:write); GITHUB_TOKEN stays read-only. Runs only on
+# DLRSP/workflows, never via workflow_call.
+"on":
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: When "1", report actions without writing
+        required: false
+        default: ""
+  schedule:
+    # Monday 05:27 UTC, after the org board sync (05:07).
+    - cron: '27 5 * * 1'
+
+concurrency:
+  group: compat-rollup-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  rollup:
+    name: Sync org compatibility rollup
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Create org-scoped App token
+        id: dlrsp-token
+        uses: DLRSP/workflows/.github/actions/dlrsp-actions-token@main
+        with:
+          github-app-id: ${{ secrets.DLRSP_ACTIONS_APP_ID }}
+          github-app-private-key: ${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          permission-issues: write
+          permission-contents: read
+          permission-metadata: read
+
+      - name: Sync compatibility rollup
+        uses: DLRSP/workflows/.github/actions/compat-rollup@main
+        with:
+          org: ${{ github.repository_owner }}
+          github-token: ${{ steps.dlrsp-token.outputs.token }}
+          dry-run: ${{ inputs.dry-run }}
