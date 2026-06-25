@@ -1,0 +1,49 @@
+---
+name: Compat Board Sync
+
+# Org-level dashboard (Phase 2): mirror every repo's compat: milestones onto a
+# single organization Project v2 roadmap. A single runner owns the board, so
+# there is no race to create the project. Org Projects writes use an org-scoped
+# dlrsp-actions App token (organization-projects:write); GITHUB_TOKEN stays
+# read-only. Runs only on DLRSP/workflows, never via workflow_call.
+"on":
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: When "1", report actions without writing
+        required: false
+        default: ""
+  schedule:
+    # Monday 05:07 UTC, after the per-repo milestone callers (04:17).
+    - cron: '7 5 * * 1'
+
+concurrency:
+  group: compat-board-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  board:
+    name: Sync org compatibility board
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Create org-scoped App token
+        id: dlrsp-token
+        uses: DLRSP/workflows/.github/actions/dlrsp-actions-token@main
+        with:
+          github-app-id: ${{ secrets.DLRSP_ACTIONS_APP_ID }}
+          github-app-private-key: ${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          permission-organization-projects: write
+          permission-issues: read
+          permission-contents: read
+          permission-metadata: read
+
+      - name: Sync compatibility board
+        uses: DLRSP/workflows/.github/actions/compat-board@main
+        with:
+          org: ${{ github.repository_owner }}
+          github-token: ${{ steps.dlrsp-token.outputs.token }}
+          dry-run: ${{ inputs.dry-run }}

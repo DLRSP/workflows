@@ -1,0 +1,36 @@
+name: Compat board sync
+description: >-
+  Mirror per-repo compatibility milestones onto an org-level GitHub Project v2
+  roadmap (one draft item per repository x version). Requires an org-scoped
+  token with organization-projects:write and issues:read.
+inputs:
+  org:
+    description: Organization login that owns the Project v2
+    required: true
+  github-token:
+    description: Org-scoped App token (org Projects RW + issues read)
+    required: true
+  project-title:
+    description: Project v2 title to ensure/create
+    required: false
+    default: DLRSP Compatibility Roadmap
+  dry-run:
+    description: When "1", report actions without writing
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v6
+      with:
+        python-version: "3.x"
+
+    - name: Sync compatibility board
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        ORG: ${{ inputs.org }}
+        PROJECT_TITLE: ${{ inputs.project-title }}
+        DRY_RUN: ${{ inputs.dry-run }}
+      run: |
+        python "${{ github.action_path }}/compat_board.py"
