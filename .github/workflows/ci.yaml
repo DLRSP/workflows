@@ -28,6 +28,15 @@ on:
         required: false
         type: boolean
         default: false
+      build-binary-wheels:
+        description: >-
+          Run the per-OS cibuildwheel matrix. Leave false for pure-Python
+          packages (the whole django-* fleet): cibuildwheel aborts with
+          NonPlatformWheelError when only a pure-Python wheel is produced.
+          Set true only for packages that ship compiled extensions.
+        required: false
+        type: boolean
+        default: false
       policy-path:
         description: Bot policy file path inside DLRSP/workflows (policy gate)
         required: false
@@ -52,6 +61,11 @@ on:
         default: false
       assert-wheel-locks:
         description: Assert runtime locks embedded in wheel
+        required: false
+        type: boolean
+        default: false
+      build-binary-wheels:
+        description: Run the per-OS cibuildwheel matrix (compiled extensions only)
         required: false
         type: boolean
         default: false
@@ -360,7 +374,9 @@ jobs:
 
   build-cross:
     name: Build wheels on ${{ matrix.os }}
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+    if: >-
+      github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+      && inputs.build-binary-wheels
     needs: [test, analyze]
     runs-on: ${{ matrix.os }}
     strategy:
