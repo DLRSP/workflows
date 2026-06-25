@@ -86,6 +86,10 @@ def _active_versions(ref):
     rows = []
     for key, label in (("python", "Python"), ("django", "Django")):
         for entry in timeline.get(key, []):
+            # Django: LTS only (packages declare support for LTS, not for the
+            # fast-churning feature releases). Python has no LTS concept.
+            if key == "django" and not entry.get("lts"):
+                continue
             eol = dt.date.fromisoformat(entry["eol"])
             if eol < today:
                 continue
@@ -221,7 +225,7 @@ def _link_sub_issue(repo, token, parent_number, child_id, linked, dry_run):
 def main():
     token = os.environ["GH_TOKEN"]
     org = os.environ["ORG"]
-    hub = os.environ.get("HUB_REPO", f"{org}/workflows")
+    hub = os.environ.get("HUB_REPO", f"{org}/compatibility")
     ref = os.environ.get("TIMELINE_REF", "main")
     override = os.environ.get("PACKAGES", "")
     dry_run = os.environ.get("DRY_RUN") == "1"
