@@ -71,6 +71,11 @@ def _desired(timeline, today):
     rows = []
     for kind, label in (("python", "Python"), ("django", "Django")):
         for entry in timeline.get(kind, []):
+            # Django: track LTS only. Packages declare support for LTS releases;
+            # the intermediate feature releases churn too fast and would never be
+            # marked supported. Python has no LTS, so every minor is tracked.
+            if kind == "django" and not entry.get("lts"):
+                continue
             version = entry["version"]
             eol = dt.date.fromisoformat(entry["eol"])
             release = entry.get("release", "")
@@ -103,8 +108,11 @@ def main():
     today = dt.date.today()
     existing = _existing_milestones(repo, token)
 
-    created = updated = skipped = 0
-    for want in _desired(timeline, today):
+    desired = _desired(timeline, today)
+    desired_titles = {want["title"] for want in desired}
+
+    created = updated = skipped = removed = 0
+    for want in desired:
         current = existing.get(want["title"])
         if current is None:
             if want["state"] == "closed":
@@ -138,9 +146,25 @@ def main():
             )
         updated += 1
 
+    # Remove compat milestones that the policy no longer tracks (e.g. Django
+    # feature releases once we narrow tracking to LTS). Past-EOL LTS milestones
+    # stay in the desired set (closed), so only off-policy ones are deleted.
+    for title, current in existing.items():
+        if not title.startswith("compat: ") or title in desired_titles:
+            continue
+        if dry_run:
+            print(f"[dry-run] delete {title}")
+        else:
+            _request(
+                "DELETE",
+                f"{API}/repos/{repo}/milestones/{current['number']}",
+                token,
+            )
+        removed += 1
+
     print(
         f"compat milestones on {repo}: created={created} "
-        f"updated={updated} unchanged={skipped}"
+        f"updated={updated} unchanged={skipped} removed={removed}"
     )
 
 

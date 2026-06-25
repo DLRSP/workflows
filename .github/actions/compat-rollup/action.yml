@@ -14,7 +14,7 @@ inputs:
   hub-repo:
     description: owner/repo that holds parent + sub-issues
     required: false
-    default: DLRSP/workflows
+    default: DLRSP/compatibility
   timeline-ref:
     description: Ref of DLRSP/workflows to read compat-timeline.yaml from
     required: false
