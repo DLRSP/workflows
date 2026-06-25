@@ -11,9 +11,9 @@ inputs:
     description: Org-scoped App token (org Projects RW + issues read)
     required: true
   project-title:
-    description: Project v2 title to ensure/create
+    description: Project v2 title to find/create
     required: false
-    default: DLRSP Compatibility Roadmap
+    default: Compatibility Roadmap
   dry-run:
     description: When "1", report actions without writing
     required: false

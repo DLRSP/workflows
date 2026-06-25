@@ -274,7 +274,7 @@ def _discover(org, token):
 def main():
     token = os.environ["GH_TOKEN"]
     org = os.environ["ORG"]
-    project_title = os.environ.get("PROJECT_TITLE", "DLRSP Compatibility Roadmap")
+    project_title = os.environ.get("PROJECT_TITLE", "Compatibility Roadmap")
     dry_run = os.environ.get("DRY_RUN") == "1"
 
     desired = _discover(org, token)
