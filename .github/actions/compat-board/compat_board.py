@@ -136,9 +136,12 @@ def _create_field(project_id, name, dtype, token):
     if dtype == "SINGLE_SELECT":
         options = ECOSYSTEM_OPTIONS if name == "Ecosystem" else STATE_OPTIONS
         data = _graphql(
-            "mutation($p:ID!,$name:String!,$opts:[ProjectV2SingleSelectFieldOptionInput!]!){"
-            "createProjectV2Field(input:{projectId:$p,dataType:SINGLE_SELECT,name:$name,"
-            "singleSelectOptions:$opts}){projectV2Field{... on ProjectV2SingleSelectField{"
+            "mutation($p:ID!,$name:String!,"
+            "$opts:[ProjectV2SingleSelectFieldOptionInput!]!){"
+            "createProjectV2Field(input:{projectId:$p,"
+            "dataType:SINGLE_SELECT,name:$name,"
+            "singleSelectOptions:$opts}){projectV2Field{"
+            "... on ProjectV2SingleSelectField{"
             "id name options{id name}}}}}",
             token,
             {"p": project_id, "name": name, "opts": options},
@@ -167,7 +170,8 @@ def _existing_items(project_id, token):
     cursor = None
     while True:
         data = _graphql(
-            "query($p:ID!,$c:String){node(id:$p){... on ProjectV2{items(first:100,after:$c){"
+            "query($p:ID!,$c:String){node(id:$p){"
+            "... on ProjectV2{items(first:100,after:$c){"
             "pageInfo{hasNextPage endCursor} nodes{id content{__typename "
             "... on DraftIssue{title}}}}}}}",
             token,
@@ -197,8 +201,9 @@ def _add_draft(project_id, title, body, token):
 
 def _set_text(project_id, item_id, field_id, value, token):
     _graphql(
-        "mutation($p:ID!,$i:ID!,$f:ID!,$v:String!){updateProjectV2ItemFieldValue("
-        "input:{projectId:$p,itemId:$i,fieldId:$f,value:{text:$v}}){projectV2Item{id}}}",
+        "mutation($p:ID!,$i:ID!,$f:ID!,$v:String!){"
+        "updateProjectV2ItemFieldValue(input:{projectId:$p,itemId:$i,"
+        "fieldId:$f,value:{text:$v}}){projectV2Item{id}}}",
         token,
         {"p": project_id, "i": item_id, "f": field_id, "v": value},
     )
@@ -206,8 +211,9 @@ def _set_text(project_id, item_id, field_id, value, token):
 
 def _set_date(project_id, item_id, field_id, value, token):
     _graphql(
-        "mutation($p:ID!,$i:ID!,$f:ID!,$v:Date!){updateProjectV2ItemFieldValue("
-        "input:{projectId:$p,itemId:$i,fieldId:$f,value:{date:$v}}){projectV2Item{id}}}",
+        "mutation($p:ID!,$i:ID!,$f:ID!,$v:Date!){"
+        "updateProjectV2ItemFieldValue(input:{projectId:$p,itemId:$i,"
+        "fieldId:$f,value:{date:$v}}){projectV2Item{id}}}",
         token,
         {"p": project_id, "i": item_id, "f": field_id, "v": value},
     )
@@ -256,7 +262,9 @@ def _discover(org, token):
                     "ecosystem": ecosystem,
                     "version": version,
                     "eol": due,
-                    "state": "EOL passed" if milestone.get("state") == "closed" else "Active",
+                    "state": (
+                        "EOL passed" if milestone.get("state") == "closed" else "Active"
+                    ),
                     "title": f"{repo['name']} \u00b7 {ecosystem} {version}",
                 }
             )
@@ -276,7 +284,10 @@ def main():
 
     if dry_run:
         if project is None:
-            print(f"[dry-run] create org Project v2 '{project_title}' + fields {list(FIELDS)}")
+            print(
+                f"[dry-run] create org Project v2 '{project_title}'"
+                f" + fields {list(FIELDS)}"
+            )
         for row in desired:
             print(
                 f"[dry-run] upsert '{row['title']}' "
@@ -312,7 +323,9 @@ def main():
             _set_select(project_id, item_id, fields["Ecosystem"]["id"], eco_opt, token)
         state_opt = _option_id(fields["Compat state"], row["state"])
         if state_opt:
-            _set_select(project_id, item_id, fields["Compat state"]["id"], state_opt, token)
+            _set_select(
+                project_id, item_id, fields["Compat state"]["id"], state_opt, token
+            )
         if row["eol"]:
             _set_date(project_id, item_id, fields["EOL"]["id"], row["eol"], token)
 
@@ -326,6 +339,8 @@ if __name__ == "__main__":
     try:
         main()
     except (urllib.error.HTTPError, RuntimeError) as exc:
-        detail = exc.read().decode() if isinstance(exc, urllib.error.HTTPError) else str(exc)
+        detail = (
+            exc.read().decode() if isinstance(exc, urllib.error.HTTPError) else str(exc)
+        )
         print(f"::error::compat board sync failed: {detail}", file=sys.stderr)
         sys.exit(1)
