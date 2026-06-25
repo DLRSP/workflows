@@ -33,7 +33,7 @@ API = "https://api.github.com"
 GRAPHQL = f"{API}/graphql"
 
 FIELDS = {
-    "Repo": "TEXT",
+    "Module": "TEXT",
     "Ecosystem": "SINGLE_SELECT",
     "Version": "TEXT",
     "EOL": "DATE",
@@ -362,8 +362,8 @@ def main():
             created += 1
         else:
             updated += 1
-        if "Repo" in fields:
-            _set_text(project_id, item_id, fields["Repo"]["id"], row["repo"], token)
+        if "Module" in fields:
+            _set_text(project_id, item_id, fields["Module"]["id"], row["repo"], token)
         if "Version" in fields:
             _set_text(
                 project_id, item_id, fields["Version"]["id"], row["version"], token
