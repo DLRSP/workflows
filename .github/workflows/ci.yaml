@@ -24,7 +24,7 @@ on:
         type: boolean
         default: false
       assert-wheel-locks:
-        description: Assert runtime py*-django*.txt locks are embedded in the wheel (ADR-004)
+        description: Assert runtime py*-django*.txt locks are embedded in the wheel
         required: false
         type: boolean
         default: false

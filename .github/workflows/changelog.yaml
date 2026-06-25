@@ -25,7 +25,7 @@ permissions:
 jobs:
 
   version-increments:
-    # Towncrier modules use CHANGELOG.rst + release-lock-patch.yaml — not changelog.md (see P-009).
+    # Towncrier modules use CHANGELOG.rst + release-lock-patch.yaml — not changelog.md.
     # This job is not time-sensitive: do not let it to be triggered by schedule event.
     # Also skip release commits (during which bump-my-version cannot find "unreleased" string in changelog.md).
     if: hashFiles('changelog.md') != '' && github.event_name != 'schedule' && !startsWith(github.event.head_commit.message, '[changelog] Release v')
@@ -100,7 +100,7 @@ jobs:
           draft: true
 
   prepare-release:
-    # Towncrier modules (CHANGELOG.rst) must not run kdeldycke-style prepare-release — see P-009.
+    # Towncrier modules (CHANGELOG.rst) must not run kdeldycke-style prepare-release.
     if: hashFiles('changelog.md') != ''
     # TODO: add complex time-based trigger condition to only update the changelog once a day on main branch activity to
     # keep the release date in sync.

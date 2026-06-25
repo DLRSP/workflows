@@ -242,7 +242,7 @@ jobs:
       - name: Bump patch version
         id: bump-version
         run: |
-          # Modules may set commit=true/tag=true in pyproject.toml; workflow owns commit via CPR (P-010).
+          # Modules may set commit=true/tag=true in pyproject.toml; workflow owns the commit via create-pull-request.
           git config user.name "dlrsp-actions[bot]"
           git config user.email "293736084+dlrsp-actions[bot]@users.noreply.github.com"
           bump-my-version bump patch --no-commit --no-tag --verbose
