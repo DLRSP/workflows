@@ -76,7 +76,10 @@ def _desired(timeline, today):
             rows.append(
                 {
                     "title": f"compat: {label} {version}",
-                    "due_on": f"{entry['eol']}T00:00:00Z",
+                    # Noon UTC: GitHub renders the milestone due date in a
+                    # timezone behind UTC and would roll midnight back to the
+                    # previous day; noon keeps the EOL date intact everywhere.
+                    "due_on": f"{entry['eol']}T12:00:00Z",
                     "state": "open" if eol >= today else "closed",
                     "description": (
                         f"Track compatibility for {label} {version}. "
