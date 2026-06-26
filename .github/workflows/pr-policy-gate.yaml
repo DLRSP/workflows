@@ -141,10 +141,13 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.dlrsp-token.outputs.token }}
 
-      # The App authors these PRs and cannot approve its own PR, so the
-      # required code-owner review is satisfied by listing the App in the
-      # branch's bypass_pull_request_allowances. A bypass actor merges with a
-      # normal merge; --admin would require repo admin, which the App lacks.
+      # The App authors these PRs and cannot approve its own PR. The required
+      # review is satisfied by listing the App as a ruleset bypass actor
+      # (actor_type: Integration, bypass_mode: pull_request). We MUST merge via
+      # the REST merge API, not `gh pr merge`: the CLI refuses client-side when
+      # mergeStateStatus is BLOCKED (review still "required" for non-bypass
+      # actors) and never calls the API, so the App's server-side bypass is
+      # never evaluated. The PUT .../merge endpoint evaluates the bypass.
       - name: Merge self-authored bot PR
         if: >-
           steps.evaluate.outputs.decision == 'approve'
@@ -152,7 +155,10 @@ jobs:
           && inputs.enable-auto-merge
           && (github.event.pull_request.user.login == 'app/dlrsp-actions'
           || github.event.pull_request.user.login == 'dlrsp-actions[bot]')
-        run: gh pr merge --rebase "${{ github.event.pull_request.html_url }}"
+        run: >-
+          gh api -X PUT
+          "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/merge"
+          -f merge_method=rebase
         env:
           GH_TOKEN: ${{ steps.dlrsp-token.outputs.token }}
 
