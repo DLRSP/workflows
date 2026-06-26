@@ -1,8 +1,9 @@
 name: Compat board sync
 description: >-
-  Mirror per-repo compatibility milestones onto an org-level GitHub Project v2
-  roadmap (one draft item per repository x version). Requires an org-scoped
-  token with organization-projects:write and issues:read.
+  Track the compatibility rollup parent issues (one per supported version) on an
+  org-level GitHub Project v2 roadmap, with Released/EOL dates for the bars and
+  native sub-issue progress for "compatible packages / total". Requires an
+  org-scoped token with organization-projects:write and issues:read.
 inputs:
   org:
     description: Organization login that owns the Project v2
@@ -10,6 +11,10 @@ inputs:
   github-token:
     description: Org-scoped App token (org Projects RW + issues read)
     required: true
+  hub-repo:
+    description: owner/repo holding the rollup parent + sub-issues
+    required: false
+    default: DLRSP/compatibility
   project-title:
     description: Project v2 title to find/create (fallback if project-number unset)
     required: false
@@ -38,6 +43,7 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.github-token }}
         ORG: ${{ inputs.org }}
+        HUB_REPO: ${{ inputs.hub-repo }}
         PROJECT_TITLE: ${{ inputs.project-title }}
         PROJECT_NUMBER: ${{ inputs.project-number }}
         TIMELINE_REF: ${{ inputs.timeline-ref }}

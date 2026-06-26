@@ -1,15 +1,15 @@
-"""Sync an org-level GitHub Project v2 roadmap from per-repo compat milestones.
+"""Sync an org-level GitHub Project v2 roadmap from the compatibility rollup.
 
-This is the aggregated, cross-repository dashboard for the DLRSP fleet
-(Phase 2). It mirrors the native per-repo ``compat: <Ecosystem> <version>``
-milestones onto a single organization Project v2, one draft item per
-(repository x version), with fields Repo / Ecosystem / Version / EOL /
-Compat state. A single org-level runner owns the board, so there is no race
-to create the project (unlike a per-repo sync).
+This is the aggregated, cross-repository dashboard for the DLRSP fleet. It tracks
+the rollup parent issues (one per still-supported Python/Django version, held in
+the hub repository) as Project v2 items, so the roadmap covers the whole fleet at
+once instead of mirroring per-repo milestones one module at a time.
 
-Onboarded repositories are discovered by the presence of ``compat:`` milestones
-(no fleet registry is duplicated into CI). The board therefore grows naturally
-as the milestone caller rolls out to more modules.
+Each parent issue carries Released/EOL dates (from the shared timeline) for the
+roadmap bars, plus the native sub-issue progress field that reads as
+"compatible packages / total". Drilling into a parent issue lists the per-package
+sub-issues. Only parents are added as items, so the roadmap stays readable; the
+per-package detail lives in each parent's sub-issue list and in the hub repo.
 
 Projects v2 is only reachable through GraphQL with an org-scoped token that has
 ``organization-projects: write`` (the repository GITHUB_TOKEN cannot access it).
@@ -17,7 +17,10 @@ Projects v2 is only reachable through GraphQL with an org-scoped token that has
 Environment:
     GH_TOKEN       org-scoped App installation token (org Projects RW + issues read)
     ORG            organization login (e.g. DLRSP)
-    PROJECT_TITLE  Project v2 title to ensure/create
+    HUB_REPO       owner/repo holding the rollup parent + sub-issues
+    PROJECT_TITLE  Project v2 title to find (fallback if PROJECT_NUMBER unset)
+    PROJECT_NUMBER Project v2 number to target directly (preferred)
+    TIMELINE_REF   ref of DLRSP/workflows to read the timeline from (default main)
     DRY_RUN        when "1", report actions without writing
 """
 
@@ -34,13 +37,14 @@ import yaml
 API = "https://api.github.com"
 GRAPHQL = f"{API}/graphql"
 
+ROLLUP_LABEL = "compat-rollup"
+PARENT_PREFIX = "compat: "
+
 FIELDS = {
-    "Module": "TEXT",
     "Ecosystem": "SINGLE_SELECT",
     "Version": "TEXT",
     "Released": "DATE",
     "EOL": "DATE",
-    "Compat state": "SINGLE_SELECT",
 }
 TIMELINE_URL = (
     "https://raw.githubusercontent.com/DLRSP/workflows/"
@@ -49,10 +53,6 @@ TIMELINE_URL = (
 ECOSYSTEM_OPTIONS = [
     {"name": "Python", "color": "BLUE", "description": "CPython runtime"},
     {"name": "Django", "color": "GREEN", "description": "Django framework"},
-]
-STATE_OPTIONS = [
-    {"name": "Active", "color": "GREEN", "description": "Supported, before EOL"},
-    {"name": "EOL passed", "color": "RED", "description": "Past end of life"},
 ]
 
 
@@ -93,13 +93,6 @@ def _graphql(query, token, variables=None):
     return body["data"]
 
 
-def _org_id(org, token):
-    data = _graphql(
-        "query($login:String!){organization(login:$login){id}}", token, {"login": org}
-    )
-    return data["organization"]["id"]
-
-
 def _list_org_projects(org, token):
     data = _graphql(
         "query($login:String!){organization(login:$login){"
@@ -127,16 +120,6 @@ def _get_project_by_number(org, number, token):
     return data["organization"]["projectV2"]
 
 
-def _create_project(owner_id, title, token):
-    data = _graphql(
-        "mutation($owner:ID!,$title:String!){createProjectV2("
-        "input:{ownerId:$owner,title:$title}){projectV2{id title number}}}",
-        token,
-        {"owner": owner_id, "title": title},
-    )
-    return data["createProjectV2"]["projectV2"]
-
-
 def _project_fields(project_id, token):
     data = _graphql(
         "query($p:ID!){node(id:$p){... on ProjectV2{fields(first:50){nodes{"
@@ -155,7 +138,6 @@ def _project_fields(project_id, token):
 
 def _create_field(project_id, name, dtype, token):
     if dtype == "SINGLE_SELECT":
-        options = ECOSYSTEM_OPTIONS if name == "Ecosystem" else STATE_OPTIONS
         data = _graphql(
             "mutation($p:ID!,$name:String!,"
             "$opts:[ProjectV2SingleSelectFieldOptionInput!]!){"
@@ -165,7 +147,7 @@ def _create_field(project_id, name, dtype, token):
             "... on ProjectV2SingleSelectField{"
             "id name options{id name}}}}}",
             token,
-            {"p": project_id, "name": name, "opts": options},
+            {"p": project_id, "name": name, "opts": ECOSYSTEM_OPTIONS},
         )
         return data["createProjectV2Field"]["projectV2Field"]
     data = _graphql(
@@ -195,37 +177,52 @@ def _ensure_fields(project_id, token):
 
 
 def _existing_items(project_id, token):
-    items = {}
+    """Return current project items with their content type and node id."""
+    items = []
     cursor = None
     while True:
         data = _graphql(
             "query($p:ID!,$c:String){node(id:$p){"
             "... on ProjectV2{items(first:100,after:$c){"
             "pageInfo{hasNextPage endCursor} nodes{id content{__typename "
-            "... on DraftIssue{title}}}}}}}",
+            "... on Issue{id title} ... on DraftIssue{title}}}}}}}",
             token,
             {"p": project_id, "c": cursor},
         )
         block = data["node"]["items"]
         for node in block["nodes"]:
             content = node.get("content") or {}
-            title = content.get("title")
-            if title:
-                items[title] = node["id"]
+            items.append(
+                {
+                    "item_id": node["id"],
+                    "type": content.get("__typename"),
+                    "content_id": content.get("id"),
+                    "title": content.get("title"),
+                }
+            )
         if not block["pageInfo"]["hasNextPage"]:
             break
         cursor = block["pageInfo"]["endCursor"]
     return items
 
 
-def _add_draft(project_id, title, body, token):
+def _add_item(project_id, content_id, token):
     data = _graphql(
-        "mutation($p:ID!,$t:String!,$b:String!){addProjectV2DraftIssue("
-        "input:{projectId:$p,title:$t,body:$b}){projectItem{id}}}",
+        "mutation($p:ID!,$c:ID!){addProjectV2ItemById("
+        "input:{projectId:$p,contentId:$c}){item{id}}}",
         token,
-        {"p": project_id, "t": title, "b": body},
+        {"p": project_id, "c": content_id},
     )
-    return data["addProjectV2DraftIssue"]["projectItem"]["id"]
+    return data["addProjectV2ItemById"]["item"]["id"]
+
+
+def _delete_item(project_id, item_id, token):
+    _graphql(
+        "mutation($p:ID!,$i:ID!){deleteProjectV2Item("
+        "input:{projectId:$p,itemId:$i}){deletedItemId}}",
+        token,
+        {"p": project_id, "i": item_id},
+    )
 
 
 def _set_text(project_id, item_id, field_id, value, token):
@@ -265,75 +262,63 @@ def _option_id(field, option_name):
     return None
 
 
-def _release_map(ref):
-    """Map (ecosystem label, version) -> release date from the shared timeline.
-
-    Milestones only carry the EOL date (their due_on); the release date gives the
-    roadmap bars a start, so a roadmap view can show each version's full support
-    window (released -> EOL).
-    """
+def _version_map(ref):
+    """Map (ecosystem label, version) -> {release, eol} from the shared timeline."""
     try:
         with urllib.request.urlopen(TIMELINE_URL.format(ref=ref)) as resp:
             timeline = yaml.safe_load(resp.read().decode())
     except (urllib.error.URLError, yaml.YAMLError) as exc:
-        print(f"::warning::could not read timeline ({exc}); roadmap start omitted")
+        print(f"::warning::could not read timeline ({exc}); dates omitted")
         return {}
     out = {}
     for key, label in (("python", "Python"), ("django", "Django")):
         for entry in timeline.get(key, []):
-            release = entry.get("release", "")
-            if release:
-                out[(label, str(entry["version"]))] = release
+            out[(label, str(entry["version"]))] = {
+                "release": entry.get("release", ""),
+                "eol": entry.get("eol", ""),
+            }
     return out
 
 
-def _discover(org, token, release_map=None):
-    """Yield desired board items from every repo carrying compat: milestones."""
-    release_map = release_map or {}
+def _discover(hub, token, version_map):
+    """Yield desired board items from the rollup parent issues in the hub."""
     rows = []
-    repos = _rest_paginated(f"/orgs/{org}/repos?per_page=100&type=all", token)
-    for repo in repos:
-        full = repo["full_name"]
-        try:
-            milestones = _rest_paginated(
-                f"/repos/{full}/milestones?state=all&per_page=100", token
-            )
-        except urllib.error.HTTPError:
+    issues = _rest_paginated(
+        f"/repos/{hub}/issues?state=open&labels={ROLLUP_LABEL}", token
+    )
+    for issue in issues:
+        if "pull_request" in issue:
             continue
-        for milestone in milestones:
-            title = milestone.get("title", "")
-            if not title.startswith("compat: "):
-                continue
-            label = title[len("compat: ") :].strip()
-            ecosystem, _, version = label.partition(" ")
-            due = (milestone.get("due_on") or "")[:10]
-            rows.append(
-                {
-                    "repo": repo["name"],
-                    "full": full,
-                    "ecosystem": ecosystem,
-                    "version": version,
-                    "start": release_map.get((ecosystem, version), ""),
-                    "eol": due,
-                    "state": (
-                        "EOL passed" if milestone.get("state") == "closed" else "Active"
-                    ),
-                    "title": f"{repo['name']} \u00b7 {ecosystem} {version}",
-                }
-            )
+        title = issue.get("title", "")
+        if not title.startswith(PARENT_PREFIX):
+            continue
+        label = title[len(PARENT_PREFIX) :].strip()
+        ecosystem, _, version = label.partition(" ")
+        dates = version_map.get((ecosystem, version), {})
+        rows.append(
+            {
+                "content_id": issue["node_id"],
+                "title": title,
+                "ecosystem": ecosystem,
+                "version": version,
+                "start": dates.get("release", ""),
+                "eol": dates.get("eol", ""),
+            }
+        )
     return rows
 
 
 def main():
     token = os.environ["GH_TOKEN"]
     org = os.environ["ORG"]
+    hub = os.environ.get("HUB_REPO", f"{org}/compatibility")
     project_title = os.environ.get("PROJECT_TITLE", "Compatibility Roadmap")
     project_number = os.environ.get("PROJECT_NUMBER", "").strip()
     timeline_ref = os.environ.get("TIMELINE_REF", "main")
     dry_run = os.environ.get("DRY_RUN") == "1"
 
-    desired = _discover(org, token, _release_map(timeline_ref))
-    print(f"discovered {len(desired)} compat milestone(s) across the fleet")
+    desired = _discover(hub, token, _version_map(timeline_ref))
+    print(f"discovered {len(desired)} rollup parent issue(s) on {hub}")
 
     project = None
     if project_number:
@@ -346,16 +331,10 @@ def main():
         project = _find_project(org, project_title, token)
 
     if dry_run:
-        if project is None:
-            print(
-                f"[dry-run] create org Project v2 '{project_title}'"
-                f" + fields {list(FIELDS)}"
-            )
         for row in desired:
             print(
-                f"[dry-run] upsert '{row['title']}' "
-                f"(released {row['start'] or 'n/a'} -> EOL {row['eol'] or 'n/a'}, "
-                f"{row['state']})"
+                f"[dry-run] track '{row['title']}' "
+                f"(released {row['start'] or 'n/a'} -> EOL {row['eol'] or 'n/a'})"
             )
         print(f"compat board: desired={len(desired)} (dry-run, no writes)")
         return
@@ -364,51 +343,31 @@ def main():
         visible = _list_org_projects(org, token)
         listing = ", ".join(f"#{p['number']} '{p['title']}'" for p in visible) or "none"
         print(f"::warning::App sees these org projects: {listing}")
-        try:
-            project = _create_project(_org_id(org, token), project_title, token)
-        except RuntimeError as exc:
-            if "FORBIDDEN" in str(exc) or "create projects" in str(exc):
-                print(
-                    f"::error::Project '{project_title}' not found and the App "
-                    "cannot create org projects. Ensure the project is org-owned "
-                    "(orgs/<org>/projects), titled exactly "
-                    f"'{project_title}' or addressed via PROJECT_NUMBER, then "
-                    "re-run this workflow."
-                )
-                sys.exit(1)
-            raise
-        print(f"created org Project v2 #{project['number']} '{project_title}'")
+        print(
+            f"::error::Project '{project_title}' not found. Ensure it is org-owned "
+            "(orgs/<org>/projects), titled exactly "
+            f"'{project_title}' or addressed via PROJECT_NUMBER, then re-run."
+        )
+        sys.exit(1)
+
     project_id = project["id"]
     fields = _ensure_fields(project_id, token)
     existing = _existing_items(project_id, token)
 
-    created = updated = 0
+    desired_ids = set()
+    tracked = 0
     for row in desired:
-        item_id = existing.get(row["title"])
-        if item_id is None:
-            body = (
-                f"Compatibility tracking for {row['ecosystem']} {row['version']} "
-                f"on {row['full']}. EOL {row['eol'] or 'n/a'}. "
-                f"Repo milestone: https://github.com/{row['full']}/milestones"
-            )
-            item_id = _add_draft(project_id, row["title"], body, token)
-            created += 1
-        else:
-            updated += 1
-        if "Module" in fields:
-            _set_text(project_id, item_id, fields["Module"]["id"], row["repo"], token)
-        if "Version" in fields:
-            _set_text(
-                project_id, item_id, fields["Version"]["id"], row["version"], token
-            )
+        item_id = _add_item(project_id, row["content_id"], token)
+        desired_ids.add(row["content_id"])
+        tracked += 1
         eco = fields.get("Ecosystem")
         eco_opt = _option_id(eco, row["ecosystem"]) if eco else None
         if eco_opt:
             _set_select(project_id, item_id, eco["id"], eco_opt, token)
-        state = fields.get("Compat state")
-        state_opt = _option_id(state, row["state"]) if state else None
-        if state_opt:
-            _set_select(project_id, item_id, state["id"], state_opt, token)
+        if "Version" in fields:
+            _set_text(
+                project_id, item_id, fields["Version"]["id"], row["version"], token
+            )
         if row["start"] and "Released" in fields:
             _set_date(
                 project_id, item_id, fields["Released"]["id"], row["start"], token
@@ -416,9 +375,19 @@ def main():
         if row["eol"] and "EOL" in fields:
             _set_date(project_id, item_id, fields["EOL"]["id"], row["eol"], token)
 
+    # Remove anything that is not a current rollup parent: stale draft items from
+    # the previous per-repo board and issues for versions now past EOL.
+    removed = 0
+    for item in existing:
+        keep = item["type"] == "Issue" and item.get("content_id") in desired_ids
+        if keep:
+            continue
+        _delete_item(project_id, item["item_id"], token)
+        removed += 1
+
     print(
-        f"compat board #{project['number']}: created={created} "
-        f"updated={updated} total={len(desired)}"
+        f"compat board #{project['number']}: tracked={tracked} "
+        f"removed-stale={removed} total={len(desired)}"
     )
 
 
