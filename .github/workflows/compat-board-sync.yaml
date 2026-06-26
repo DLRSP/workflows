@@ -1,11 +1,13 @@
 ---
 name: Compat Board Sync
 
-# Org-level dashboard (Phase 2): mirror every repo's compat: milestones onto a
-# single organization Project v2 roadmap. A single runner owns the board, so
-# there is no race to create the project. Org Projects writes use an org-scoped
-# dlrsp-actions App token (organization-projects:write); GITHUB_TOKEN stays
-# read-only. Runs only on DLRSP/workflows, never via workflow_call.
+# Org-level dashboard: track the compatibility rollup parent issues (one per
+# supported Python/Django version, held in the hub repo) on a single
+# organization Project v2 roadmap, with Released/EOL dates for the bars and
+# native sub-issue progress for "compatible packages / total". A single runner
+# owns the board. Org Projects writes use an org-scoped dlrsp-actions App token
+# (organization-projects:write); GITHUB_TOKEN stays read-only. Runs only on
+# DLRSP/workflows, never via workflow_call.
 "on":
   workflow_dispatch:
     inputs:
@@ -14,8 +16,8 @@ name: Compat Board Sync
         required: false
         default: ""
   schedule:
-    # Monday 05:07 UTC, after the per-repo milestone callers (04:17).
-    - cron: '7 5 * * 1'
+    # Monday 05:47 UTC, after the rollup creates the parent issues (05:27).
+    - cron: '47 5 * * 1'
 
 concurrency:
   group: compat-board-sync
