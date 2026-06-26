@@ -215,34 +215,39 @@ jobs:
           ls -la 2>/dev/null || echo "Directory listing failed"
           
           ARTIFACTS_FOUND=false
-          
+
+          # Use compgen for glob detection: returns non-zero with no match, which
+          # is safe inside `if` and avoids SIGPIPE/exit-2 from `ls ... | head`
+          # under the runner's default `bash -eo pipefail` shell (this step runs
+          # in the reusable workflow's home repo too, where no py*-*.txt exist).
+
           # Check for dev requirements files
-          if ls py*-dev.txt 2>/dev/null | head -1 > /dev/null; then
+          if compgen -G "py*-dev.txt" > /dev/null 2>&1; then
             echo "✅ Found dev requirements files:"
-            ls -la py*-dev.txt 2>/dev/null
+            ls -la py*-dev.txt 2>/dev/null || true
             ARTIFACTS_FOUND=true
           else
             echo "ℹ️  No dev requirements files found (py*-dev.txt)"
           fi
 
           # Check for CI test requirements files
-          if ls py*-test.txt 2>/dev/null | head -1 > /dev/null; then
+          if compgen -G "py*-test.txt" > /dev/null 2>&1; then
             echo "✅ Found CI test requirements files:"
-            ls -la py*-test.txt 2>/dev/null
+            ls -la py*-test.txt 2>/dev/null || true
             ARTIFACTS_FOUND=true
           else
             echo "ℹ️  No CI test requirements files found (py*-test.txt)"
           fi
-          
+
           # Check for docs requirements files
-          if ls py*-docs.txt 2>/dev/null | head -1 > /dev/null; then
+          if compgen -G "py*-docs.txt" > /dev/null 2>&1; then
             echo "✅ Found docs requirements files:"
-            ls -la py*-docs.txt 2>/dev/null
+            ls -la py*-docs.txt 2>/dev/null || true
             ARTIFACTS_FOUND=true
           else
             echo "ℹ️  No docs requirements files found (py*-docs.txt)"
           fi
-          
+
           if [ "$ARTIFACTS_FOUND" = "true" ]; then
             echo "has_artifacts=true" >> "$GITHUB_OUTPUT"
             echo "✅ Artifacts found, will create PR"
@@ -250,6 +255,9 @@ jobs:
             echo "has_artifacts=false" >> "$GITHUB_OUTPUT"
             echo "⚠️  No artifacts found - no .in files were processed, skipping PR creation"
           fi
+
+          # Always succeed: downstream steps are gated on has_artifacts output.
+          exit 0
 
       - name: Verify all downloaded requirements files
         if: steps.check-artifacts.outputs.has_artifacts == 'true'
