@@ -154,14 +154,21 @@ jobs:
   verify-django-requirements:
     runs-on: ubuntu-latest
     strategy:
+      # Do not let one unsupported combo (e.g. EOL Django 3.2 against modules
+      # whose deps require Django>=4.2) cancel the whole matrix via fail-fast.
+      fail-fast: false
       matrix:
         include:
           - python-version: "3.9"
             django-version: "4.2"
             experimental: true
+          # Django 3.2 reached end-of-life (2024-04). Modern modules
+          # (e.g. django-prose-editor requires Django>=4.2) cannot resolve it;
+          # keep the leg for modules that still support 3.2 but make it
+          # non-blocking so EOL incompatibility does not gate PRs.
           - python-version: "3.10"
             django-version: "3.2"
-            experimental: false
+            experimental: true
           - python-version: "3.10"
             django-version: "4.2"
             experimental: false
@@ -204,6 +211,9 @@ jobs:
           pip install pip-tools
 
       - name: Generate and verify runtime lock requirements
+        # Experimental legs (e.g. EOL Django 3.2) may be unresolvable for
+        # modules whose deps require a newer Django; do not fail the job.
+        continue-on-error: ${{ matrix.experimental }}
         run: |
           RUNTIME_IN=""
           if [ -f "requirements/runtime.in" ]; then
