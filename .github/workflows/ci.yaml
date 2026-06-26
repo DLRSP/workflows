@@ -236,6 +236,41 @@ jobs:
       continue-on-error: true
       uses: github/codeql-action/analyze@v4
 
+    # SCA backstop (AR-033). Surfaces known CVEs in the runtime locks. Kept
+    # informational (continue-on-error) until the fleet CVE backlog is
+    # remediated; flip to a hard gate afterwards so only NEW CVEs block.
+    - name: SCA - pip-audit (runtime locks)
+      if: ${{ always() && hashFiles('requirements/py*-django*.txt') != '' }}
+      continue-on-error: true
+      run: |
+        python -m pip install --upgrade pip-audit
+        status=0
+        for f in requirements/py*-django*.txt; do
+          [ -e "$f" ] || continue
+          echo "::group::pip-audit $f"
+          pip-audit -r "$f" || status=$?
+          echo "::endgroup::"
+        done
+        exit $status
+
+  dependency-review:
+    name: Dependency review
+    # PR-only, non-regression by construction: only evaluates dependencies
+    # CHANGED by this PR (base..head), so the legacy backlog never trips it.
+    # Safe to gate immediately (AR-033).
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+    - uses: actions/checkout@v6
+    - name: Dependency review (new high/critical CVEs introduced by this PR)
+      uses: actions/dependency-review-action@v4
+      with:
+        fail-on-severity: high
+        comment-summary-in-pr: on-failure
+
   policy-gate:
     name: Policy gate (bot PR approve/merge)
     needs: [test, analyze]
