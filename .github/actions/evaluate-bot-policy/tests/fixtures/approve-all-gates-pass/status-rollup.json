@@ -1,4 +1,5 @@
 [
   {"name": "ci / Analyze (python)", "status": "COMPLETED", "conclusion": "SUCCESS"},
-  {"name": "ci / Python 3.12 · Django 4.2", "status": "COMPLETED", "conclusion": "SUCCESS"}
+  {"name": "ci / Python 3.12 · Django 4.2", "status": "COMPLETED", "conclusion": "SUCCESS"},
+  {"name": "CodeQL", "status": "COMPLETED", "conclusion": "SUCCESS"}
 ]
