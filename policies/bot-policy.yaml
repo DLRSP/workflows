@@ -16,6 +16,9 @@ policies:
           required:
             - ci / Analyze (python)
             - ci / Python 3.12 · Django 4.2
+            # CodeQL code-scanning results gate (AR-033). Native check emitted by
+            # github/codeql-action/analyze; blocks bot merge on new high alerts.
+            - CodeQL
       - paths:
           deny:
             - .github/workflows/**
@@ -34,6 +37,7 @@ policies:
           required:
             - ci / Analyze (python)
             - ci / Python 3.12 · Django 4.2
+            - CodeQL
       - paths:
           deny:
             - .github/workflows/**
