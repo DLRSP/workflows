@@ -30,9 +30,10 @@ jobs:
       matrix:
         # Explicit matrix aligned with tox envlist (no invalid py/django combos).
         include:
-          - {python-version: "3.9", django-version: "4.2", experimental: true}
-          # Django 3.2 dropped (EOL Apr-2024): no longer regenerated; the
-          # py*-django32.txt locks are removed fleet-wide.
+          # Django 3.2 dropped (EOL Apr-2024) and Python 3.9 dropped (EOL
+          # Oct-2025): no longer regenerated; the py*-django32.txt and
+          # py39-*.txt locks are removed fleet-wide. Dropping py3.9 also lets
+          # urllib3/pillow reach their patched (py3.10+) versions.
           - {python-version: "3.10", django-version: "4.2", experimental: false}
           - {python-version: "3.10", django-version: "5.2", experimental: true}
           - {python-version: "3.11", django-version: "4.2", experimental: false}
