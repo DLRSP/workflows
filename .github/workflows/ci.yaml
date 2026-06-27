@@ -219,21 +219,23 @@ jobs:
         black --check .github
         flake8 --max-line-length=88 --extend-ignore=E203,W503 .github
 
+    # CodeQL is GATING (AR-033): no continue-on-error, so a failed analysis turns
+    # the "Analyze (python)" check red instead of silently passing without SARIF.
+    # New-alert blocking itself is enforced by the native "Require code scanning
+    # results" branch protection (CodeQL, high security-severity) + the `CodeQL`
+    # check in bot-policy.yaml ci_status.required.
     - name: Initialize CodeQL
       if: ${{ always() && hashFiles('setup.py', 'pyproject.toml', 'tox.ini') }}
-      continue-on-error: true
       uses: github/codeql-action/init@v4
       with:
         languages: ${{ matrix.language }}
 
     - name: Autobuild
       if: ${{ always() && hashFiles('setup.py', 'pyproject.toml', 'tox.ini') }}
-      continue-on-error: true
       uses: github/codeql-action/autobuild@v4
 
     - name: Perform CodeQL Analysis
       if: ${{ always() && hashFiles('setup.py', 'pyproject.toml', 'tox.ini') }}
-      continue-on-error: true
       uses: github/codeql-action/analyze@v4
 
     # SCA backstop (AR-033). Surfaces known CVEs in the runtime locks. Kept
