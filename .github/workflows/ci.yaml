@@ -267,7 +267,14 @@ jobs:
     # PR-only, non-regression by construction: only evaluates dependencies
     # CHANGED by this PR (base..head), so the legacy backlog never trips it.
     # Safe to gate immediately (AR-033).
-    if: github.event_name == 'pull_request'
+    #
+    # Public-only: dependency-review-action requires Dependency graph + GitHub
+    # Advanced Security, which are free on public repos but unavailable on
+    # private repos without a GHAS license. The private template (django-pkg)
+    # would otherwise fail with "Dependency review is not supported on this
+    # repository". All distributed modules are public, so SCA still covers
+    # every shipped package (mirrors the CodeQL public-gate, #1266).
+    if: github.event_name == 'pull_request' && github.event.repository.visibility == 'public'
     runs-on: ubuntu-latest
     permissions:
       contents: read
