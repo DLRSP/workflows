@@ -166,9 +166,9 @@ black==26.5.1 \
     --hash=sha256:ecb3e624844c798144e9bd986954e0adc81d8911a1f30f375e1252fe26e8c294 \
     --hash=sha256:ed1a20af114c301a0269bf01163d51dbef72737fd65f850001e7cbe7f3c7abae
     # via -r requirements/requirements.in
-bracex==2.7 \
-    --hash=sha256:025043774188f8a05db36de9e3d4f7d82a8509a41a115cc134c44a60c36375eb \
-    --hash=sha256:4cb5d415a707f6beeb2779099486090bf98cbd8b7edbdfcb7cbea2f5fe6bdb48
+bracex==3.0 \
+    --hash=sha256:3833e61c2f092d5aa0468fa2e6c6e990a306185abf763b6d122f0158e59c58a5 \
+    --hash=sha256:b73f718d6bd98d8419e45df02426c86e9967c179949f779340d6c3a8c83b9111
     # via wcmatch
 build==1.5.0 \
     --hash=sha256:13f3eecb844759ab66efec90ca17639bbf14dc06cb2fdf37a9010322d9c50a6f \
@@ -1213,11 +1213,11 @@ virtualenv==21.5.1 \
     --hash=sha256:55aa670b67bbfb991b03fda39bd3276d92c419d702376e98c5df1c9989a26783 \
     --hash=sha256:dca3bf98275a59c652b69d68e73433e597d977c2da9198882479d1a7188009c8
     # via poetry
-wcmatch==10.1 \
-    --hash=sha256:5848ace7dbb0476e5e55ab63c6bbd529745089343427caa5537f230cc01beb8a \
-    --hash=sha256:f11f94208c8c8484a16f4f48638a85d771d9513f4ab3f37595978801cb9465af
+wcmatch==10.2 \
+    --hash=sha256:92204839e3e9c945e1e71d7e1e4edeab2601ed50a5c51ff4f3f97ca711eeb738 \
+    --hash=sha256:f1a79e80ccbe296907b7eaf57d8d3bc49eab0b428d35f7d09986b5079b6e4a5d
     # via bump-my-version
-wcwidth==0.8.1 \
-    --hash=sha256:f453740b1e4a4f3291faa37944c555d71056c4da08d59809b307ef4feba695c8 \
-    --hash=sha256:faf5b4a5366a72dc49cad48cdf21f52bdf63bdda995178e483ba247ff79089b9
+wcwidth==0.8.2 \
+    --hash=sha256:91fbef97204b96a3d4d421609b80340b760cf33e26da123ff243d76b1fda8dda \
+    --hash=sha256:d63947694a0539a1d51e01eda7caf800c291020e6cdd7e28ad7b14dd33ad4f85
     # via prompt-toolkit
