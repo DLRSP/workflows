@@ -175,9 +175,9 @@ bracex==3.0 \
     --hash=sha256:3833e61c2f092d5aa0468fa2e6c6e990a306185abf763b6d122f0158e59c58a5 \
     --hash=sha256:b73f718d6bd98d8419e45df02426c86e9967c179949f779340d6c3a8c83b9111
     # via wcmatch
-build==1.5.1 \
-    --hash=sha256:94e17f1db803ab22f46049376c44c8437c52090f0dfdf1adc43df56542d644fb \
-    --hash=sha256:f1a58fe2e5af5b0238a07b9e70207492c79ddebbdb1ad954fc86d62a56be3e0d
+build==1.5.0 \
+    --hash=sha256:13f3eecb844759ab66efec90ca17639bbf14dc06cb2fdf37a9010322d9c50a6f \
+    --hash=sha256:302c22c3ba2a0fd5f3911918651341ebb3896176cbdec15bd421f80b1afc7647
     # via poetry
 bump-my-version==1.4.1 \
     --hash=sha256:b4ad672b4e8b9f560f36a9ae0aff80088727ce2b3e0f1b7ea00d3f75846b09dd \
@@ -531,17 +531,17 @@ httpcore==1.0.9 \
     --hash=sha256:2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55 \
     --hash=sha256:6e34463af53fd2ab5d807f399a9b45ea31c3dfa2276f15a2c3f00afff6e176e8
     # via httpx
-httpcore2==2.5.0 \
-    --hash=sha256:5ce35188de461d31e8d000bfb8ef8bf22c6c16587a211e5571deaa5e9bdf842a \
-    --hash=sha256:88aa170137c17328d5ac44234f9fd10706466d5fb347f3edac4d39b91137b09d
+httpcore2==2.7.0 \
+    --hash=sha256:1452f589fe23f55b44546cd884294c41a29330af902bc0b71a761fd52d18f92b \
+    --hash=sha256:6dc0fedf329a52a990930a5579edfebaea81118ea700ea0dd7de2b5e5be49efc
     # via httpx2
 httpx==0.28.1 \
     --hash=sha256:75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc \
     --hash=sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad
     # via pbs-installer
-httpx2==2.5.0 \
-    --hash=sha256:3d2d4d9cf4b61f1a1f46a95947cfdb47e80cb56a2f91c6256ac8f58e4891df41 \
-    --hash=sha256:e2df9cb4611021527ff8a675b1c320b610a2ec397acc8d6fe6e91df2d9b33c29
+httpx2==2.7.0 \
+    --hash=sha256:8b30709aed5c8465b0dd3b95c09ce301c8f79e7e7a2d00ab0af551e0d0375b07 \
+    --hash=sha256:ed2a2719c696789e09493bd8e2bec3d8bd925cc6e26b68389ec25ade132f7bf4
     # via bump-my-version
 idna==3.18 \
     --hash=sha256:7f952cbe720b688055e3f87de14f5c3e5fdaa8bc3928985c4077ca689de849a2 \
