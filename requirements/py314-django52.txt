@@ -414,9 +414,9 @@ fastjsonschema==2.21.2 \
     --hash=sha256:1c797122d0a86c5cace2e54bf4e819c36223b552017172f32c5c024a6b77e463 \
     --hash=sha256:b1eb43748041c880796cd077f1a07c3d94e93ae84bba5ed36800a33554ae05de
     # via poetry
-filelock==3.30.2 \
-    --hash=sha256:1ea7c857465c897a4a6e64c1aace28ff6b83f5bc66c1c06ea148efa65bc2ec5d \
-    --hash=sha256:a64b58f75048ec39589983e97f5117163f822261dcb6ba843e098f05aac9663f
+filelock==3.31.0 \
+    --hash=sha256:739b73e580fe88bb78d830aeddbc492519ece3d97ac8368de13a2032c61010c1 \
+    --hash=sha256:c188cbc4307c18894c5424fa73f97ea7fa127ddf62192487546da3a214d0a381
     # via
     #   cachecontrol
     #   python-discovery
@@ -732,9 +732,9 @@ pkginfo==1.12.1.2 \
     --hash=sha256:5cd957824ac36f140260964eba3c6be6442a8359b8c48f4adf90210f33a04b7b \
     --hash=sha256:c783ac885519cab2c34927ccfa6bf64b5a704d7c69afaea583dd9b7afe969343
     # via poetry
-platformdirs==4.10.0 \
-    --hash=sha256:31e761a6a0ca04faf7353ea759bdba55652be214725111e5aac52dfa29d4bef7 \
-    --hash=sha256:fb516cdb12eb0d857d0cd85a7c57cea4d060bee4578d6cf5a14dfdf8cbf8784a
+platformdirs==4.10.1 \
+    --hash=sha256:0e4eff26be2d75293977f7cddc153fd9b8eaa7fb0c7b64ffe4076cb443117443 \
+    --hash=sha256:ceab4084426fe6319ce18e86deada8ab1b7487c7aee7040c55e277c9ae793695
     # via
     #   black
     #   findpython
