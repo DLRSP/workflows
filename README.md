@@ -51,6 +51,8 @@ Check these projects to get real-life examples of usage and inspiration:
 - ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-filer-optimizer?label=%E2%AD%90&style=flat-square) [django-filer-optimizer](https://github.com/DLRSP/django-filer-optimizer#readme) - Django application to extend the "django-filer" application with extra utils like.
 - ![GitHub stars](https://img.shields.io/github/stars/DLRSP/requirements?label=%E2%AD%90&style=flat-square) [requirements](https://github.com/DLRSP/requirements#readme)
 - ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-service?label=%E2%AD%90&style=flat-square) [django-service](https://github.com/DLRSP/django-service#readme)
+- ![GitHub stars](https://img.shields.io/github/stars/DLRSP/ateco?label=%E2%AD%90&style=flat-square) [ateco](https://github.com/DLRSP/ateco#readme)
+- ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-ateco?label=%E2%AD%90&style=flat-square) [django-ateco](https://github.com/DLRSP/django-ateco#readme)
 
 Feel free to send a PR to add your project in this list if you are relying on these scripts.
 
