@@ -16,6 +16,10 @@ package sub-issue is complete (parent issue closed), Todo when any package still
 needs adaptation (parent open). Fully-adapted versions stay on the board until
 EOL so the Released→EOL bars remain visible.
 
+Ecosystem is mandatory on every parent (Python/Django). After field updates the
+sync re-fetches and prunes non-parent items (package sub-issues auto-added to
+the Project), so Group-by Ecosystem does not grow a "No Ecosystem" pile.
+
 Projects v2 is only reachable through GraphQL with an org-scoped token that has
 ``organization-projects: write`` (the repository GITHUB_TOKEN cannot access it).
 
@@ -170,6 +174,45 @@ def _create_field(project_id, name, dtype, token):
     return data["createProjectV2Field"]["projectV2Field"]
 
 
+def _ensure_ecosystem_options(project_id, field, token):
+    """Ensure Ecosystem single-select has Python and Django options.
+
+    ``updateProjectV2Field`` replaces the whole option list, so preserve any
+    extra options already on the field and only append missing required ones.
+    """
+    if field is None:
+        return field
+    have = {opt["name"] for opt in field.get("options", [])}
+    missing = [opt for opt in ECOSYSTEM_OPTIONS if opt["name"] not in have]
+    if not missing:
+        return field
+    # Preserve existing options (name/color/description); API replace is wholesale.
+    merged = []
+    for opt in field.get("options", []):
+        merged.append(
+            {
+                "name": opt["name"],
+                "color": "GRAY",
+                "description": opt.get("description") or opt["name"],
+            }
+        )
+    # Prefer canonical colors for required options when (re)writing them.
+    by_name = {opt["name"]: opt for opt in merged}
+    for opt in ECOSYSTEM_OPTIONS:
+        by_name[opt["name"]] = opt
+    merged = list(by_name.values())
+    print(f"updating Ecosystem options; adding {[o['name'] for o in missing]}")
+    data = _graphql(
+        "mutation($f:ID!,$opts:[ProjectV2SingleSelectFieldOptionInput!]!){"
+        "updateProjectV2Field(input:{fieldId:$f,singleSelectOptions:$opts}){"
+        "projectV2Field{... on ProjectV2SingleSelectField{"
+        "id name options{id name}}}}}",
+        token,
+        {"f": field["id"], "opts": merged},
+    )
+    return data["updateProjectV2Field"]["projectV2Field"]
+
+
 def _ensure_fields(project_id, token):
     fields = _project_fields(project_id, token)
     for name, dtype in FIELDS.items():
@@ -183,18 +226,26 @@ def _ensure_fields(project_id, token):
                 print(f"::warning::field '{name}' is reserved by GitHub; skipping")
                 continue
             raise
-    return _project_fields(project_id, token)
+    fields = _project_fields(project_id, token)
+    eco = fields.get("Ecosystem")
+    if eco is not None:
+        fields["Ecosystem"] = _ensure_ecosystem_options(project_id, eco, token)
+    return fields
 
 
 def _existing_items(project_id, token):
-    """Return current project items with their content type and node id."""
+    """Return current project items with content id, title, and Ecosystem value."""
     items = []
     cursor = None
     while True:
         data = _graphql(
             "query($p:ID!,$c:String){node(id:$p){"
             "... on ProjectV2{items(first:100,after:$c){"
-            "pageInfo{hasNextPage endCursor} nodes{id content{__typename "
+            "pageInfo{hasNextPage endCursor} nodes{id "
+            "fieldValues(first:20){nodes{"
+            "... on ProjectV2ItemFieldSingleSelectValue{"
+            "name field{... on ProjectV2FieldCommon{name}}}}}"
+            "content{__typename "
             "... on Issue{id title} ... on DraftIssue{title}}}}}}}",
             token,
             {"p": project_id, "c": cursor},
@@ -202,18 +253,90 @@ def _existing_items(project_id, token):
         block = data["node"]["items"]
         for node in block["nodes"]:
             content = node.get("content") or {}
+            ecosystem = None
+            for fv in (node.get("fieldValues") or {}).get("nodes") or []:
+                if not fv:
+                    continue
+                field = (fv.get("field") or {}).get("name")
+                if field == "Ecosystem":
+                    ecosystem = fv.get("name")
             items.append(
                 {
                     "item_id": node["id"],
                     "type": content.get("__typename"),
                     "content_id": content.get("id"),
                     "title": content.get("title"),
+                    "ecosystem": ecosystem,
                 }
             )
         if not block["pageInfo"]["hasNextPage"]:
             break
         cursor = block["pageInfo"]["endCursor"]
     return items
+
+
+def _is_desired_parent(item, desired_ids):
+    """Keep only active rollup parents (not package sub-issues or drafts)."""
+    if item.get("type") != "Issue":
+        return False
+    if item.get("content_id") not in desired_ids:
+        return False
+    title = item.get("title") or ""
+    return title.startswith(PARENT_PREFIX)
+
+
+def _prune_non_parents(project_id, desired_ids, token, max_rounds=3):
+    """Delete non-parent items; re-fetch each round (auto-add may race mid-sync)."""
+    removed = 0
+    for round_i in range(1, max_rounds + 1):
+        items = _existing_items(project_id, token)
+        round_removed = 0
+        for item in items:
+            if _is_desired_parent(item, desired_ids):
+                continue
+            title = item.get("title") or "(untitled)"
+            print(f"prune round {round_i}: remove '{title}'")
+            _delete_item(project_id, item["item_id"], token)
+            round_removed += 1
+        removed += round_removed
+        if round_removed == 0:
+            break
+    return removed
+
+
+def _verify_parents(project_id, desired, token):
+    """Fail closed if any desired parent is missing or lacks Ecosystem."""
+    by_content = {
+        item["content_id"]: item
+        for item in _existing_items(project_id, token)
+        if item.get("content_id")
+    }
+    errors = 0
+    for row in desired:
+        item = by_content.get(row["content_id"])
+        if item is None:
+            print(f"::error::parent '{row['title']}' not on project after sync")
+            errors += 1
+            continue
+        eco = item.get("ecosystem")
+        if eco != row["ecosystem"]:
+            print(
+                f"::error::parent '{row['title']}' Ecosystem="
+                f"{eco!r} want {row['ecosystem']!r}"
+            )
+            errors += 1
+        else:
+            print(f"ecosystem '{row['title']}' -> {eco}")
+    extras = [
+        item
+        for item in by_content.values()
+        if not _is_desired_parent(item, {r["content_id"] for r in desired})
+    ]
+    if extras:
+        names = ", ".join((i.get("title") or "?") for i in extras[:10])
+        print(f"::error::non-parent items remain on project: {names}")
+        errors += len(extras)
+    return errors
 
 
 def _add_item(project_id, content_id, token):
@@ -395,6 +518,7 @@ def main():
             state = "Done" if row["complete"] else "open"
             print(
                 f"[dry-run] track '{row['title']}' status={state} "
+                f"ecosystem={row['ecosystem']} "
                 f"(released {row['start'] or 'n/a'} -> EOL {row['eol'] or 'n/a'})"
             )
         print(f"compat board: desired={len(desired)} (dry-run, no writes)")
@@ -413,8 +537,11 @@ def main():
 
     project_id = project["id"]
     fields = _ensure_fields(project_id, token)
-    existing = _existing_items(project_id, token)
     status_field = fields.get("Status")
+    eco_field = fields.get("Ecosystem")
+    if eco_field is None:
+        print("::error::Ecosystem field missing on project after ensure")
+        sys.exit(1)
 
     desired_ids = set()
     tracked = done = 0
@@ -422,10 +549,15 @@ def main():
         item_id = _add_item(project_id, row["content_id"], token)
         desired_ids.add(row["content_id"])
         tracked += 1
-        eco = fields.get("Ecosystem")
-        eco_opt = _option_id(eco, row["ecosystem"]) if eco else None
-        if eco_opt:
-            _set_select(project_id, item_id, eco["id"], eco_opt, token)
+        eco_opt = _option_id(eco_field, row["ecosystem"])
+        if not eco_opt:
+            print(
+                f"::error::Ecosystem option '{row['ecosystem']}' missing; "
+                f"have={[o['name'] for o in eco_field.get('options', [])]}"
+            )
+            sys.exit(1)
+        _set_select(project_id, item_id, eco_field["id"], eco_opt, token)
+        print(f"ecosystem '{row['title']}' -> {row['ecosystem']}")
         if "Version" in fields:
             _set_text(
                 project_id, item_id, fields["Version"]["id"], row["version"], token
@@ -445,19 +577,20 @@ def main():
                 done += 1
             print(f"status '{row['title']}' -> {status_name}")
 
-    # Remove anything that is not a current rollup parent: stale draft items from
-    # the previous per-repo board and issues for versions now past EOL.
-    removed = 0
-    for item in existing:
-        keep = item["type"] == "Issue" and item.get("content_id") in desired_ids
-        if keep:
-            continue
-        _delete_item(project_id, item["item_id"], token)
-        removed += 1
+    # Re-fetch after writes: package sub-issues auto-added mid-sync must be pruned,
+    # otherwise Group-by Ecosystem shows a "No Ecosystem" pile under open parents.
+    removed = _prune_non_parents(project_id, desired_ids, token)
+    verify_errors = _verify_parents(project_id, desired, token)
+    if verify_errors:
+        print(
+            f"::error::compat board verify failed ({verify_errors} problem(s)); "
+            "disable Project auto-add for DLRSP/compatibility if sub-issues reappear"
+        )
+        sys.exit(1)
 
     print(
         f"compat board #{project['number']}: tracked={tracked} complete={done} "
-        f"removed-stale={removed} total={len(desired)}"
+        f"removed-stale={removed} total={len(desired)} verified=ok"
     )
 
 
