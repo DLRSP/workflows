@@ -50,10 +50,16 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install pip-tools
+      # Pinned toolchain (see .github/actions/setup-pip-tools).
+      - name: Setup pip-tools
         run: |
-          pip install --upgrade pip
-          pip install pip-tools
+          set -euo pipefail
+          python -m pip install --upgrade \
+            'pip>=26.1.2,<26.2' \
+            'pip-tools==7.6.0' \
+            typing_extensions
+          python -m pip --version
+          pip-compile --version
 
       - name: Generate and verify dev requirements
         run: |
@@ -112,10 +118,16 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install pip-tools
+      # Pinned toolchain (see .github/actions/setup-pip-tools).
+      - name: Setup pip-tools
         run: |
-          pip install --upgrade pip
-          pip install pip-tools
+          set -euo pipefail
+          python -m pip install --upgrade \
+            'pip>=26.1.2,<26.2' \
+            'pip-tools==7.6.0' \
+            typing_extensions
+          python -m pip --version
+          pip-compile --version
 
       - name: Generate and verify CI test requirements
         run: |
@@ -198,10 +210,16 @@ jobs:
           RAW_DJANGO_ENV="py${{ matrix.python-version }}-django${{ matrix.django-version }}"
           echo "DJANGO_ENV=${RAW_DJANGO_ENV//./}" >> "$GITHUB_ENV"
 
-      - name: Install pip-tools
+      # Pinned toolchain (see .github/actions/setup-pip-tools).
+      - name: Setup pip-tools
         run: |
-          pip install --upgrade pip
-          pip install pip-tools
+          set -euo pipefail
+          python -m pip install --upgrade \
+            'pip>=26.1.2,<26.2' \
+            'pip-tools==7.6.0' \
+            typing_extensions
+          python -m pip --version
+          pip-compile --version
 
       - name: Generate and verify runtime lock requirements
         # Experimental legs (e.g. EOL Django 3.2) may be unresolvable for
@@ -261,10 +279,16 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install pip-tools
+      # Pinned toolchain (see .github/actions/setup-pip-tools).
+      - name: Setup pip-tools
         run: |
-          pip install --upgrade pip
-          pip install pip-tools
+          set -euo pipefail
+          python -m pip install --upgrade \
+            'pip>=26.1.2,<26.2' \
+            'pip-tools==7.6.0' \
+            typing_extensions
+          python -m pip --version
+          pip-compile --version
 
       - name: Generate and verify docs requirements
         run: |

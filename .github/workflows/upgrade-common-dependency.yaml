@@ -53,11 +53,21 @@ jobs:
           RAW_PY_ENV="py${{ matrix.python-version }}"
           echo "PY_ENV=${RAW_PY_ENV//./}" >> "$GITHUB_ENV"
 
+      # Pinned toolchain (see .github/actions/setup-pip-tools). Inline so this
+      # reusable workflow stays self-contained when the action is first introduced.
+      - name: Setup pip-tools
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade \
+            'pip>=26.1.2,<26.2' \
+            'pip-tools==7.6.0' \
+            typing_extensions
+          python -m pip --version
+          pip-compile --version
+
       - name: Upgrade Python dependencies ${{ matrix.python-version }}
         id: upgrade-deps
         run: |
-          pip install -U pip pip-tools
-          
           HAS_CHANGES=false
           
           if [[ -f "dev.in" ]] ; then
