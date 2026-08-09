@@ -269,6 +269,15 @@ jobs:
               count=1,
               flags=re.MULTILINE,
           )
+          if count == 0:
+              # Older modules omit version under [tool.towncrier]; insert it.
+              text, count = re.subn(
+                  r"(^\[tool\.towncrier\]\s*\n)",
+                  rf'\1version = "{new_version}"\n',
+                  text,
+                  count=1,
+                  flags=re.MULTILINE,
+              )
           if count != 1:
               raise SystemExit("Could not sync [tool.towncrier] version")
           path.write_text(text, encoding="utf-8")

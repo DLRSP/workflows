@@ -66,6 +66,18 @@ jobs:
           RAW_DJANGO_ENV="py${{ matrix.python-version }}-django${{ matrix.django-version }}"
           echo "DJANGO_ENV=${RAW_DJANGO_ENV//./}" >> "$GITHUB_ENV"
 
+      # Pinned toolchain (see .github/actions/setup-pip-tools). Inline so this
+      # reusable workflow stays self-contained when the action is first introduced.
+      - name: Setup pip-tools
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade \
+            'pip>=26.1.2,<26.2' \
+            'pip-tools==7.6.0' \
+            typing_extensions
+          python -m pip --version
+          pip-compile --version
+
       - name: Upgrade Python dependencies ${{ matrix.python-version }}
         run: |
           typeset -A ranges=(["3.2"]="Django>=3.2a1,<3.3" ["4.2"]="Django>=4.2,<4.3" ["5.2"]="Django>=5.2,<5.3")
@@ -77,7 +89,6 @@ jobs:
             echo "❌ No requirements/runtime.in or requirements/requirements.in found"
             exit 1
           fi
-          pip install -U pip pip-tools
           pip-compile --upgrade --generate-hashes --allow-unsafe \
                       -P "${ranges["${{ matrix.django-version }}"]}" \
                       -o "requirements/${{ env.DJANGO_ENV }}.txt" \

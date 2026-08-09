@@ -1,0 +1,30 @@
+name: Setup pip-tools
+description: >-
+  Install a pinned pip + pip-tools toolchain for pip-compile in CI.
+  Unpinned `pip install -U pip pip-tools` breaks when pip removes internal
+  APIs (e.g. stdlib_pkgs in 26.2) or when pip-tools imports typing_extensions
+  without declaring it on older Python. Keep the requirement specs here in
+  sync with the inline Setup pip-tools steps in upgrade-dependency,
+  upgrade-common-dependency, and verify-requirements.
+inputs:
+  pip-spec:
+    description: pip requirement specifier
+    required: false
+    default: "pip>=26.1.2,<26.2"
+  pip-tools-spec:
+    description: pip-tools requirement specifier
+    required: false
+    default: "pip-tools==7.6.0"
+runs:
+  using: composite
+  steps:
+    - name: Install pinned pip and pip-tools
+      shell: bash
+      run: |
+        set -euo pipefail
+        python -m pip install --upgrade \
+          "${{ inputs.pip-spec }}" \
+          "${{ inputs.pip-tools-spec }}" \
+          typing_extensions
+        python -m pip --version
+        pip-compile --version
