@@ -3,10 +3,11 @@ name: Compat Rollup Sync
 
 # Org-level hierarchy: one parent issue per active Python/Django version, with one
 # sub-issue per published package (closed when the package declares support). The
-# parent's native sub-issue progress reads as "compatible packages / total". A
-# single runner owns the hub repo issues. Writes use an org-scoped dlrsp-actions
-# App token (issues:write); GITHUB_TOKEN stays read-only. Runs only on
-# DLRSP/workflows, never via workflow_call.
+# parent's native sub-issue progress reads as "compatible packages / total", and
+# the parent itself is closed when every package is done (reopened if any gap
+# remains). A single runner owns the hub repo issues. Writes use an org-scoped
+# dlrsp-actions App token (issues:write); GITHUB_TOKEN stays read-only. Runs only
+# on DLRSP/workflows, never via workflow_call.
 "on":
   workflow_dispatch:
     inputs:

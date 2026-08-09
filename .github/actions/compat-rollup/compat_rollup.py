@@ -7,6 +7,11 @@ declares support for that version (via pyproject classifiers) and open when it
 still needs adaptation, so the parent's native sub-issue progress reads as
 "compatible packages / total".
 
+The parent issue mirrors that rollup: closed (completed) when every package
+sub-issue is done, reopened as soon as any package still needs adaptation.
+Past-EOL versions are retired separately (closed and dropped from the active
+set).
+
 The per-repo ``compat:`` milestones are untouched: they keep the native pull
 request link and the EOL countdown inside each repository.
 
@@ -290,7 +295,7 @@ def main():
     existing = {} if dry_run else _existing_issues(hub, token)
 
     active_titles = set()
-    parents = subs = supported = soon = 0
+    parents = subs = supported = soon = parents_done = 0
     for ver in versions:
         eco, num = ver["ecosystem"], ver["version"]
         near = ver["days_to_eol"] <= EOL_WARN_DAYS
@@ -299,20 +304,31 @@ def main():
         countdown = (
             f"EOL in {ver['days_to_eol']} days." if near else f"EOL {ver['eol']}."
         )
+        pkg_ok = [
+            num in support.get(pkg["name"], {}).get(eco, set()) for pkg in packages
+        ]
+        # Parent tracks fleet readiness for this version: complete only when
+        # every published package declares support; reopen if any gap remains.
+        all_done = bool(packages) and all(pkg_ok)
+        want_parent = "closed" if all_done else "open"
         pbody = (
             f"Tracks {eco} {num} compatibility across published DLRSP packages.\n\n"
             f"Released {ver['release'] or 'n/a'}; {countdown}\n\n"
             "Each sub-issue is one package: closed = already declares support, "
-            "open = still needs adaptation."
+            "open = still needs adaptation.\n\n"
+            "This parent is closed when every package sub-issue is complete, "
+            "and reopened if any package still needs adaptation."
         )
         plabels = [LABEL, EOL_SOON] if near else [LABEL]
         parent = _ensure_issue(
-            hub, token, ptitle, pbody, "open", existing, dry_run, plabels
+            hub, token, ptitle, pbody, want_parent, existing, dry_run, plabels
         )
         parents += 1
+        if all_done:
+            parents_done += 1
         if near:
             soon += 1
-            current = existing.get(ptitle)
+            current = existing.get(ptitle) or parent
             if current is not None:
                 have = {lbl["name"] for lbl in current.get("labels", [])}
                 if EOL_SOON not in have:
@@ -322,9 +338,7 @@ def main():
             if dry_run or parent is None
             else _linked_child_ids(hub, token, parent["number"])
         )
-        for pkg in packages:
-            sets = support.get(pkg["name"], {})
-            ok = num in sets.get(eco, set())
+        for pkg, ok in zip(packages, pkg_ok):
             supported += 1 if ok else 0
             stitle = f"{pkg['name']}: {eco} {num}"
             sbody = (
@@ -345,8 +359,9 @@ def main():
 
     closed = _close_stale(hub, token, existing, active_titles, dry_run)
     print(
-        f"compat rollup on {hub}: parents={parents} sub-issues={subs} "
-        f"declared-supported={supported} eol-soon={soon} retired={closed}"
+        f"compat rollup on {hub}: parents={parents} parents-complete={parents_done} "
+        f"sub-issues={subs} declared-supported={supported} eol-soon={soon} "
+        f"retired={closed}"
     )
 
 
