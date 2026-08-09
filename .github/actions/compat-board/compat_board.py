@@ -11,6 +11,11 @@ roadmap bars, plus the native sub-issue progress field that reads as
 sub-issues. Only parents are added as items, so the roadmap stays readable; the
 per-package detail lives in each parent's sub-issue list and in the hub repo.
 
+Parent completion is mirrored onto the built-in Status field: Done when every
+package sub-issue is complete (parent issue closed), Todo when any package still
+needs adaptation (parent open). Fully-adapted versions stay on the board until
+EOL so the Released→EOL bars remain visible.
+
 Projects v2 is only reachable through GraphQL with an org-scoped token that has
 ``organization-projects: write`` (the repository GITHUB_TOKEN cannot access it).
 
@@ -26,6 +31,7 @@ Environment:
 
 from __future__ import annotations
 
+import datetime as dt
 import json
 import os
 import sys
@@ -54,6 +60,10 @@ ECOSYSTEM_OPTIONS = [
     {"name": "Python", "color": "BLUE", "description": "CPython runtime"},
     {"name": "Django", "color": "GREEN", "description": "Django framework"},
 ]
+# Built-in Status option names (project defaults vary slightly across templates).
+STATUS_DONE = ("Done", "Complete", "Completed")
+STATUS_TODO = ("Todo", "To do", "Backlog", "Ready")
+STATUS_ACTIVE = ("In Progress", "In progress", "Started")
 
 
 def _rest(method, path, token):
@@ -262,17 +272,41 @@ def _option_id(field, option_name):
     return None
 
 
-def _version_map(ref):
-    """Map (ecosystem label, version) -> {release, eol} from the shared timeline."""
+def _option_id_any(field, names):
+    for name in names:
+        opt = _option_id(field, name)
+        if opt:
+            return opt, name
+    return None, None
+
+
+def _status_option(field, complete, in_progress):
+    """Map rollup readiness onto the built-in Status single-select."""
+    if field is None:
+        return None, None
+    if complete:
+        return _option_id_any(field, STATUS_DONE)
+    if in_progress:
+        opt, name = _option_id_any(field, STATUS_ACTIVE)
+        if opt:
+            return opt, name
+    return _option_id_any(field, STATUS_TODO)
+
+
+def _load_timeline(ref):
     try:
         with urllib.request.urlopen(TIMELINE_URL.format(ref=ref)) as resp:
-            timeline = yaml.safe_load(resp.read().decode())
+            return yaml.safe_load(resp.read().decode())
     except (urllib.error.URLError, yaml.YAMLError) as exc:
         print(f"::warning::could not read timeline ({exc}); dates omitted")
         return {}
+
+
+def _version_map(timeline):
+    """Map (ecosystem label, version) -> {release, eol} from the shared timeline."""
     out = {}
     for key, label in (("python", "Python"), ("django", "Django")):
-        for entry in timeline.get(key, []):
+        for entry in (timeline or {}).get(key, []):
             out[(label, str(entry["version"]))] = {
                 "release": entry.get("release", ""),
                 "eol": entry.get("eol", ""),
@@ -280,11 +314,28 @@ def _version_map(ref):
     return out
 
 
-def _discover(hub, token, version_map):
-    """Yield desired board items from the rollup parent issues in the hub."""
+def _active_versions(timeline):
+    """Active rollup versions: eol >= today; Django LTS only (matches compat-rollup)."""
+    today = dt.date.today()
+    active = set()
+    for key, label in (("python", "Python"), ("django", "Django")):
+        for entry in (timeline or {}).get(key, []):
+            if key == "django" and not entry.get("lts"):
+                continue
+            eol = dt.date.fromisoformat(entry["eol"])
+            if eol < today:
+                continue
+            active.add((label, str(entry["version"])))
+    return active
+
+
+def _discover(hub, token, version_map, active):
+    """Yield desired board items from active rollup parents (open or complete)."""
     rows = []
+    # state=all: fully-adapted parents are closed but must stay on the roadmap
+    # until EOL so Released→EOL bars remain visible.
     issues = _rest_paginated(
-        f"/repos/{hub}/issues?state=open&labels={ROLLUP_LABEL}", token
+        f"/repos/{hub}/issues?state=all&labels={ROLLUP_LABEL}", token
     )
     for issue in issues:
         if "pull_request" in issue:
@@ -294,7 +345,11 @@ def _discover(hub, token, version_map):
             continue
         label = title[len(PARENT_PREFIX) :].strip()
         ecosystem, _, version = label.partition(" ")
-        dates = version_map.get((ecosystem, version), {})
+        key = (ecosystem, version)
+        if key not in active:
+            continue
+        dates = version_map.get(key, {})
+        complete = issue.get("state") == "closed"
         rows.append(
             {
                 "content_id": issue["node_id"],
@@ -303,6 +358,10 @@ def _discover(hub, token, version_map):
                 "version": version,
                 "start": dates.get("release", ""),
                 "eol": dates.get("eol", ""),
+                # Parent issue state already mirrors sub-issue completion
+                # (compat-rollup): closed = all packages done, open = work left.
+                "complete": complete,
+                "in_progress": False,
             }
         )
     return rows
@@ -317,7 +376,8 @@ def main():
     timeline_ref = os.environ.get("TIMELINE_REF", "main")
     dry_run = os.environ.get("DRY_RUN") == "1"
 
-    desired = _discover(hub, token, _version_map(timeline_ref))
+    timeline = _load_timeline(timeline_ref)
+    desired = _discover(hub, token, _version_map(timeline), _active_versions(timeline))
     print(f"discovered {len(desired)} rollup parent issue(s) on {hub}")
 
     project = None
@@ -332,8 +392,9 @@ def main():
 
     if dry_run:
         for row in desired:
+            state = "Done" if row["complete"] else "open"
             print(
-                f"[dry-run] track '{row['title']}' "
+                f"[dry-run] track '{row['title']}' status={state} "
                 f"(released {row['start'] or 'n/a'} -> EOL {row['eol'] or 'n/a'})"
             )
         print(f"compat board: desired={len(desired)} (dry-run, no writes)")
@@ -353,9 +414,10 @@ def main():
     project_id = project["id"]
     fields = _ensure_fields(project_id, token)
     existing = _existing_items(project_id, token)
+    status_field = fields.get("Status")
 
     desired_ids = set()
-    tracked = 0
+    tracked = done = 0
     for row in desired:
         item_id = _add_item(project_id, row["content_id"], token)
         desired_ids.add(row["content_id"])
@@ -374,6 +436,14 @@ def main():
             )
         if row["eol"] and "EOL" in fields:
             _set_date(project_id, item_id, fields["EOL"]["id"], row["eol"], token)
+        status_opt, status_name = _status_option(
+            status_field, row["complete"], row["in_progress"]
+        )
+        if status_opt:
+            _set_select(project_id, item_id, status_field["id"], status_opt, token)
+            if row["complete"]:
+                done += 1
+            print(f"status '{row['title']}' -> {status_name}")
 
     # Remove anything that is not a current rollup parent: stale draft items from
     # the previous per-repo board and issues for versions now past EOL.
@@ -386,7 +456,7 @@ def main():
         removed += 1
 
     print(
-        f"compat board #{project['number']}: tracked={tracked} "
+        f"compat board #{project['number']}: tracked={tracked} complete={done} "
         f"removed-stale={removed} total={len(desired)}"
     )
 

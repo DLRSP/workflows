@@ -1,9 +1,10 @@
 name: Compat board sync
 description: >-
   Track the compatibility rollup parent issues (one per supported version) on an
-  org-level GitHub Project v2 roadmap, with Released/EOL dates for the bars and
-  native sub-issue progress for "compatible packages / total". Requires an
-  org-scoped token with organization-projects:write and issues:read.
+  org-level GitHub Project v2 roadmap, with Released/EOL dates for the bars,
+  native sub-issue progress for "compatible packages / total", and Status
+  (Done when every package sub-issue is complete). Requires an org-scoped token
+  with organization-projects:write and issues:read.
 inputs:
   org:
     description: Organization login that owns the Project v2
