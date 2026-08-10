@@ -54,6 +54,7 @@ Check these projects to get real-life examples of usage and inspiration:
 - ![GitHub stars](https://img.shields.io/github/stars/DLRSP/ateco?label=%E2%AD%90&style=flat-square) [ateco](https://github.com/DLRSP/ateco#readme) - Italian ATECO classification (ISTAT) as a pure-Python data library.
 - ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-ateco?label=%E2%AD%90&style=flat-square) [django-ateco](https://github.com/DLRSP/django-ateco#readme) - Django helpers for Italian ATECO classification (wraps ateco).
 - ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-agentweb?label=%E2%AD%90&style=flat-square) [django-agentweb](https://github.com/DLRSP/django-agentweb#readme) - Make Django sites first-class citizens of the agentic web: llms.txt, Schema.org/JSON-LD, agent discovery, WebMCP tools, agentic commerce/booking and SDF — per-site opt-in.
+- ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-blog-core?label=%E2%AD%90&style=flat-square) [django-blog-core](https://github.com/DLRSP/django-blog-core#readme) - Reusable multi-blog Django app: Blog, Section, Article with draft/schedule/publish, feeds, hookset, and optional Markdown/sanitize extras.
 
 Feel free to send a PR to add your project in this list if you are relying on these scripts.
 
