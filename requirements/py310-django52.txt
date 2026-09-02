@@ -1014,17 +1014,17 @@ pathspec==1.1.1 \
     # via
     #   black
     #   mypy
-pbs-installer[download,install]==2026.8.25 \
-    --hash=sha256:2ef248b8689e676b5f52bda96e0b91f29db1f351ac793d9d610cfde030ea165b \
-    --hash=sha256:55716bb41a8f86afee5812485ae71e96dcd3499aad6cb7fa75d7825993e15728
+pbs-installer[download,install]==2026.9.1 \
+    --hash=sha256:b21eb21a53557d197899e1bf3d8b7f4f264feb1c546327106fdfcc967cb3a704 \
+    --hash=sha256:d2c320a11e0313f559f4338fad3f698345d200d0506053c75d266730b2507dcb
     # via poetry
 pkginfo==1.13 \
     --hash=sha256:37e1bfb7b5b149829e6f140a225b517c4c8808d8d164f68137b9492023874061 \
     --hash=sha256:4f70471c643f71fe84a06230c0e33c5c5b12a33b2fd21bff14ddaef5a974adb1
     # via poetry
-platformdirs==4.11.6 \
-    --hash=sha256:1a4016e373f89f8ec458431fe0e0c5c4285858ac623f3e20efdfcbc0bd862941 \
-    --hash=sha256:b22d992e863bc651c26b16242041c7979db6e3286e548f9a76cc91238fac599e
+platformdirs==4.11.7 \
+    --hash=sha256:4f41487eeeeeb07f3a6625e61d9bc0ae6809f92d3386dbd74392fbb76108104d \
+    --hash=sha256:8a02cb259042c79d1cd0450facc2fe6dc9d303ae7901afbe33bf8ea0b188cef6
     # via
     #   black
     #   findpython
@@ -1455,9 +1455,9 @@ urllib3==2.7.0 \
     # via
     #   dulwich
     #   requests
-virtualenv==21.7.7 \
-    --hash=sha256:67a6a68fef3ad8ca16b8b89f33fd8f97996cc0bf0db31629d07ecf8dec539a2c \
-    --hash=sha256:6874376f99ba6b8d4e3ee8bde67f9285412400c7d5b29ba41ee6daa5e0221bdc
+virtualenv==21.7.8 \
+    --hash=sha256:1dc49c790072a9072cb1803f9bd62aa69cd583077cada32390f75505cdc64c9b \
+    --hash=sha256:3040eb3cbf5d32b10ffd57d167e6a162237ad82ba7d8cf1400a1efed593d85ac
     # via poetry
 wcmatch==11.0.1 \
     --hash=sha256:1ea2b4fa678b8ca268253798d5963935df39132d47c3e241c0a0732224005e7d \
