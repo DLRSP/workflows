@@ -89,7 +89,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.x"
 
@@ -123,7 +123,7 @@ jobs:
 
       - name: Set up Python ${{ matrix.python-version }}
         if: ${{ always() && hashFiles('setup.py', 'pyproject.toml', 'tox.ini') }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -191,7 +191,7 @@ jobs:
     steps:
     - uses: actions/checkout@v6
 
-    - uses: actions/setup-python@v6
+    - uses: actions/setup-python@v7
       with:
         python-version: "3.x"
 
@@ -309,7 +309,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') }}
         with:
           python-version: "3.x"
@@ -436,7 +436,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         if: ${{ always() && hashFiles('setup.py', 'pyproject.toml') }}
         with:
           python-version: "3.x"
