@@ -1018,13 +1018,13 @@ platformdirs==4.11.11 \
     #   findpython
     #   poetry
     #   virtualenv
-poetry==2.4.3 \
-    --hash=sha256:79ce90140d0dcded93bab2df97fdd26b433f6949d834b4ac7bb1951aaca65c2f \
-    --hash=sha256:f5687e723512332ffe2469f81624d8c9ecbe69c16eb84889decbd85ecfc282e7
+poetry==2.5.1 \
+    --hash=sha256:19fbd566efced512be58989a756aa1333cdc9b6aabb4fc84fd1ec9d29ee74874 \
+    --hash=sha256:3f7910abc667ce0c33a67e306baf017acdec1c8eeec4aa64d176e530d8338a61
     # via -r requirements/requirements.in
-poetry-core==2.4.0 \
-    --hash=sha256:4305848477da00272bebd3f615bbec87f64bd117cdb858ab660b626a06a9d96c \
-    --hash=sha256:4e8c7496cf797998ffc493f2e23eba4b038c894c08eadacdcdf688945de6b43a
+poetry-core==2.5.0 \
+    --hash=sha256:81d04c9253b19d0604718268d781867c8f7b2128e5b25bbf1e84141eec6b89c4 \
+    --hash=sha256:98ee465b66f7e14bb9fbe68fb5e00d0cff184f036993ec94610ae4b5612f3add
     # via poetry
 prompt-toolkit==3.0.53 \
     --hash=sha256:01c0891d7f9237d5e339f7d3e42cdae80b7534abb1c7c0e3352efba6231492f2 \
@@ -1403,9 +1403,9 @@ urllib3==2.8.0 \
     # via
     #   dulwich
     #   requests
-virtualenv==21.7.16 \
-    --hash=sha256:752fd5d5352502fbd794422983eed65a249fc6f4685c5e2122fd6052e6477a11 \
-    --hash=sha256:d3fcf6954a07121c2b61efcb96419e2f40b3718d558998f13a7314e32cc42723
+virtualenv==21.9.0 \
+    --hash=sha256:8c7cde05f630fbedf61758258014a92e6d6d5b4b9c6e6be7279d233f89e09aac \
+    --hash=sha256:fa0f2a26fcb6f32b376fc8b2c705b6057366763d5b9e5242d1ab10ecc3279fd3
     # via poetry
 wcmatch==11.0.1 \
     --hash=sha256:1ea2b4fa678b8ca268253798d5963935df39132d47c3e241c0a0732224005e7d \
