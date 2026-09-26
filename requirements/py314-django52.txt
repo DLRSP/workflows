@@ -922,9 +922,9 @@ pkginfo==1.13 \
     --hash=sha256:37e1bfb7b5b149829e6f140a225b517c4c8808d8d164f68137b9492023874061 \
     --hash=sha256:4f70471c643f71fe84a06230c0e33c5c5b12a33b2fd21bff14ddaef5a974adb1
     # via poetry
-platformdirs==4.11.13 \
-    --hash=sha256:228b2283af5c1f32673cdf55271216a52bbd8258cb31374e302ad7bd26cd7513 \
-    --hash=sha256:6985eefdc2298693e4ce1fe124645524cb967428eb6384e0ce5b49767e7ea8ba
+platformdirs==4.11.15 \
+    --hash=sha256:84508421c77d3c6462e71dd8c0d2776c2ace0e94eb006dc4fd383bc1dcf5a176 \
+    --hash=sha256:d7419e973b2b740d428200130f80c0e79304d1c71081001db911e15b26a3a6d4
     # via
     #   black
     #   findpython
