@@ -137,7 +137,17 @@ jobs:
           && inputs.enable-auto-merge
           && github.event.pull_request.user.login != 'app/dlrsp-actions'
           && github.event.pull_request.user.login != 'dlrsp-actions[bot]'
-        run: gh pr merge --auto --rebase "${{ github.event.pull_request.html_url }}"
+        run: |
+          set -euo pipefail
+          if ! out="$(gh pr merge --auto --rebase "${{ github.event.pull_request.html_url }}" 2>&1)"; then
+            if [[ "$out" == *"Auto merge is not allowed"* ]] || [[ "$out" == *"enablePullRequestAutoMerge"* ]]; then
+              echo "::warning::Auto-merge not enabled on this repository — skipping"
+              exit 0
+            fi
+            echo "$out"
+            exit 1
+          fi
+          echo "$out"
         env:
           GH_TOKEN: ${{ steps.dlrsp-token.outputs.token }}
 
