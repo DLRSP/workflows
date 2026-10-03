@@ -116,7 +116,21 @@ jobs:
           pattern: py*
           merge-multiple: true
 
+      # Private/template repos may lack org App secrets; skip PR rather than fail schedule.
+      - name: Check App secrets available
+        id: app-secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${{ secrets.DLRSP_ACTIONS_APP_ID }}" || -z "${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}" ]]; then
+            echo "::warning::App secrets unavailable in this repository — skipping Open Pull Request"
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Create App installation token
+        if: steps.app-secrets.outputs.available == 'true'
         id: dlrsp-token
         uses: DLRSP/workflows/.github/actions/dlrsp-actions-token@main
         with:
@@ -126,6 +140,7 @@ jobs:
           permission-pull-requests: write
 
       - name: Create Pull Request
+        if: steps.app-secrets.outputs.available == 'true'
         id: cpr
         uses: peter-evans/create-pull-request@v8
         with:
