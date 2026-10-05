@@ -4,7 +4,7 @@
 #   - ~/.cursor/context/dlrsp/scripts/compat_board_sync.py  (agent/local: verify + board)
 # Dates verified 2026-06-25 (python.org devguide, djangoproject.com). Future
 # rows are scheduled and may shift; keep this file as the only place to update.
-updated: "2026-06-25"
+updated: "2026-10-05"
 
 python:
   - version: "3.9"
@@ -12,7 +12,7 @@ python:
     eol: "2025-10-31"
   - version: "3.10"
     release: "2021-10-04"
-    eol: "2026-10-31"
+    eol: "2026-10-01"
   - version: "3.11"
     release: "2022-10-24"
     eol: "2027-10-31"
