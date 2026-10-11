@@ -110,9 +110,9 @@ build==1.6.1 \
     --hash=sha256:51cc11666391ab6f092070437ac747002ff46f3e4113a3622177ee6b488bfc53 \
     --hash=sha256:ecd351a4be9d35a9eaaba244a7687143c9c7d4aea6ac964e7e7ddab20cbcf4e7
     # via poetry
-bump-my-version==1.5.1 \
-    --hash=sha256:5079e443ab8c9a9903f140b427ff9f6fe8dd54013a55a4cf48b89326f3a71c07 \
-    --hash=sha256:df3e2989d0d7fe704718feb24a5880f089b6b6369e427a4445b89c3adebfcff1
+bump-my-version==1.6.0 \
+    --hash=sha256:ba2c81ed0c17bf0a95e24f9676b8ffaf3b24d29fcb978f06b4ef0f57ee9f39ad \
+    --hash=sha256:e01a80fcbe265d3d3d4e6060e21bf5bb9c5521986e6582a122a0e5dfd48f74ee
     # via -r requirements/requirements.in
 cachecontrol[filecache]==0.14.4 \
     --hash=sha256:b7ac014ff72ee199b5f8af1de29d60239954f223e948196fa3d84adaffc71d2b \
@@ -939,9 +939,9 @@ pkginfo==1.13 \
     --hash=sha256:37e1bfb7b5b149829e6f140a225b517c4c8808d8d164f68137b9492023874061 \
     --hash=sha256:4f70471c643f71fe84a06230c0e33c5c5b12a33b2fd21bff14ddaef5a974adb1
     # via poetry
-platformdirs==4.12.4 \
-    --hash=sha256:63743c02414e755de4e31b8f68125c1407495b86c5a006e203c01ff8b9924250 \
-    --hash=sha256:78bfb9db2a8471ed7eebe3c3c932da413911042994e699b384fbb4493fa872d7
+platformdirs==4.13.0 \
+    --hash=sha256:1aa0b0d3f224c1f07c295121e312a5a24a180d6ae5a8425ea1784b3e3863e9c0 \
+    --hash=sha256:3dbcf4cd708f21cf876c4eaa90e58412bc4f033d87143f41b1493ff77c25b7e1
     # via
     #   black
     #   findpython
