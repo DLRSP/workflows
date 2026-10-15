@@ -641,9 +641,9 @@ fastjsonschema==2.22.2 \
     --hash=sha256:0fb3915616adac85ccfdd737d26be1089845d2019819505b42d39888458f74d4 \
     --hash=sha256:72064e12356a7d6ef02165be2946b9abadbdf238536e07eb587e3dbaa33099cf
     # via poetry
-filelock==4.1.1 \
-    --hash=sha256:3f4a557945a7b0f95efeb1f432267affe5d45ac8ddde2aed1b97ebb62382c089 \
-    --hash=sha256:7ba0927482c5a814b0a7f391d029ccdb8010f576f0a74c0dcde1811e8bc4c1b6
+filelock==4.2.0 \
+    --hash=sha256:2ff5690882e8cdb00ef31fb3d01a3094c29f30985426c59495afb1733f3b7238 \
+    --hash=sha256:7a60906c75227cf04d0c273afadc8219400f11aeb13cc69591d4f6cdc6c8036e
     # via
     #   cachecontrol
     #   python-discovery
@@ -859,9 +859,9 @@ mdurl==0.1.2 \
     --hash=sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8 \
     --hash=sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba
     # via markdown-it-py
-more-itertools==11.2.0 \
-    --hash=sha256:59960f488835254863a857eb501f69e4ec92fdc8822f098c0f48dba530afd487 \
-    --hash=sha256:e4c522352a24664c974d0be8382944107ae638281a06391a5a538366b5707fe5
+more-itertools==11.2.1 \
+    --hash=sha256:35a7377edd1dd6608dcb2cdf534ded55ea32d49448875ad042cd3f879fb1ded0 \
+    --hash=sha256:cbf08fd0af284dc69718b9b76a8e6203df624d70209ea511e4219d350c856f63
     # via
     #   jaraco-classes
     #   jaraco-functools
@@ -1033,9 +1033,9 @@ pathspec==1.1.1 \
     # via
     #   black
     #   mypy
-pbs-installer[download,install]==2026.10.3 \
-    --hash=sha256:06914e979658b63502771ba565211ccfad16dbf835ceaa2ea247353b33fc2c01 \
-    --hash=sha256:2e8a1a470e46d220b4ffae12db40a3f2f577604c18d0331789ca1eeb4b70ca65
+pbs-installer[download,install]==2026.10.13 \
+    --hash=sha256:3308621cdd55a56e064b5fc544d3e6fa90e77991906292c6111b3ef5b9e8d625 \
+    --hash=sha256:888654540e18a358f0dd1d20838fa7231f47a2b11dd803f457148cda88cabe6a
     # via poetry
 pkginfo==1.13 \
     --hash=sha256:37e1bfb7b5b149829e6f140a225b517c4c8808d8d164f68137b9492023874061 \
