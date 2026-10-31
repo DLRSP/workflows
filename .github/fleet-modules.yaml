@@ -1,0 +1,27 @@
+# Curated DLRSP package repos for fleet packaging hygiene.
+# Mirrors registry.yaml modules (publishable + templates). Update when a
+# registry module is added or retired. Do not invent repos from directory globs.
+org: DLRSP
+modules:
+  - django-pkg
+  - python-pkg
+  - ateco
+  - django-ateco
+  - django-agentweb
+  - django-blog-core
+  - django-allergens
+  - django-ingredients
+  - django-food-recipes
+  - django-model-mixin
+  - django-sp
+  - django-party
+  - django-errors
+  - django-lang
+  - django-iubenda
+  - django-custom-storage
+  - django-hashtag
+  - django-filer-optimizer
+  - django-requests-api
+  - django-sites-extra
+  - django-static-base
+  - django-service

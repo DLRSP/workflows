@@ -2,8 +2,16 @@
 
 ## [1.19.1 (unreleased)]
 
+### Added
+
+- Fleet packaging-hygiene scanner (cron + dispatch): CI log warning classes → one
+  idempotent tracking issue per repo/warning class via `dlrsp-actions` App token.
+- `packaging-hygiene` label; curated `.github/fleet-modules.yaml` module list.
+
 ### Changed
 
+- `ci.yaml` PyPI deploy: grant `id-token: write` so Trusted Publishing OIDC works
+  when `PYPI_API_TOKEN` is unset (avoids `ACTIONS_ID_TOKEN_REQUEST_TOKEN` unset).
 - Migrate remaining workflows from `BOT_PAT` to `dlrsp-actions` App installation token
   (`changelog`, `pr-rebase-*`, `release-*`, `update-used-in`, `upgrade-*`).
 - Extend bot policies to `dependabot[bot]` and `pre-commit-ci[bot]` (TS-03/04).

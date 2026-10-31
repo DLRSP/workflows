@@ -1,0 +1,108 @@
+---
+name: Packaging Hygiene Scan
+
+# Fleet packaging / deprecation warning tracker. Iterates curated modules in
+# .github/fleet-modules.yaml, reads recent CI job logs, and opens or updates
+# one idempotent tracking issue per (repo, warning class). Issue writes use an
+# org-scoped dlrsp-actions App token; GITHUB_TOKEN stays read-only.
+#
+# Runs on DLRSP/workflows (cron + dispatch). Also callable via workflow_call;
+# composites are always referenced at @main so callers resolve the action from
+# this repository, not the consumer tree.
+"on":
+  workflow_call:
+    inputs:
+      dry-run:
+        description: When "1", report without writing issues
+        required: false
+        type: string
+        default: ""
+      repos:
+        description: Optional CSV of repo names (overrides fleet file)
+        required: false
+        type: string
+        default: ""
+      runs-per-repo:
+        description: Completed CI runs to inspect per repository
+        required: false
+        type: string
+        default: "3"
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: When "1", report without writing issues
+        required: false
+        default: ""
+      repos:
+        description: Optional CSV of repo names (overrides fleet file)
+        required: false
+        default: ""
+      runs-per-repo:
+        description: Completed CI runs to inspect per repository
+        required: false
+        default: "3"
+  schedule:
+    # Tuesday 06:17 UTC — after Monday compat rollup / board sync.
+    - cron: "17 6 * * 2"
+
+concurrency:
+  group: packaging-hygiene-scan
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    name: Scan CI logs for packaging hygiene
+    # Hub runner owns the fleet scan; workflow_call from another repo is allowed
+    # but still needs org App secrets.
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Create org-scoped App token
+        id: dlrsp-token
+        uses: DLRSP/workflows/.github/actions/dlrsp-actions-token@main
+        with:
+          github-app-id: ${{ secrets.DLRSP_ACTIONS_APP_ID }}
+          github-app-private-key: ${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          permission-issues: write
+          permission-actions: read
+          permission-contents: read
+          permission-metadata: read
+
+      - name: Checkout workflows (fleet list + scanner)
+        uses: actions/checkout@v6
+        with:
+          repository: DLRSP/workflows
+          # Prefer the ref that triggered this run so branch/PR dispatches
+          # exercise the in-flight scanner before it lands on main.
+          ref: ${{ github.repository == 'DLRSP/workflows' && github.sha || 'main' }}
+          path: workflows-src
+
+      - name: Run packaging hygiene scanner
+        id: hygiene
+        uses: ./workflows-src/.github/actions/packaging-hygiene-scan
+        with:
+          org: ${{ github.repository_owner }}
+          github-token: ${{ steps.dlrsp-token.outputs.token }}
+          fleet-file: workflows-src/.github/fleet-modules.yaml
+          repos: ${{ inputs.repos }}
+          runs-per-repo: ${{ inputs.runs-per-repo || '3' }}
+          dry-run: ${{ inputs.dry-run }}
+
+      - name: Summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Packaging hygiene scan"
+            echo ""
+            echo "Issues created or updated: **${{ steps.hygiene.outputs.issue-count || 0 }}**"
+            echo ""
+            if [[ -n "${{ steps.hygiene.outputs.issue-urls }}" ]]; then
+              echo "### Issue URLs"
+              echo ""
+              echo "${{ steps.hygiene.outputs.issue-urls }}"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
