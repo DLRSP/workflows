@@ -95,7 +95,10 @@ _MATCHERS: list[tuple[str, re.Pattern[str], str, str, bool]] = [
     ),
     (
         "python-deprecation-warning",
-        re.compile(r"\bDeprecationWarning\b|\bPendingDeprecationWarning\b"),
+        # Require warning emission form (Trailing ":"), not tox `-W error::DeprecationWarning`.
+        re.compile(
+            r"(?<!::)(DeprecationWarning|PendingDeprecationWarning)\s*:"
+        ),
         "Python DeprecationWarning in CI logs",
         "A DeprecationWarning / PendingDeprecationWarning appeared in CI job "
         "logs; triage the stack frame and remove the deprecated call path.",
@@ -240,28 +243,34 @@ def _scan_log_text(text: str) -> dict[str, WarningHit]:
     return found
 
 
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ANN001
+        return None
+
+
 def _download_bytes(url: str, token: str | None = None) -> bytes:
     """GET bytes; do not forward Authorization onto Azure/S3 log redirects."""
-    req = urllib.request.Request(url, method="GET")
-    if token:
-        req.add_header("Authorization", f"Bearer {token}")
-        req.add_header("Accept", "application/vnd.github+json")
-        req.add_header("X-GitHub-Api-Version", "2022-11-28")
-    opener = urllib.request.build_opener(urllib.request.HTTPRedirectHandler())
-    # Manual redirect loop so the Bearer header is not sent to blob storage.
+    opener = urllib.request.build_opener(_NoRedirect)
+    current = url
+    auth = token
     for _ in range(5):
+        req = urllib.request.Request(current, method="GET")
+        if auth:
+            req.add_header("Authorization", f"Bearer {auth}")
+            req.add_header("Accept", "application/vnd.github+json")
+            req.add_header("X-GitHub-Api-Version", "2022-11-28")
         try:
             with opener.open(req) as resp:
                 return resp.read()
         except urllib.error.HTTPError as exc:
             if exc.code not in (301, 302, 303, 307, 308):
                 detail = exc.read().decode(errors="replace")[:300]
-                raise RuntimeError(f"GET {url} -> {exc.code}: {detail}") from exc
+                raise RuntimeError(f"GET {current} -> {exc.code}: {detail}") from exc
             location = exc.headers.get("Location")
             if not location:
-                raise RuntimeError(f"GET {url} -> {exc.code} without Location") from exc
-            req = urllib.request.Request(location, method="GET")
-            # No Authorization on the redirected blob URL.
+                raise RuntimeError(f"GET {current} -> {exc.code} without Location") from exc
+            current = location
+            auth = None  # blob URL must not receive the GitHub Bearer token
     raise RuntimeError(f"too many redirects for {url}")
 
 
@@ -434,13 +443,17 @@ def scan_repo(org: str, name: str, token: str, runs_per: int, workflow_name: str
         print("  no matching completed CI runs")
         return []
 
+    jobs_per_run = int(os.environ.get("JOBS_PER_RUN", "8"))
     for run in runs:
         run_url = run.get("html_url") or ""
-        jobs = _run_jobs(repo, run["id"], token)
-        for job in jobs:
-            conclusion = job.get("conclusion")
-            if conclusion not in ("success", "failure"):
-                continue
+        jobs = [
+            j
+            for j in _run_jobs(repo, run["id"], token)
+            if j.get("conclusion") in ("success", "failure")
+        ]
+        # Prefer longer / test jobs; packaging warnings usually appear there.
+        jobs.sort(key=lambda j: (-(j.get("run_attempt") or 1), j.get("name") or ""))
+        for job in jobs[:jobs_per_run]:
             text = _job_log_text(repo, job["id"], token)
             if not text:
                 continue
