@@ -191,7 +191,21 @@ jobs:
     env:
       BRANCH_NAME: auto-dependency-upgrades-py-django
     steps:
+      # Private/template repos may lack org App secrets; skip PR rather than fail schedule.
+      - name: Check App secrets available
+        id: app-secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${{ secrets.DLRSP_ACTIONS_APP_ID }}" || -z "${{ secrets.DLRSP_ACTIONS_PRIVATE_KEY }}" ]]; then
+            echo "::warning::App secrets unavailable in this repository — skipping Open Pull Request"
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Create App installation token
+        if: steps.app-secrets.outputs.available == 'true'
         id: dlrsp-token
         uses: DLRSP/workflows/.github/actions/dlrsp-actions-token@main
         with:
@@ -203,11 +217,13 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Set up Python for verification
+        if: steps.app-secrets.outputs.available == 'true'
         uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
       - name: Download all artifacts
+        if: steps.app-secrets.outputs.available == 'true'
         id: download-artifacts
         uses: actions/download-artifact@v7
         continue-on-error: true
@@ -217,6 +233,7 @@ jobs:
           merge-multiple: true
 
       - name: Check if artifacts were downloaded
+        if: steps.app-secrets.outputs.available == 'true'
         id: check-artifacts
         run: |
           echo "🔍 Checking for downloaded artifacts..."
@@ -270,7 +287,9 @@ jobs:
           exit 0
 
       - name: Verify all downloaded requirements files
-        if: steps.check-artifacts.outputs.has_artifacts == 'true'
+        if: >-
+          steps.app-secrets.outputs.available == 'true'
+          && steps.check-artifacts.outputs.has_artifacts == 'true'
         run: |
           echo "Verifying all downloaded requirements files can be installed..."
           python -m pip install --upgrade pip
@@ -334,7 +353,9 @@ jobs:
 
       - name: Create Pull Request
         id: cpr
-        if: steps.check-artifacts.outputs.has_artifacts == 'true'
+        if: >-
+          steps.app-secrets.outputs.available == 'true'
+          && steps.check-artifacts.outputs.has_artifacts == 'true'
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ steps.dlrsp-token.outputs.token }}

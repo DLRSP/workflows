@@ -153,12 +153,19 @@ print("yes" if fnmatch.fnmatch(sys.argv[1], sys.argv[2]) else "no")
 PY
 }
 
-check_paths_deny() {
-  local deny_json="$1"
-  local files
-  files="$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/files" --paginate -q '.[].filename' 2>/dev/null)" || {
+list_pr_files() {
+  gh api "repos/${REPO}/pulls/${PR_NUMBER}/files" --paginate -q '.[].filename' 2>/dev/null || {
     fail_closed "paths: unable to list PR files"
   }
+}
+
+check_paths_deny() {
+  local deny_json="$1"
+  if [[ "${deny_json}" == "null" || "${deny_json}" == "[]" ]]; then
+    return 0
+  fi
+  local files
+  files="$(list_pr_files)"
 
   while IFS= read -r pattern; do
     [[ -z "${pattern}" ]] && continue
@@ -171,6 +178,31 @@ check_paths_deny() {
     done <<< "${files}"
   done < <(echo "${deny_json}" | jq -r '.[]')
 
+  return 0
+}
+
+check_paths_allow_only() {
+  local allow_json="$1"
+  if [[ "${allow_json}" == "null" || "${allow_json}" == "[]" ]]; then
+    return 0
+  fi
+  local files
+  files="$(list_pr_files)"
+  while IFS= read -r file; do
+    [[ -z "${file}" ]] && continue
+    local ok=false
+    while IFS= read -r pattern; do
+      [[ -z "${pattern}" ]] && continue
+      if [[ "$(path_matches_glob "${file}" "${pattern}")" == "yes" ]]; then
+        ok=true
+        break
+      fi
+    done < <(echo "${allow_json}" | jq -r '.[]')
+    if [[ "${ok}" != "true" ]]; then
+      echo "paths allow_only miss: ${file}"
+      return 1
+    fi
+  done <<< "${files}"
   return 0
 }
 
@@ -203,7 +235,11 @@ gates_pass() {
         return 1
       fi
     elif [[ "$(echo "${gate}" | jq -r 'has("paths")')" == "true" ]]; then
-      if ! reason="$(check_paths_deny "$(echo "${gate}" | jq -c '.paths.deny')")"; then
+      if ! reason="$(check_paths_deny "$(echo "${gate}" | jq -c '.paths.deny // []')")"; then
+        echo "${reason}"
+        return 1
+      fi
+      if ! reason="$(check_paths_allow_only "$(echo "${gate}" | jq -c '.paths.allow_only // []')")"; then
         echo "${reason}"
         return 1
       fi
