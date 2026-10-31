@@ -137,7 +137,17 @@ jobs:
           && inputs.enable-auto-merge
           && github.event.pull_request.user.login != 'app/dlrsp-actions'
           && github.event.pull_request.user.login != 'dlrsp-actions[bot]'
-        run: gh pr merge --auto --rebase "${{ github.event.pull_request.html_url }}"
+        run: |
+          set -euo pipefail
+          if ! out="$(gh pr merge --auto --rebase "${{ github.event.pull_request.html_url }}" 2>&1)"; then
+            if [[ "$out" == *"Auto merge is not allowed"* ]] || [[ "$out" == *"enablePullRequestAutoMerge"* ]]; then
+              echo "::warning::Auto-merge not enabled on this repository — skipping"
+              exit 0
+            fi
+            echo "$out"
+            exit 1
+          fi
+          echo "$out"
         env:
           GH_TOKEN: ${{ steps.dlrsp-token.outputs.token }}
 
@@ -191,8 +201,17 @@ jobs:
           steps.evaluate.outputs.decision == 'block'
           && contains(steps.evaluate.outputs.actions, 'comment:blocked-by-policy')
         run: |
+          set -euo pipefail
+          marker="Policy gate blocked this PR:"
+          reason="${{ steps.evaluate.outputs.reason }}"
+          # Idempotent: skip if an identical marker+reason comment already exists.
+          if gh api "repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments" \
+            --paginate -q '.[].body' 2>/dev/null | grep -Fqx "${marker} ${reason}"; then
+            echo "Policy block comment already present — skipping"
+            exit 0
+          fi
           gh pr comment "${{ github.event.pull_request.number }}" \
             --repo "${{ github.repository }}" \
-            --body "Policy gate blocked this PR: ${{ steps.evaluate.outputs.reason }}"
+            --body "${marker} ${reason}"
         env:
           GH_TOKEN: ${{ steps.dlrsp-token.outputs.token }}

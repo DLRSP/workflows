@@ -7,7 +7,8 @@ trusted_actors:
 shim_actors:
   - dlrsp-bot
 policies:
-  - name: bot-auto-merge
+  # Action pin bumps (Dependabot / bots) — workflows-only paths, block majors.
+  - name: bot-auto-merge-action-pins
     when:
       draft: false
       actor_in: trusted_actors
@@ -17,13 +18,16 @@ policies:
             - Analyze (python)
             - Python 3.12
       - paths:
-          deny:
+          allow_only:
             - .github/workflows/**
+          deny:
             - CODEOWNERS
+      - semver:
+          block: major
     then:
       - approve
       - enable_auto_merge
-  - name: shim-auto-merge
+  - name: shim-auto-merge-action-pins
     when:
       draft: false
       actor_in: shim_actors
@@ -33,9 +37,12 @@ policies:
             - Analyze (python)
             - Python 3.12
       - paths:
-          deny:
+          allow_only:
             - .github/workflows/**
+          deny:
             - CODEOWNERS
+      - semver:
+          block: major
     then:
       - approve
       - enable_auto_merge
@@ -45,4 +52,3 @@ policies:
     then:
       - label:needs-human-review
       - comment:blocked-by-policy
-
