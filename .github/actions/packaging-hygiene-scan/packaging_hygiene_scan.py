@@ -23,6 +23,7 @@ import os
 import re
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 import zipfile
 from dataclasses import dataclass
@@ -119,6 +120,25 @@ _MATCHERS: list[tuple[str, re.Pattern[str], str, str, bool]] = [
 ]
 
 
+class _StripAuthOnRedirect(urllib.request.HTTPRedirectHandler):
+    """Do not forward GitHub Authorization to Azure blob log redirects."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        new_req = super().redirect_request(req, fp, code, msg, headers, newurl)
+        if new_req is None:
+            return None
+        from_host = urllib.parse.urlparse(req.full_url).netloc
+        to_host = urllib.parse.urlparse(new_req.full_url).netloc
+        if from_host != to_host:
+            for header in ("Authorization", "authorization"):
+                if header in new_req.headers:
+                    del new_req.headers[header]
+        return new_req
+
+
+_OPENER = urllib.request.build_opener(_StripAuthOnRedirect)
+
+
 def _request(method, url, token, data=None, accept=None, raw=False):
     payload = json.dumps(data).encode() if data is not None else None
     req = urllib.request.Request(url, data=payload, method=method)
@@ -128,7 +148,7 @@ def _request(method, url, token, data=None, accept=None, raw=False):
     if payload is not None:
         req.add_header("Content-Type", "application/json")
     try:
-        with urllib.request.urlopen(req) as resp:
+        with _OPENER.open(req) as resp:
             body = resp.read()
             if raw:
                 return body
@@ -220,16 +240,35 @@ def _scan_log_text(text: str) -> dict[str, WarningHit]:
     return found
 
 
+def _download_bytes(url: str, token: str | None = None) -> bytes:
+    """GET bytes; do not forward Authorization onto Azure/S3 log redirects."""
+    req = urllib.request.Request(url, method="GET")
+    if token:
+        req.add_header("Authorization", f"Bearer {token}")
+        req.add_header("Accept", "application/vnd.github+json")
+        req.add_header("X-GitHub-Api-Version", "2022-11-28")
+    opener = urllib.request.build_opener(urllib.request.HTTPRedirectHandler())
+    # Manual redirect loop so the Bearer header is not sent to blob storage.
+    for _ in range(5):
+        try:
+            with opener.open(req) as resp:
+                return resp.read()
+        except urllib.error.HTTPError as exc:
+            if exc.code not in (301, 302, 303, 307, 308):
+                detail = exc.read().decode(errors="replace")[:300]
+                raise RuntimeError(f"GET {url} -> {exc.code}: {detail}") from exc
+            location = exc.headers.get("Location")
+            if not location:
+                raise RuntimeError(f"GET {url} -> {exc.code} without Location") from exc
+            req = urllib.request.Request(location, method="GET")
+            # No Authorization on the redirected blob URL.
+    raise RuntimeError(f"too many redirects for {url}")
+
+
 def _job_log_text(repo: str, job_id: int, token: str) -> str:
     url = f"{API}/repos/{repo}/actions/jobs/{job_id}/logs"
     try:
-        raw = _request(
-            "GET",
-            url,
-            token,
-            accept="application/vnd.github+json",
-            raw=True,
-        )
+        raw = _download_bytes(url, token=token)
     except RuntimeError as exc:
         print(f"  skip job {job_id} logs: {exc}")
         return ""
