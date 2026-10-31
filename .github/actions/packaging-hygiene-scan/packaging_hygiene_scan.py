@@ -87,7 +87,9 @@ _MATCHERS: list[tuple[str, re.Pattern[str], str, str, bool]] = [
     ),
     (
         "pip-deprecation",
-        re.compile(r"pip\._(internal|vendor).+DeprecationWarning|DEPRECATION: .+pip", re.I),
+        re.compile(
+            r"pip\._(internal|vendor).+DeprecationWarning|DEPRECATION: .+pip", re.I
+        ),
         "pip deprecation warning in CI",
         "pip emitted a DeprecationWarning during install or build; upgrade pip "
         "or adjust the install invocation.",
@@ -95,10 +97,8 @@ _MATCHERS: list[tuple[str, re.Pattern[str], str, str, bool]] = [
     ),
     (
         "python-deprecation-warning",
-        # Require warning emission form (Trailing ":"), not tox `-W error::DeprecationWarning`.
-        re.compile(
-            r"(?<!::)(DeprecationWarning|PendingDeprecationWarning)\s*:"
-        ),
+        # Trailing ":" = emitted warning, not tox `-W error::DeprecationWarning`.
+        re.compile(r"(?<!::)(DeprecationWarning|PendingDeprecationWarning)\s*:"),
         "Python DeprecationWarning in CI logs",
         "A DeprecationWarning / PendingDeprecationWarning appeared in CI job "
         "logs; triage the stack frame and remove the deprecated call path.",
@@ -268,7 +268,9 @@ def _download_bytes(url: str, token: str | None = None) -> bytes:
                 raise RuntimeError(f"GET {current} -> {exc.code}: {detail}") from exc
             location = exc.headers.get("Location")
             if not location:
-                raise RuntimeError(f"GET {current} -> {exc.code} without Location") from exc
+                raise RuntimeError(
+                    f"GET {current} -> {exc.code} without Location"
+                ) from exc
             current = location
             auth = None  # blob URL must not receive the GitHub Bearer token
     raise RuntimeError(f"too many redirects for {url}")
@@ -295,8 +297,7 @@ def _job_log_text(repo: str, job_id: int, token: str) -> str:
 
 def _recent_runs(repo: str, token: str, workflow_name: str, limit: int) -> list[dict]:
     path = (
-        f"/repos/{repo}/actions/runs"
-        f"?status=completed&per_page={max(limit * 3, 10)}"
+        f"/repos/{repo}/actions/runs" f"?status=completed&per_page={max(limit * 3, 10)}"
     )
     runs = _paginated(path, token, max_pages=1)
     selected = []
@@ -316,7 +317,9 @@ def _run_jobs(repo: str, run_id: int, token: str) -> list[dict]:
     return _paginated(f"/repos/{repo}/actions/runs/{run_id}/jobs", token, max_pages=2)
 
 
-def _ensure_label(repo: str, token: str, name: str, color: str, description: str, dry_run: bool):
+def _ensure_label(
+    repo: str, token: str, name: str, color: str, description: str, dry_run: bool
+):
     if dry_run:
         return
     try:
@@ -416,7 +419,9 @@ def _create_or_update_issue(
     return url
 
 
-def scan_repo(org: str, name: str, token: str, runs_per: int, workflow_name: str, dry_run: bool) -> list[str]:
+def scan_repo(
+    org: str, name: str, token: str, runs_per: int, workflow_name: str, dry_run: bool
+) -> list[str]:
     repo = f"{org}/{name}"
     print(f"== {repo} ==")
     _ensure_label(
