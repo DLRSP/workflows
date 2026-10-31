@@ -55,6 +55,10 @@ Check these projects to get real-life examples of usage and inspiration:
 - ![GitHub stars](https://img.shields.io/github/stars/DLRSP/ateco?label=%E2%AD%90&style=flat-square) [ateco](https://github.com/DLRSP/ateco#readme) - Italian ATECO classification (ISTAT) as a pure-Python data library.
 - ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-ateco?label=%E2%AD%90&style=flat-square) [django-ateco](https://github.com/DLRSP/django-ateco#readme) - Django helpers for Italian ATECO classification (wraps ateco).
 - ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-blog-core?label=%E2%AD%90&style=flat-square) [django-blog-core](https://github.com/DLRSP/django-blog-core#readme) - Reusable multi-blog Django app: Blog, Section, Article with draft/schedule/publish, feeds, hookset, and optional Markdown/sanitize extras.
+- ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-party?label=%E2%AD%90&style=flat-square) [django-party](https://github.com/DLRSP/django-party#readme) - Django party identity hub: contacts, external ids, consent, thin account codes.
+- ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-allergens?label=%E2%AD%90&style=flat-square) [django-allergens](https://github.com/DLRSP/django-allergens#readme) - EU food allergen vocabulary for Django with Filer images and catalog seed.
+- ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-ingredients?label=%E2%AD%90&style=flat-square) [django-ingredients](https://github.com/DLRSP/django-ingredients#readme) - Food ingredient catalog for Django with nutrition data, allergens and Filer.
+- ![GitHub stars](https://img.shields.io/github/stars/DLRSP/django-food-recipes?label=%E2%AD%90&style=flat-square) [django-food-recipes](https://github.com/DLRSP/django-food-recipes#readme) - Core Django recipe models with taxonomy, steps and ingredient quantities.
 
 Feel free to send a PR to add your project in this list if you are relying on these scripts.
 
