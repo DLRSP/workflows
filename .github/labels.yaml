@@ -74,3 +74,7 @@
 - name: 🧹 deprecation-cleanup
   color: "#5319E7"
   description: Remove code deprecated in the version targeted by the compat milestone
+
+- name: 📦 packaging-hygiene
+  color: "#1d76db"
+  description: Recurring packaging / metadata hygiene findings from CI logs
