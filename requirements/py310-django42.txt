@@ -206,9 +206,9 @@ build==1.6.1 \
     --hash=sha256:51cc11666391ab6f092070437ac747002ff46f3e4113a3622177ee6b488bfc53 \
     --hash=sha256:ecd351a4be9d35a9eaaba244a7687143c9c7d4aea6ac964e7e7ddab20cbcf4e7
     # via poetry
-bump-my-version==1.8.0 \
-    --hash=sha256:2b6aded7a523014a20b7e4612bb6f6e8e2fd8c7d8a96bba529a31e24423ef09d \
-    --hash=sha256:9e6bc618e316cca864541b8c0b8e450b2b099e58e1f860cc6b3c3b2938eae190
+bump-my-version==1.8.1 \
+    --hash=sha256:6457f2a1b964df60ff7d532e61d41422f19dbf936c9752bdff25d79f63768069 \
+    --hash=sha256:b85397a51d5fa6bfa338fe7672de5c02268b455584be17cb455568b71c6eb0af
     # via -r requirements/requirements.in
 cachecontrol[filecache]==0.14.4 \
     --hash=sha256:b7ac014ff72ee199b5f8af1de29d60239954f223e948196fa3d84adaffc71d2b \
@@ -636,9 +636,9 @@ exceptiongroup==1.3.1 \
     --hash=sha256:8b412432c6055b0b7d14c310000ae93352ed6754f70fa8f7c34141f91c4e3219 \
     --hash=sha256:a7a39a3bd276781e98394987d3a5701d0c4edffb633bb7a5144577f82c773598
     # via anyio
-fastjsonschema==2.22.2 \
-    --hash=sha256:0fb3915616adac85ccfdd737d26be1089845d2019819505b42d39888458f74d4 \
-    --hash=sha256:72064e12356a7d6ef02165be2946b9abadbdf238536e07eb587e3dbaa33099cf
+fastjsonschema==2.22.3 \
+    --hash=sha256:8330c91b027dcf941efcb7b1f0998515ff95d177ea15bbabdfe8671965620901 \
+    --hash=sha256:f670b443830b75aca3f00b75949efa20f4b2a80302ec7a21505c28dd54cffd43
     # via poetry
 filelock==4.1.0 \
     --hash=sha256:2ce9818e3e2d8f284c1a964414447ef148d42a5fd5e2a477a7118e574b293ec1 \
@@ -1218,9 +1218,9 @@ pyproject-hooks==1.3.3 \
     # via
     #   build
     #   poetry
-python-discovery==1.9.0 \
-    --hash=sha256:88beb57e51b919c30f303b053ec41359298ca349192035b0a802c76347ae96d7 \
-    --hash=sha256:fb65edfff3541b7ceb3a39be334a0f69f4cb5148287a053e1874748742fda93b
+python-discovery==1.9.1 \
+    --hash=sha256:83e3c0024b93e256809dc9cd053537a37df6d3badc3b68aa03006a224336b21f \
+    --hash=sha256:a78322b3b70c5d61dddc2f37ca1beffa9a5ce01cedf3526444e01bfc94f50b35
     # via virtualenv
 python-dotenv==1.2.4 \
     --hash=sha256:42269a8a5b3fd54ffa6f3d84b18abed50064717576b4ecf03dc4a55d8aa04fdc \
