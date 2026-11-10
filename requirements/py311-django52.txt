@@ -644,9 +644,9 @@ fastjsonschema==2.22.3 \
     --hash=sha256:8330c91b027dcf941efcb7b1f0998515ff95d177ea15bbabdfe8671965620901 \
     --hash=sha256:f670b443830b75aca3f00b75949efa20f4b2a80302ec7a21505c28dd54cffd43
     # via poetry
-filelock==4.2.9 \
-    --hash=sha256:96530b7c538d4ea08493ab067247aab7948c54d8cd622cce711c97cccc5d9896 \
-    --hash=sha256:a379c50a729e5b68c8519a4d26489f755d9769960a236ecd838190e2a78db2e9
+filelock==4.2.10 \
+    --hash=sha256:9479aaeb4db20b5a53e3da28493edd24720b66b8a0b84030aa56ccdf243d6857 \
+    --hash=sha256:fcc3c0cb8bfe7f4b3bb0e231c04b15dbad068cb3c2515f343d8fde4dce93bd5d
     # via
     #   cachecontrol
     #   python-discovery
@@ -676,9 +676,9 @@ idna==3.20 \
     #   anyio
     #   httpx2
     #   requests
-importlib-metadata==10.1.0 \
-    --hash=sha256:82b04047fa09792c1a8cfeddfe08bec79e4b13c29c8469b0d3949860f61017e8 \
-    --hash=sha256:cf45ce66a929c64e994185a809c04840d0501db17e663810d993d0f4829265c7
+importlib-metadata==10.2.0 \
+    --hash=sha256:9413a2029fd9ca5669d27f1386071bbfe3c7ebca0545692ec975088241fe1d79 \
+    --hash=sha256:c7a4bf1c7479601f6b8e437cfc14f4f77028ba62a8f34ae95cd93d9774dfba51
     # via keyring
 installer==1.1.0 \
     --hash=sha256:5adc0c01ce62d809989e246987cd68944fe5df8af562d0358f65b2ab15cb5de7 \
@@ -706,6 +706,10 @@ keyring==25.7.0 \
     --hash=sha256:be4a0b195f149690c166e850609a477c532ddbfbaed96a404d4e43f8d5e2689f \
     --hash=sha256:fe01bd85eb3f8fb3dd0405defdeac9a5b4f6f0439edbb3149577f244a2e8245b
     # via poetry
+lazy-importer==0.1.0 \
+    --hash=sha256:b2e296716ce015c0cd80e57b940e52727c5b934b34b8656d5ce06bdd0ee5fbdd \
+    --hash=sha256:bd93fab7bef18e842eea02b839410954d37889140dc64ca4d9680aec6880c739
+    # via importlib-metadata
 librt==0.16.0 \
     --hash=sha256:001bfd59a7d45b17e3e75f2a8c6405280b35e7b84471792778e718c4f368950e \
     --hash=sha256:0058f9d68721094105917254c72ac0569117bb7b13b9769cf45d26d89f9d21cd \
